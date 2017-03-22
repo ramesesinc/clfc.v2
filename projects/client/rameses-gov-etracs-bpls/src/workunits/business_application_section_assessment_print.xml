@@ -1,0 +1,72 @@
+<workunit>
+    <invokers>
+        <!--
+        <invoker type="business_application:assessment:formActions" caption="Print Assessment" icon="images/toolbars/printer.png" 
+            action="viewReport" visibleWhen="#{prevmode=='assessment' || prevmode=='reassessment' || task.state=='approval' || task.state=='release'}"/>
+        -->    
+        <invoker type="business_application:assessment:print" caption="Print Assessment" action="preview"/>
+        <invoker type="formActions" caption="Back" action="_close" icon="back"/>
+    </invokers>
+    
+    <code>
+    <![CDATA[    
+        import com.rameses.rcp.annotations.*
+        import com.rameses.rcp.common.*
+        import com.rameses.osiris2.client.*
+        import com.rameses.osiris2.common.*
+        import com.rameses.osiris2.reports.*;
+        import java.rmi.server.*;
+        
+        class BusinessAssessmentReportController extends com.rameses.etracs.shared.ReportController 
+        {
+            String title = "Business Assessment";
+            String reportpath = 'com/rameses/gov/etracs/bpls/reports/assessment/';
+            String reportName = reportpath + 'Assessment.jasper';
+                        
+            def data;
+            def task;
+            
+            SubReport[] getSubReports(){ 
+                return [
+                    new SubReport("AssessmentItem", reportpath + "AssessmentItem.jasper"), 
+                    new SubReport("AssessmentGross", reportpath + "AssessmentGross.jasper") 
+                ] as SubReport[] 
+            }
+            
+            def getReportData() {
+                entity.bin = entity.business.bin;
+                entity.totaltax = entity.totals?.tax;
+                entity.totalregfee = entity.totals?.regfee;
+                entity.totalcharge = entity.totals?.othercharge;
+                entity.totalamount = entity.totals?.total;
+                
+                def taxes = entity.taxfees.findAll{ it.taxfeetype=='TAX' }
+                def regfees = entity.taxfees.findAll{ it.taxfeetype=='REGFEE' }
+                def charges = entity.taxfees.findAll{ it.taxfeetype.toString().matches('TAX|REGFEE')==false }
+                taxes?.each{ 
+                    it.sortindexno=0 
+                }
+                regfees?.each{ 
+                    it.sortindexno = (it.lob?.objid == null? 2: 1); 
+                }
+                charges?.each{  
+                    it.sortindexno = (it.lob?.objid == null? 4: 3); 
+                } 
+                entity.taxfees.sort{ it.sortindexno } 
+                entity.applications = []; 
+                entity.applications << [
+                    year: entity.appyear, taxes: taxes, 
+                    regfees: regfees.sort{ it.sortindexno }, 
+                    charges: charges.sort{ it.sortindexno }  
+                ]; 
+                return entity; 
+            } 
+        } 
+    ]]>
+    </code>
+    
+    <pages>
+        <page name="preview" template="com.rameses.osiris2.common.ui.ReportPreviewPage" />
+    </pages>
+    
+</workunit>

@@ -1,0 +1,6 @@
+<workunit extends="wtemplates/ListController.xml" serviceName="LiquidationListService" entityName="liquidation" tag="byliquidatingofficer">
+    <invokers>
+        <invoker folderid="/explorer/txn/treasury" caption="Liquidations" index="40" role="LIQUIDATING_OFFICER"/>
+        <invoker type="home.action" caption="Liquidations" index="40" role="LIQUIDATING_OFFICER" target="window"/>
+    </invokers>
+</workunit>

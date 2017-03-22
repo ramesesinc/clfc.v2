@@ -1,0 +1,176 @@
+<workunit>
+    <invokers>
+        <invoker type="business:section" caption="Business Ledger" index="40"/>
+       
+        <invoker type="formActions" caption="Print Bill" action="runBilling"/>
+        
+        <invoker type="formActions" caption="Request Payment" action="requestPayment"/>
+        <invoker type="formActions" caption="Capture Payment" action="capturePayment"/>
+        <invoker type="formActions" caption="Tax Credit Payment" action="payTaxCredit"/>
+        
+    </invokers>
+    
+    <code>
+        <![CDATA[    
+        import com.rameses.rcp.annotations.*
+        import com.rameses.rcp.common.*
+        import com.rameses.osiris2.client.*
+        import com.rameses.osiris2.common.*
+        import java.rmi.server.*
+        
+        class  BusinessGeneralInfoController  {
+        
+            @Service("BusinessApplicationHistoryService")
+            def appService;
+            
+            @Service("BusinessReceivableService")
+            def service;
+            
+            @Service("BusinessPaymentService")
+            def pmtService;
+            
+            @Service("BusinessPaymentOrderService")
+            def pmtOrderService;
+            
+            @Service("BusinessTaxCreditService")
+            def taxCreditService;
+            
+            String entityName = "businessinfo:ledger"
+            String title = "Business Ledger";
+            
+            def entity;
+            def selectedReceivable;
+            def selectedPayment;
+            def selectedTaxCredit;
+            
+            
+            def selectedApplication;
+            def receivables;
+            
+            def applicationListModel = [
+                fetchList: { o->
+                    return appService.getList( [businessid: entity.objid] ).sort{it.appyear*-1};
+                },
+            ] as BasicListModel;
+            
+            def receivableModel = [
+                fetchList: { o->
+                    receivables = [];
+                    if(selectedApplication) {
+                        receivables = service.getAllReceivables([ applicationid: selectedApplication.objid ]);
+                    }
+                    return receivables;
+                }
+            ] as BasicListModel;
+            
+            def receivablePaymentModel = [
+                fetchList: { o->
+                    if(!selectedReceivable) return [];
+                    return service.getReceivablePayments([ receivableid: selectedReceivable.objid ]);
+                }
+            ] as BasicListModel;
+            
+            
+            def paymentsModel = [
+                fetchList: { o->
+                    return pmtService.getList( [objid: entity.objid] ); 
+                },
+                onOpenItem: { o, col-> 
+                    return viewPayment(); 
+                    //return InvokerUtil.lookupOpener("business_payment:open", [ entity: [objid: o.objid] ]);
+                }
+            ] as BasicListModel;
+            
+            def viewPayment() {
+                if ( !selectedPayment ) return;
+                
+                if ( selectedPayment.reftype == 'cashreceipt' ) {
+                    def op = Inv.lookupOpener( "cashreceiptinfo:open", [entity:[objid: selectedPayment.refid]] );
+                    op.target = 'popup';
+                    return op;
+                }             
+                throw new Exception('No available handler for this type of receipt'); 
+            } 
+            
+            def taxcreditModel = [
+                fetchList: { o->
+                    return taxCreditService.getList( [businessid: entity.objid]  );
+                },
+            ] as BasicListModel;
+            
+            void reload() {
+                receivables = null;
+                receivableModel.reload();
+                paymentsModel.reload();
+                taxcreditModel.reload();
+            }
+            
+            def addPayment(def mode, def handler, def title) {
+                def newItems = receivables.collect{ [
+                    objid: 'BPMTI'+new UID(),
+                    iyear: it.iyear,
+                    receivableid: it.objid,
+                    account: it.account,
+                    item: it.account,
+                    lob: it.lob,
+                    balance: it.balance,
+                    amtpaid: 0,
+                    discount: 0,
+                    surchargepaid: 0,
+                    interestpaid: 0,
+                    txntype:'basic'
+                ] }
+                return Inv.lookupOpener( "business_payment:add", [items: newItems, mode:mode, handler:handler, title: title] );
+            }
+            
+            def requestPayment() {
+                def h = { o->
+                    o.reftype = 'request';
+                    o.business = entity;
+                    def r = pmtOrderService.create( o );
+                    MsgBox.alert( 'Transaction id is ' + r.txnid );
+                }
+                return addPayment( 'request', h, 'Request Payment' ); 
+            }
+            
+            def capturePayment() {
+                def h = { o->
+                    o.reftype = 'capture';
+                    o.businessid = entity.objid;
+                    o.voided = 0;
+                    o.appyear = entity.activeyear;
+                    o.paymentmode = 'CAPTURE';
+                    pmtService.create( o );
+                    reload();
+                }
+                return addPayment( 'capture', h, 'Capture Payment' );
+            }
+
+            def payTaxCredit() {
+                def h = { o->
+                    o.reftype = 'taxcreditpayment';
+                    o.businessid = entity.objid;
+                    pmtService.create( o );
+                    reload();
+                }
+                return addPayment( 'taxcredit', h, 'Add Tax Credit' );
+            }
+            
+            def runBilling() {
+                if( selectedApplication == null )
+                    throw new Exception("Please select an application");
+                def m = [:];    
+               m.putAll( selectedApplication );
+               m.receivables = receivables;
+               return Inv.lookupOpener( "business:billing", [entity: m] );
+            }
+            
+        }
+        ]]>
+    </code>
+
+    <pages>
+        <page template="com.rameses.gov.etracs.bpls.business.BusinessLedger"/>
+    </pages>
+    
+</workunit>

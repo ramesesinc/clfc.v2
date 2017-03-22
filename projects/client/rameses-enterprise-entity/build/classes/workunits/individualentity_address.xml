@@ -1,0 +1,61 @@
+<workunit>
+    <invokers>
+        <invoker type="individualentity_general:formActions1" caption="Edit Address"  index="5"
+            action="init" role="MASTER" permission="individualentity.editaddress" target="self"/>
+        <invoker type="formActions" caption="Close" action="_close" immediate="true"/>    
+    </invokers>
+    
+    <code>
+    <![CDATA[
+        import com.rameses.rcp.annotations.*;
+        import com.rameses.rcp.common.*;
+        import com.rameses.osiris2.client.*;
+        import com.rameses.osiris2.common.*;
+        import java.rmi.server.UID;
+        import com.rameses.util.*;
+
+        public class IndividualEntityEditAddressController {
+            
+            @Service("EntityAddressService")
+            def service;
+        
+            def entity;
+            def selectedItem;
+            
+            def addressOpeners = [:];
+            
+            void init() {
+                addressOpeners = Inv.lookupOpeners( "address:component:type", [:] );  
+            }
+        
+            def listModel = [
+                fetchList: { o->
+                    def list =  service.getList( [objid: entity.objid] );
+                    list.each { x->
+                        println x;
+                        def op = addressOpeners.find{ it.properties.key == x.type };
+                        x.text =  TemplateProvider.instance.getResult("templates/address/" + x.type + ".htm", [entity: x] );
+                    }
+                    return list;
+                }
+            ] as BasicListModel;
+            
+            def addAddress() {
+                def h = { o->
+                    MsgBox.alert( 'added ' + o );
+                }
+                return Inv.lookupOpener( "address:editor", [handler: h] );
+            }
+            
+            def makeDefault() {
+                if(!selectedItem) return;
+                service.makeDefault( [addressid: selectedItem.objid, parentid: entity.objid] );
+            }
+            
+        }        
+   ]]>
+   </code>
+   <pages>
+       <page template="com.rameses.entity.ui.EntityChangeAddress"/>
+   </pages>   
+</workunit>

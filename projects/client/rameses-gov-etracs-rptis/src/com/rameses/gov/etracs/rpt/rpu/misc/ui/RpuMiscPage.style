@@ -1,0 +1,7 @@
+"entity.rpu.*" [allowEdit == true]{
+    enabled:true;
+}
+
+"entity.rpu.*" [allowEdit != true]{
+    enabled:false;
+}

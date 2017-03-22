@@ -1,0 +1,17 @@
+"selectedForm|selectedHandler" [mode == 'read'] {
+    enabled:false;
+}
+
+"selectedForm|selectedHandler" [mode != 'read'] {
+    enabled:true;
+}
+
+"entity.*" [ mode == 'read' ] {
+    readonly: true;
+    editable: false;
+}
+
+"entity.*" [ mode != 'read' ] {
+    readonly: false;
+    editable: true;
+}

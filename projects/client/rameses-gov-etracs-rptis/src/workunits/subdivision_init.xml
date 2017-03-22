@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workunit>
+    <invokers>
+        <invoker folderid="/explorer/txn/rpt/online" action="init"  caption="Subdivision" index="15"
+            txntypeid="SD" txntype="Subdivision" newledger="true" newrpu="true"
+            role="APPRAISER,EXAMINER,RECEIVER" permission="subdivision.create"/>
+        
+        <invoker folderid="/home/rpt/txn" action="init"  caption="Subdivision" index="15"
+            txntypeid="SD" txntype="Subdivision" newledger="true" newrpu="true"
+            role="APPRAISER,EXAMINER,RECEIVER" permission="subdivision.create"/>
+
+         <invoker type="quick_launcher" code="SD01" action="init"  caption="Subdivision" 
+            txntypeid="SD" txntype="Subdivision" newledger="true" newrpu="true"
+            role="APPRAISER,EXAMINER,RECEIVER" permission="subdivision.create" index="15"/>
+            
+        <invoker type="formActions" action="_close" caption="Close" mnemonic="c" />
+         <invoker type="formActions" action="process" caption="Next" mnemonic="n" icon="images/toolbars/arrow_right.png" />
+   </invokers>
+   <code>
+<![CDATA[
+
+import com.rameses.rcp.annotations.* 
+import com.rameses.rcp.common.* 
+import com.rameses.osiris2.client.*
+import com.rameses.osiris2.common.*
+
+class SubdivisionInitController
+{
+    @Binding
+    def binding;
+    
+    @Service('SubdivisionService')
+    def svc;
+    
+    def entity = [:]
+    
+    String getTitle(){
+        return 'Subdivision: Initial';
+    }
+    
+    void init(){
+    }
+
+    def getLookupFaas(){
+        return InvokerUtil.lookupOpener('faas:lookup', [
+            onselect: {
+                if (it.state == 'CANCELLED')
+                    throw new Exception('FAAS has already been cancelled.');
+                if (it.state != 'CURRENT')
+                    throw new Exception('Cannot process record. The FAAS is not yet current.')
+                    
+                 entity.motherfaas = it;
+                 binding.refresh('.*');
+            },
+            
+            enempty :{ entity.motherfaas = null; }
+        ])
+    }
+    
+    
+    def process(){
+        entity.objid = 'SD' + new java.rmi.server.UID();
+        entity.filetype = 'subdivision';
+        def newentity = svc.createSubdivision(entity)
+        return InvokerUtil.lookupOpener('subdivision:open', [entity:newentity]);
+    }
+        
+}
+
+
+
+]]>
+   </code>
+
+   <pages> 
+       <page template="com.rameses.gov.etracs.rpt.subdivision.ui.SubdivisionInitPage"/>
+    </pages>
+</workunit>
+
+

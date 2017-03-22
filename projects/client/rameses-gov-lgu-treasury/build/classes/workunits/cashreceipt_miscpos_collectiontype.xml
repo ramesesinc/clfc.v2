@@ -1,0 +1,80 @@
+<workunit extends="wtemplates/gov/treasury/BasicCashReceiptController.xml">
+    <invokers>
+        <invoker type="collectiontype:handler" action="init" caption="Miscellaneous (POS)" 
+            name="miscpos"  formno="51" formtype="serial" index="100" />
+    </invokers>
+
+    <code>
+        <![CDATA[    
+        import com.rameses.rcp.annotations.*
+        import com.rameses.rcp.common.*
+        import com.rameses.osiris2.client.*
+        import com.rameses.osiris2.common.*
+        
+        class  MiscPOSCollectionTypeController {
+            @Caller 
+            def caller 
+            
+            @Service('SpecialCollectionTypeService')
+            def svc 
+            
+            def selectedItem;
+            def items
+            
+            void init(){
+                items = svc.getList(entity.objid);
+                items.each{ it.isnew = false }
+                
+                def invokers = InvokerUtil.lookupOpeners('miscpos:handler')
+                def newinvokers = []
+                invokers.each{ inv ->
+                    if ( ! items.find{it.revtype == inv.properties.revtype} ) {
+                        newinvokers << inv 
+                    }
+                }
+                newinvokers.each{
+                    items << [
+                        objid   : 'CI' + new java.rmi.server.UID(),
+                        collectiontypeid: entity.objid,
+                        revtype : it.properties.revtype,
+                        amount  : 0.0,
+                        isnew   : true,
+                    ]
+                }
+                
+                items.each{println it}
+                
+            }
+            
+            def getEntity(){
+                return caller.entity
+            }
+            
+            def listHandler = [
+                fetchList : { return items },
+                validate : { li ->
+                    def item = li.item 
+                    if (item.item) {
+                        if (item.isnew == true) {
+                            svc.create(item)
+                            item.isnew = false;
+                        }
+                        else{
+                            svc.updateItem(item)
+                        }
+                    }   
+                }
+            ] as EditorListModel
+            
+            
+            
+        }
+        ]]>
+        
+    </code>
+    
+    <pages>
+        <page name="default" template="com.rameses.gov.treasury.collection.pos.MiscPOSCollectionTypeHandler"/>
+    </pages>
+    
+</workunit>

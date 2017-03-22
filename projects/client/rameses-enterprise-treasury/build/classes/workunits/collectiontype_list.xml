@@ -1,0 +1,6 @@
+<workunit extends="wtemplates/ListController.xml" 
+    serviceName="CollectionTypeService" entityName="collectiontype">
+    <invokers>
+        <invoker folderid="/explorer/master/treasury" caption="Collection Types" role="MASTER" index="1" permission="collectiontype.view" />
+   </invokers>
+</workunit>

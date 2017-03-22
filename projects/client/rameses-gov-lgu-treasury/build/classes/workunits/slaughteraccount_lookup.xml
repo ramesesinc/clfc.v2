@@ -1,0 +1,5 @@
+<workunit extends="wtemplates/BasicLookupController.xml" serviceName="SlaughterAccountLookupService">
+    <invokers>
+        <invoker type="slaughteraccount:lookup" caption="Lookup Slaughter Account" target="popup"/>
+    </invokers>
+</workunit>

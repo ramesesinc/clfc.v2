@@ -1,0 +1,61 @@
+<workunit>
+    <invokers>
+        <invoker type="business_lessor:lookup" caption="Building" target="popup"/>
+    </invokers>
+    
+    <code>
+        <![CDATA[    
+        import com.rameses.rcp.annotations.*
+        import com.rameses.rcp.common.*
+        import com.rameses.osiris2.client.*
+        import com.rameses.osiris2.common.*
+        import com.rameses.common.*;
+        import java.rmi.server.*
+        import com.rameses.util.*;
+        
+        class  BusinessLessorLookup {
+        
+            @Binding 
+            def binding;
+            
+            @Service("BusinessLessorService")
+            def service;
+            
+            def onselect;
+            def selectedEntity;
+            def ownerid;
+            
+            def listHandler = [
+                getColumnList: {
+                    return [
+                        [name: 'bldgname', caption:'Building Name'],
+                        [name: 'street', caption:'Street'],
+                        [name: 'status', caption:'Status'],
+                    ]
+                },
+                fetchList: { o->
+                    o.ownerid = ownerid;
+                    return service.getList(o);
+                }
+            ] as PageListModel;
+            
+            
+            def doSelect() {
+                if(!onselect) throw new Exception("Please specify an onselect handler");
+                onselect(selectedEntity);
+                return  "_close";
+            }
+            
+            def doCancel() {
+                return "_close";
+            }
+            
+        }
+        ]]>
+    </code>
+    
+    <pages>
+        <page template="com.rameses.osiris2.themes.LookupPage"/>
+    </pages>
+    
+</workunit>

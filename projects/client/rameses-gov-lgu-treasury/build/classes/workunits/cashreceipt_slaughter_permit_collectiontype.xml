@@ -1,0 +1,71 @@
+<workunit extends="wtemplates/enterprise/treasury/BasicCashReceiptController.xml">
+    <invokers>
+        <invoker type="collectiontype:handler" caption="Slaughter Permit" 
+            name="slaughter"  formno="57" formtype="serial" index="0"/>
+    </invokers>
+
+    <code>
+        <![CDATA[    
+        import com.rameses.rcp.annotations.*
+        import com.rameses.rcp.common.*
+        import com.rameses.osiris2.client.*
+        import com.rameses.osiris2.common.*
+        import com.rameses.enterprise.treasury.cashreceipt.*
+        
+        class  SlaughterCollectionTypeController {
+            @Caller 
+            def caller 
+            
+            def selectedItem;
+            
+            public def getEntity(){
+                return caller.entity;
+            }
+            
+           def itemListHandler = [
+                fetchList: { o->
+                    if( entity.items == null ) entity.items = [];
+                    return entity.items;
+                },
+                onAddItem: {o-> 
+                    o.state = 'UNSAVED';
+                    entity.items.add( o );
+                },
+                onRemoveItem: { o->
+                    if(!MsgBox.confirm("You are about to remove this entry. Proceed?")) 
+                        return false;
+                        
+                    if( ! entity.itemsToDelete ) entity.itemsToDelete = [];
+                    if( o.state == 'SAVED') entity.itemsToDelete.add( o );
+                        
+                    entity.items.remove( o );
+                    return true;
+                }
+            ] as EditorListModel
+            
+            def getLookupAccts() {
+                return InvokerUtil.lookupOpener("revenueitem:lookup",[
+                    "query.txntype" : "cashreceipt",
+                    onselect:{ o->
+                        if(!o.fund.objid) 
+                            throw new Exception("The item selected must be associated with a fund");
+
+                        if(!o.cashbookid) 
+                            throw new Exception("There is no associated cashbook for this item. Please contact the treasury");
+
+                        if( entity.items.find{ it.item.objid == o.objid }!=null )
+                            throw new Exception("This item has already been added");
+                        selectedItem.item = o;
+                    }
+                ]);
+            }
+        }
+        ]]>
+        
+    </code>
+    
+    <pages>
+        <page template="com.rameses.gov.treasury.collection.SlaughterCollectionTypeHandler"/>
+    </pages>
+    
+</workunit>

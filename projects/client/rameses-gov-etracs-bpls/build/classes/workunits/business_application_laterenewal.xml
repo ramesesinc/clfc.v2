@@ -1,0 +1,121 @@
+<workunit>
+    <invokers>
+        <invoker folderid="/home/business/business_application" caption="Late Renewal"  
+                 action="start" target="window" role="ASSESSOR" index="52"/>
+        
+        <invoker type="lobActions" caption="Add" action="lob.add"  immediate="true"/>
+        <invoker type="lobActions" caption="Remove" action="lob.remove"  immediate="true" visibleWhen="#{lob.selectedItem!=null &amp;&amp; lob.selectedItem.assessmenttype=='NEW'}"/>
+        <invoker type="lobActions" caption="Reclassify" action="lob.reclassify"  immediate="true" visibleWhen="#{lob.selectedItem!=null &amp;&amp; lob.selectedItem.assessmenttype=='RENEW' }"/>
+        <invoker type="lobActions" caption="Retire" action="lob.retire" immediate="true" visibleWhen="#{lob.selectedItem!=null  &amp;&amp; lob.selectedItem.assessmenttype=='RENEW' }"/>
+        <invoker type="lobActions" caption="Unretire" action="lob.unretire" immediate="true" visibleWhen="#{lob.selectedItem!=null &amp;&amp; lob.selectedItem.assessmenttype=='RETIRE'}"/>
+
+        <invoker type="extActions" caption="Print"  icon="images/toolbars/printer.png" 
+            action="application.print" visibleWhen="#{state=='save-success'}"/>
+    </invokers>
+    
+    <code>
+         <![CDATA[    
+        import com.rameses.rcp.annotations.*
+        import com.rameses.rcp.common.*
+        import com.rameses.osiris2.client.*
+        import com.rameses.osiris2.common.*
+        import java.rmi.server.*;
+        import com.rameses.gov.etracs.bpls.controller.*;
+        
+        public class LateRenewalApplicationController extends PageFlowController {
+        
+            @Script("BusinessSearchUtil")
+            def searchList;
+        
+            @Script("BusinessApplicationUtil")
+            def application;
+            
+            @Script("BusinessLobUtil")
+            def lob;
+
+            @Script("BusinessInfoUtil")
+            def appinfo;
+
+            @Script("BusinessAssessmentInfoUtil")
+            def assessmentInfo;
+
+            def entity;
+            def yearsdelinquent = [];
+            
+            void open() {
+                application.init( [businessid:searchList.selectedItem.objid, apptype: 'LATERENEWAL'] );
+                lob.reset();
+                appinfo.reset();
+                yearsdelinquent = entity.remove("yearsdelinquent");
+            }
+            
+            void initApplication() {
+                if(yearsdelinquent.size()>0) entity.appyear = yearsdelinquent[0];
+            }
+            
+            void updateInfo() {
+                Modal.show(appinfo.update());
+                if(entity.appinfos) appinfo.verify();
+                Modal.show(assessmentInfo.calculate());
+            }
+            
+            void save() {
+                entity = application.create( entity );
+                yearsdelinquent.remove(0);
+                if( yearsdelinquent.size() > 0 ) {
+                    entity.appyear =  yearsdelinquent[0];    
+                }
+                
+            }
+            
+            boolean getHasMore() {
+                return (yearsdelinquent.size() > 0);
+            }
+        }
+        ]]>
+    </code>    
+    
+    <pageflow>
+        
+        <start>
+            <transition to="search" name="create" />
+        </start>
+        
+        <page name="search" title="Search Business Name (Late Renewal)">
+            <transition to="view-initial" caption="Next" name="next" mnemonic="N" immediate="false" action="open"/>
+        </page>
+        
+        <page name="view-initial" title="Late Renewal (Initial)">
+            <transition to="search" caption="Back" mnemonic="B" name="back" />
+            <transition to="view-info" caption="Next" name="save" mnemonic="S" action="initApplication"/>
+        </page>
+
+        <page name="view-info" title="Late Renewal (Delinquency for #{entity.appyear} )">
+            <transition to="end" caption="Cancel" mnemonic="B" name="back" />
+            <transition to="confirm" caption="Next" name="save" mnemonic="S" action="updateInfo"/>
+        </page>
+
+        <page name="confirm" title="Late Renewal (Delinquency for #{entity.appyear} )">
+            <transition to="view-info" caption="Back" mnemonic="B" name="back" />
+            <transition to="save-success" caption="Submit" mnemonic="S" name="save" action="save"
+                confirm="You are about to save this transaction. Continue?"/>
+        </page>
+
+        <page name="save-success" title="Save Success">
+            <transition to="end" caption="Close" />
+            <transition to="view-initial" caption="Next" visibleWhen="#{hasMore == true}"/>
+        </page>
+
+        <end/>
+    </pageflow>
+    
+    <pages>
+        <page name="search" template="com.rameses.gov.etracs.bpls.view.SearchBusinessPage"/>
+        <page name="view-initial" template="com.rameses.gov.etracs.bpls.view.LateRenewalInitialPage"/>
+        <page name="view-info" template="com.rameses.gov.etracs.bpls.view.LateRenewalPage"/>
+        <page name="confirm" template="com.rameses.gov.etracs.bpls.view.AssessmentConfirmPage"/>
+        <page name="save-success" template="com.rameses.gov.etracs.bpls.view.SuccessPage"/>
+    </pages>
+    
+    
+</workunit>

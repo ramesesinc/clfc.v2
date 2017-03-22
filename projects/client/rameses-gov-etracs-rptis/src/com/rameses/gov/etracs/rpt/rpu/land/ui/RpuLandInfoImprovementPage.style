@@ -1,0 +1,12 @@
+
+"selectedPlantTree"  [allowEdit == true] {
+    readonly:false;
+}
+
+"selectedPlantTree"  [entity.datacapture == 0 && entity.txntype.newrpu == 0] {
+    readonly:true;
+}
+
+"selectedPlantTree"  [allowEdit == false || !entity.taskstate.matches('appraiser.*')] {
+    readonly:true;
+}

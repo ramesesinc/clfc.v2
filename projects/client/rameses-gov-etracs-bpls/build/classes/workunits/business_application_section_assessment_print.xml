@@ -1,0 +1,62 @@
+<workunit>
+    <invokers>
+        <invoker type="business_application:assessment:formActions" caption="Print" icon="images/toolbars/printer.png" 
+            action="viewReport" visibleWhen="#{task.state=='approval' || task.state=='release'}"/>
+        <invoker type="formActions" caption="Back" action="_close" icon="back"/>
+    </invokers>
+    
+    <code>
+        <![CDATA[    
+        import com.rameses.rcp.annotations.*
+        import com.rameses.rcp.common.*
+        import com.rameses.osiris2.client.*
+        import com.rameses.osiris2.common.*
+        import java.rmi.server.*;
+        import com.rameses.osiris2.reports.*;
+        
+        class  BusinessAssessmentReportController  {
+        
+            @Service("ReportParameterService") 
+            def paramsvc
+        
+            @Service("BusinessApplicationAssessmentService") 
+            def service;
+            
+            def data;
+            def task;
+            def entity;
+            def title = "Business Assessement"
+            
+            
+            def reportPath = "com/rameses/gov/etracs/bpls/reports/assessment/"
+            
+            void viewReport() {
+                data = service.getReport( [objid: entity.objid] );
+                if(data.business?.address?.text) {
+                    data.business.address.text=data.business.address.text.split("\n").join(", "); 
+                }
+                if(data.business?.owner?.address?.text) {
+                    data.business.owner.address.text = data.business.owner.address.text.split("\n").join(", "); 
+                }
+                report.viewReport();
+            } 
+            
+            def report = [
+                getReportName : { return reportPath + "Assessment.jasper" },
+                getReportData : { return  data },
+                getParameters : { return paramsvc.getStandardParameter() },
+                getSubReports : { return [
+                        new SubReport("AssessmentItem", reportPath + "AssessmentItem.jasper"),
+                    ] as SubReport[];
+                }
+            ] as ReportModel
+           
+        }
+        ]]>
+    </code>
+    
+    <pages>
+        <page template="com.rameses.osiris2.common.ui.ReportPreviewPage"/>
+    </pages>
+    
+</workunit>

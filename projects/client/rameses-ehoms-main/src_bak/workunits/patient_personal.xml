@@ -1,0 +1,48 @@
+<workunit> 
+    <invokers>
+        <invoker type="patient:option" index="0" caption="Personal" action="init"/>
+        
+        <invoker type="formActions" caption="Edit" action="edit"/>
+        <invoker type="formActions" caption="View Address" action="viewAddress"/>
+    </invokers>  
+    <code>
+         <![CDATA[    
+        import com.rameses.rcp.annotations.*
+        import com.rameses.rcp.common.*
+        import com.rameses.osiris2.client.*
+        import com.rameses.osiris2.common.*
+        import java.rmi.server.*;
+        import com.rameses.osiris2.reports.*;
+        
+        class PatientPersonalController  {
+
+            @Caller 
+            def caller;
+            
+            def entity;
+            
+            def genderList = LOV.GENDER.collect{[name:it.key, caption:it.value]};
+            def civilStatusList = LOV.CIVIL_STATUS.collect{[name:it.key, caption:it.value]};
+            
+            def init() {
+            }
+            
+            def edit() {
+                def r = caller.edit();
+                caller.binding.fireNavigation(r);
+            }
+            
+            def viewAddress(){ 
+                def h = { o->
+                    MsgBox.alert('address is ' + o);
+                }
+                return Inv.lookupOpener( "address:editor", [handler:h]);
+            }
+        }
+        ]]>
+        
+    </code>
+    <pages>
+        <page name="default" template="com.rameses.ehoms.patient.ViewPersonalPage"/>
+    </pages>
+</workunit>

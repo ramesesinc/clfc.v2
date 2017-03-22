@@ -1,0 +1,71 @@
+<workunit extends="wtemplates/gov/bp/ReportController.xml" >
+    <invokers>
+        <invoker folderid="/explorer/report/bpls" caption="Line of Business Count Listing" 
+            action="init" role="REPORT" target="window" index="-100"/>
+    </invokers>
+    
+    <code>
+    <![CDATA[
+        import com.rameses.rcp.common.*;
+        import com.rameses.rcp.annotations.*;
+        import com.rameses.osiris2.common.*;
+        import com.rameses.osiris2.client.*;
+        import com.rameses.osiris2.reports.*;
+        
+        public class LobCountListingReportController extends com.rameses.etracs.shared.ReportController 
+        {
+            @Service('BPLobCountReportService')
+            def svc;
+            
+            @Service('LobClassificationService') 
+            def lobClassficationSvc;
+            
+            @Service('BarangayLookupService') 
+            def brgySvc;
+            
+            @Service('BPApplicationListingReportService')
+            def appSvc;
+            
+            String title = "Line of Business Count Listing";
+            String reportpath = 'com/rameses/gov/etracs/bpls/reports/'
+            String reportName = reportpath + 'LobCountListing.jasper' 
+            
+            def formControl = [
+                getFormControls: {
+                    return [
+                        new FormControl( "integer", [caption:'Year', name:'entity.year', required:true, preferredSize:'100,20', captionWidth:100]),
+                        new FormControl( "combo", [caption:'State', name:'entity.statemap', items:'statelist', expression:'#{item.name}', required:false, immediate:true, preferredSize:'0,20', captionWidth:100 ]),
+                        new FormControl( "combo", [caption:'Barangay', name:'entity.barangay', items:'barangaylist',  expression:'#{item.name}', preferredSize:'0,20', captionWidth:100]),
+                        new FormControl( "combo", [caption:'Classification', name:'entity.classification', items:'classificationlist', expression:'#{item.name}', preferredSize:'0,20', captionWidth:100]) 
+                     ]    
+                },
+            ] as FormPanelModel; 
+            
+            
+            def getReportData(){
+                return svc.getReport( entity ); 
+            }
+            
+            Map getParameters(){
+                return [
+                    STATE           :   entity.statemap,
+                    BARANGAYNAME    :   ( entity.barangay  ? entity.barangay.name : 'ALL' ) 
+                ] 
+            }
+            
+            List getStatelist() {
+                return appSvc.getApplicationStates();
+            }
+
+            List getBarangaylist() {
+                return brgySvc.getList([:]);
+            }
+
+            List getClassificationlist() {
+                return lobClassficationSvc.getList([:]);
+            }
+        }
+    ]]>
+    </code>
+    
+</workunit>

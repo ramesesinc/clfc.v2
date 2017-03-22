@@ -1,0 +1,97 @@
+<workunit>
+    
+   <invokers>
+         <invoker type="home.action" caption="Cash Receipt" action="init" index="1" role="COLLECTOR,SUBCOLLECTOR" target="window"/>
+         <invoker type="quick_launcher" code="RCT" caption="Cash Receipt" action="init" index="1" role="COLLECTOR,SUBCOLLECTOR" target="window"/>
+         <invoker folderid="/menu/txn/treasury" caption="Cash Receipt" action="init" index="10" role="COLLECTOR,SUBCOLLECTOR"/>
+         
+         <!-- self toolbars -->
+         <invoker type="formActions" caption="Next" action="runProcess" shortcut="ctrl N" mnemonic="n" icon="images/toolbars/arrow_right.png"/>
+   </invokers>
+   
+   <code>
+       <![CDATA[
+        import com.rameses.osiris2.common.*;
+        import com.rameses.rcp.common.*;
+        import com.rameses.rcp.annotations.*;
+        import com.rameses.osiris2.client.*;
+        import com.rameses.util.*;
+        
+        class CashReceiptInitialController  {
+        
+            @Binding
+            def binding;
+        
+            @Service("CashReceiptService")
+            def cashReceiptSvc;
+        
+            @Service("CollectionTypeService")
+            def collectionTypeSvc;
+            
+            String title = "Cash Receipts";
+
+            def formType;    
+            def formTypes;
+            
+            def collectiontype;
+            def collectionTypes;
+            
+            def modeOpener;
+            def modeOpeners;
+                
+            def entity = [:];
+            String entityName = "cashreceipt-initial";
+            
+            void init() {
+                formTypes = collectionTypeSvc.getFormTypes();
+                modeOpeners = InvokerUtil.lookupOpeners( "cashreceipt:mode", [entity:entity]);
+            }
+
+            @PropertyChangeListener
+            def listener = [
+                "formType": { o->
+                    entity.formno = o.objid;
+                    entity.formtype = o.formtype;
+                    collectionTypes = collectionTypeSvc.getCollectionTypes([formno: o.objid]);
+                },
+                "collectiontype": { o->
+                    entity.collectiontype = o;
+                },
+                "modeOpener" : { o->
+                    entity.txnmode = o.caption;
+                    entity.receiptdate = null;
+                    entity.collector = null;
+                }
+                
+            ]
+            
+            def runProcess() {
+                try {
+                    //call init first
+                    def newRecord = cashReceiptSvc.init( entity );
+                    if( newRecord.batchcontrol ) {
+                        try {
+                            def o = InvokerUtil.lookupOpener("cashreceipt:batch:"+entity.collectiontype.handler,[entity: newRecord]);
+                            if(o) return o;
+                        }
+                        catch(ign){;}
+                    }
+                    return InvokerUtil.lookupOpener("cashreceipt:"+entity.collectiontype.handler,[entity: newRecord]);
+                }
+                catch(Warning w) {
+                    String m = "cashreceipt:"+w.message;
+                    return InvokerUtil.lookupOpener( m, [entity:entity] );
+                }
+                catch(e) {
+                    throw e;
+                }
+            }
+        }      
+       ]]>
+   </code>
+   
+   <pages>
+       <page template="com.rameses.enterprise.treasury.cashreceipt.CashReceiptInitialPage" />
+   </pages>
+   
+</workunit>

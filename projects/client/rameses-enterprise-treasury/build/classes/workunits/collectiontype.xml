@@ -1,0 +1,70 @@
+<workunit>
+    
+   <invokers>
+         <invoker type="collectiontype:open" caption="Collection Type" action="open" role="MASTER" permission="collectiontype.open"/>
+         <invoker type="collectiontype:create" caption="Collection Type" action="create" role="MASTER" permission="collectiontype.create"/>
+   </invokers>
+   
+   <code>
+       <![CDATA[
+        import com.rameses.osiris2.common.*;
+        import com.rameses.rcp.common.*;
+        import com.rameses.rcp.annotations.*;
+        import com.rameses.osiris2.client.*;
+        
+        class CollectionTypeController extends CRUDController {
+        
+            @Service("CollectionTypeService")
+            def service;
+            
+            String entityName = "collectiontype";
+            String prefixId = "COLLTYPE";
+            def selectedForm;
+            def selectedHandler;
+            def handlers;
+            boolean showConfirmOnSave = false;
+            
+            @PropertyChangeListener
+            def listener = [
+                "selectedForm" : { o->
+                    entity.formno = o.objid;
+                    buildHandlers();
+                },
+                "selectedHandler" : { o->
+                    entity.handler = o.properties.name;
+                }
+            ]
+            
+            void afterOpen( def o ) {
+                selectedForm = formTypes.find{ it.objid == o.formno };
+                buildHandlers();
+                selectedHandler = handlers.find{ it.properties.name == entity.handler };
+            }
+            
+            void afterEdit(def o) {
+                buildHandlers();
+                selectedHandler = handlers.find{ it.properties.name == o.handler };
+            }
+            
+            def getFormTypes() {
+                return service.getFormTypes();
+            }
+            
+            void buildHandlers() {
+                handlers = InvokerUtil.lookupOpeners( "collectiontype:handler" ).findAll {
+                    if( it.properties.formno ) {
+                        return (it.properties.formno == selectedForm.objid);
+                    }
+                    return true;
+                };
+            }
+            
+        }      
+       ]]>
+   </code>
+   
+   <pages>
+       <page template="com.rameses.enterprise.treasury.collection.CollectionTypePage" />
+   </pages>
+   
+</workunit>

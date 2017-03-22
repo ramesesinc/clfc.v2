@@ -1,0 +1,68 @@
+<workunit>
+    <invokers>
+        <invoker type="rptledger:formActions" action="init" caption="Fix Ledger" target="popup" 
+            role="ADMIN" visibleWhen="#{entity.state=='APPROVED'}" index="50000"/>        
+        <invoker type="rptledgermanual:formActions" action="init" caption="Fix Ledger Information" target="popup"
+            role="ADMIN" visibleWhen="#{entity.state=='APPROVED'}" index="100"/>        
+    </invokers>
+    
+    <code lang="groovy">
+        <![CDATA[
+        
+import com.rameses.rcp.common.*
+import com.rameses.rcp.annotations.*
+import com.rameses.osiris2.client.*
+
+
+public class FixLedgerController 
+{
+    @Caller
+    def caller;
+    
+    @Service('RPTLedgerService')
+    def svc;
+    
+    
+    @Binding
+    def binding;
+    
+    def entity;
+    
+    String title = 'Fix Ledger Information'
+    
+    def info = [:]
+    
+    void init(){
+        info.objid = entity.objid
+        info.taxpayer = entity.taxpayer
+        info.lastyearpaid = entity.lastyearpaid
+        info.partialbasic = entity.partialbasic
+        info.partialbasicint = entity.partialbasicint
+        info.partialsef = entity.partialsef
+        info.partialsefint = entity.partialsefint 
+        info.taxable = entity.taxable;
+    }
+    
+    
+    def fixLedger(){
+        if (MsgBox.confirm('Fix this Ledger?')){
+            svc.fixLedger(info)
+            caller.open();
+            return '_close'
+        }
+    }
+    
+    def getQuarters(){
+        return [1,2,3,4]
+    }
+
+}
+
+
+]]>
+    </code>
+    
+    <pages>
+        <page template="com.rameses.gov.etracs.rpt.ledger.ui.RPTLedgerFixPage" />
+    </pages>
+</workunit>

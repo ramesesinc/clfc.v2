@@ -1,0 +1,117 @@
+<workunit>
+    <invokers>
+        <invoker type="business_application:open" caption="Business Info" action="open" target="window" />
+        <invoker type="global:barcode:51005" caption="Business Application" action="openBarcode" 
+            target="window" expr="#{barcodeid.contains('-')}" />
+
+        <invoker type="extActions" caption="Print Permit"  
+         action="printPermit" visibleWhen="#{entity.state=='COMPLETED'}" index="2" role="LICENSING"/>      
+        
+         <invoker type="extActions" caption="Test Release"  action="release" index="2"/> 
+         <invoker type="extActions" caption="Test Cancel"  action="cancel" index="2"/> 
+    </invokers>
+    
+    <code>
+        <![CDATA[    
+        import com.rameses.rcp.annotations.*
+        import com.rameses.rcp.common.*
+        import com.rameses.osiris2.client.*
+        import com.rameses.osiris2.common.*
+        import com.rameses.common.*;
+        import java.rmi.server.*
+        import com.rameses.util.*;
+        
+        class  BusinessApplicationController extends WorkflowController {
+        
+            @Service("BusinessApplicationWorkflowService")
+            def service;
+            
+            @Service("BusinessPermitService")
+            def permitService;
+            
+            @Service("BusinessApplicationService")
+            def appService;
+            
+            def sections = [];
+            def currentSection;
+            def subform;
+            def barcodeid;
+            
+            @FormId
+            def formId;
+            
+            @FormTitle
+            def formTitle;
+            
+            String entityName = "business_application:section";
+            
+            def open() {
+                if(entity.taskid) {
+                    super.open();
+                }
+                else {
+                    entity = appService.open( [objid: entity.objid] );
+                    buildExtActions();
+                    afterOpen(entity);
+                }
+            }
+            
+            void openBarcode() {
+                entity = service.getTaskFromBarcode( [barcodeid: barcodeid ]);
+                super.open();
+            }
+            
+            void afterOpen(o) {
+                formId = entity.objid;
+                formTitle = "BA:"+entity.appno;
+                reloadSections();
+            }
+            
+            void onEnd() {
+                entity.state = 'COMPLETED';
+            }
+            
+            void reloadSections()  {
+                def handlers = Inv.lookupOpeners("business_application:section", [entity:entity, task:task]);
+                sections.clear();
+                sections.addAll( 
+                    handlers.findAll {
+                        def vw = it.properties.visibleWhen;
+                        return  ((!vw)  ||  ExpressionResolver.getInstance().evalBoolean( vw, [entity:entity, task:task] ));     
+                    }
+                );    
+                if(sections && !currentSection) {
+                    currentSection = sections[0];
+                }
+            }
+
+            public String getTitle() {
+                return " Application No. " + entity?.appno + (task!=null ?  " ["+ task.title + "]" : "" );
+            }
+            
+            public void afterSignal( o ) {
+                if(o.assessor) entity.assessor = o.assessor;
+                if(o.approver) entity.approver = o.approver;
+                reloadSections();
+            }
+            
+            public def printPermit() {
+                return  Inv.lookupOpener("business_permit:print", [entity: entity] );
+            }
+            
+            void release() {
+                appService.release( entity );
+            }
+            
+            void cancel() {
+                appService.cancel( entity );
+            }
+        }
+        ]]>
+    </code>
+    
+    <pages>
+        <page template="com.rameses.gov.etracs.bpls.view.ApplicationFormPage"/>
+    </pages>
+    
+</workunit>

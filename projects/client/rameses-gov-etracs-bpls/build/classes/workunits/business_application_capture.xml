@@ -1,0 +1,179 @@
+<workunit>
+    
+    <invokers>
+        <invoker folderid="/home/business/business_application" 
+                 caption="Capture"  action="start" target="window" 
+            role="BUSINESSINFO" index="51" permission="business.capture"/>
+          
+        <invoker type="lobActions" caption="Add" action="lob.add"  immediate="true"/>
+        <invoker type="lobActions" caption="Remove" action="lob.remove" immediate="true" 
+            visibleWhen="#{lob.selectedItem!=null}"/>
+        <invoker type="lobActions" caption="Map Line of Business" action="lob.reclassify" 
+            immediate="true" visibleWhen="#{lob.selectedItem!=null}"/>
+    </invokers>
+    
+    <code>
+        <![CDATA[    
+        import com.rameses.rcp.annotations.*
+        import com.rameses.rcp.common.*
+        import com.rameses.osiris2.client.*
+        import com.rameses.osiris2.common.*
+        import com.rameses.util.*;
+        import java.rmi.server.*;
+        
+        class BusinessCapture extends PageFlowController {
+        
+            @Service("BusinessCaptureService")
+            def service;
+            
+            @Script("BusinessApplicationUtil")
+            def application;
+            
+            @Script("BusinessVerificationUtil")
+            def verifyList;
+            
+            @Script("BusinessOwnerUtil")
+            def owner;
+            
+            @Script("BusinessLobUtil")
+            def lob;
+        
+            @Script("BusinessAddressUtil")
+            def address;
+
+            @Script("BusinessCaptureSearchUtil")
+            def capture;
+            
+            @FormTitle
+            def title = "Capture Business";
+            
+            def capturetype = 'manual';
+            def entity;
+            def sources;
+            
+            def appStates = ['PROCESSING', 'ACTIVE'];
+            def taskStates = [
+                [id:'reassessment', title:'Assessment'],
+                [id:'approval', title:'Approval'],
+                [id:'payment', title:'Payment'],
+                [id:'release', title:'Released']
+            ];
+            
+            def start() {
+                sources = service.getSources();
+                return super.start();
+            }
+            
+            void initManual() {
+                application.init([ txnmode:'CAPTURE']);
+                lob.reset();
+            }
+
+            void openEntry() {
+                capture.openEntry();
+                entity.txnmode = 'CAPTURE';
+                application.init(entity);
+                lob.reset();
+            }
+            
+            void initAddressType() {
+                if( application.copyOwnerAddress ) {
+                    owner.reload();
+                    entity.business.address = entity.business.owner.address;
+                    address.addressType = entity.business.address.type;
+                }
+                else {
+                    address.addressType = application.addressType;
+                }
+            }
+            
+            void save() {
+                owner.verify();
+                address.verify();
+                lob.verify();
+                if( !MsgBox.confirm("You are about to save this record. Proceed?")) {
+                    throw new BreakException();
+                }
+                application.save();
+            }
+            
+            
+        }
+        ]]>
+        
+    </code>
+    
+    <pageflow>
+        <start>
+            <transition to="selecttype"/>
+        </start>
+
+        <page name="selecttype" title="Select type of capture">
+            <transition to="end" caption="Close" />
+            <transition to="choosetype" caption="Next"/>
+        </page>
+        
+        <process name="choosetype" >
+            <transition to="edit-name" cond="#{capturetype=='manual'}" action="initManual"/>
+            <transition to="search" cond="#{capturetype=='datasource'}"/>
+        </process>
+        
+        <page name="search" title="Search Business @ #{capture.query.source}">
+            <transition to="selecttype" caption="Back" />
+            <transition to="edit-name" caption="Next" name="next"  action="openEntry"/>
+        </page>
+        
+        <page name="edit-name" title="Edit Business Name">
+            <transition to="selecttype" caption="Back" name="back1" visibleWhen="#{capturetype=='manual'}"/>
+            <transition to="search" caption="Back" name="back2" visibleWhen="#{capturetype=='datasource'}"/>
+            <transition to="check-name" caption="Next" name="next"  immediate="false" />
+        </page>
+        
+        <process name="check-name" action="verifyList.check">
+            <transition to="verify-name" cond="#{verifyList.pass==false}"/>
+            <transition to="edit-owner" cond="#{verifyList.pass==true}"/>
+        </process>
+
+        <page name="verify-name" title="Verify Business Name">
+            <transition to="edit-name" caption="Back" mnemonic="B"/>
+            <transition to="edit-owner" caption="Next" name="next" mnemonic="N" action="verifyList.verify"/>
+        </page>        
+        
+        <page name="edit-owner" title="Edit Business Owner">
+            <transition to="edit-name" caption="Back" />
+            <transition to="edit-address" caption="Next"  />
+        </page>
+        
+        <page name="edit-address" title="Edit Business Address" action="initAddressType">
+            <transition to="edit-owner" caption="Back" />
+            <transition to="edit-lob" caption="Next"  />
+        </page>
+
+        <page name="edit-lob" title="Edit Line of Buisness">
+            <transition to="edit-address" caption="Back" />
+            <transition to="edit-lob" caption="Next"  />
+        </page>
+
+
+        <page name="success" title="Business Registered">
+            <transition to="choosetype" caption="Add Another" action="addAnother"/>
+        </page>
+
+        <end/>
+    </pageflow>
+    
+    <pages>
+        <page name="selecttype" template="com.rameses.gov.etracs.bpls.view.SelectCaptureTypePage"/>
+        <page name="search" template="com.rameses.gov.etracs.bpls.view.SearchBusinessCapturePage"/>
+        
+        <page name="edit-name" template="com.rameses.gov.etracs.bpls.view.EditBusinessNamePage"/>
+        <page name="verify-name" template="com.rameses.gov.etracs.bpls.view.BusinessNameVerificationPage"/>
+        
+        <page name="edit-owner" template="com.rameses.gov.etracs.bpls.view.EditBusinessOwnerPage"/>
+        <page name="edit-address" template="com.rameses.gov.etracs.bpls.view.EditBusinessAddressPage"/>
+        <page name="edit-lob" template="com.rameses.gov.etracs.bpls.view.CaptureLobPage"/>
+        
+        <page name="success" template="com.rameses.gov.etracs.bpls.view.SuccessPage"/>
+    </pages>
+    
+</workunit>

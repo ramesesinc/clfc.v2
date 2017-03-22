@@ -1,0 +1,10 @@
+<workunit extends="wtemplates/ListController.xml"  serviceName="CashBookService" entityName="cashbook">
+    <invokers>
+        <invoker folderid="/explorer/master/treasury" caption="Cash Books" index="1" 
+            role="MASTER,COLLECTOR,LIQUIDATING_OFFICER,CASHIER" permission="cashbook.view"/>
+        
+        <invoker type="home.action" caption="Cash Books" index="50" 
+            role="MASTER,COLLECTOR,LIQUIDATING_OFFICER,CASHIER" permission="cashbook.view" target="window"/>
+            
+   </invokers>
+</workunit>

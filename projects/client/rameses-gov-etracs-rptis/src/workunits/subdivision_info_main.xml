@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workunit>
+    <invokers>
+        <invoker type="subdivision:info" caption="General Info" index="-20"/>
+        <invoker type="formActions" caption="Remote Support" mnemonic="r" name="popupSupportInfo" visibleWhen="#{showSupport}" category="subdivision:info:main" index="100000" role="ADMIN"/>
+   </invokers>
+   <code>
+
+<![CDATA[
+
+import com.rameses.rcp.annotations.* 
+import com.rameses.rcp.common.* 
+import com.rameses.osiris2.client.*
+import com.rameses.osiris2.common.*
+
+class SubdivisionMainInfoController
+{
+    @Binding
+    def binding;
+    
+    @Caller
+    def caller;
+    
+    def entity;
+    
+    String title = 'General Information'
+    
+    
+    def popupSupportInfo(def inv) {
+        def popupMenu = new PopupMenuOpener();
+        def list = InvokerUtil.lookupOpeners( inv.properties.category, [entity:entity] );
+        list.each{
+            popupMenu.add( it );
+        }
+        return popupMenu;
+    }
+    
+    def getShowSupport(){
+        if (!'municipality'.equalsIgnoreCase(OsirisContext.env.ORGCLASS))
+            return false;
+        if (entity.state != 'FORAPPROVAL') 
+            return false;
+        return true;
+    }
+    
+}
+]]>
+   </code>
+    
+    <pages> 
+        <page template="com.rameses.gov.etracs.rpt.subdivision.ui.SubdivisionInfoMainPage"/>
+    </pages>
+</workunit>
+
+

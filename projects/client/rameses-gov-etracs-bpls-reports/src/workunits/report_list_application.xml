@@ -1,0 +1,88 @@
+<workunit extends="wtemplates/gov/bp/ReportController.xml" >
+    <invokers>
+        <invoker folderid="/explorer/report/bpls" action="init" role="REPORT" 
+            caption="Application Listing" target="window" index="-90"/>
+    </invokers>
+    
+    <code>
+    <![CDATA[
+import com.rameses.rcp.common.*;
+import com.rameses.rcp.annotations.*;
+import com.rameses.osiris2.common.*;
+import com.rameses.osiris2.client.*;
+import com.rameses.osiris2.reports.*;
+
+public class ApplicationListingReportController extends com.rameses.etracs.shared.AsyncReportController {
+
+    @Service('LobClassificationService') 
+    def lobClassficationSvc;
+
+    @Service('BarangayLookupService') 
+    def brgySvc;
+
+    @Service('BPApplicationListingReportService')
+    def svc 
+
+    String title = "Application Listing";
+    String reportpath = 'com/rameses/gov/etracs/bpls/reports/'
+    String reportName = reportpath + 'ApplicationListing.jasper'
+
+    def formControl = [
+        getFormControls: {
+            return [
+                new FormControl( "integer", [caption:'Year', name:'entity.year', required:true, preferredSize:'100,20', captionWidth:100]),
+
+                new FormControl( "checkbox", [caption:'App Type', text:'NEW', name:'entity.type_new', immediate:true, preferredSize:'0,20', captionWidth:100 ]),
+                new FormControl( "checkbox", [caption:'',  text:'RENEW', name:'entity.type_renew',immediate:true, preferredSize:'0,20', captionWidth:100 ]),
+                new FormControl( "checkbox", [caption:'',  text:'RETIRE', name:'entity.type_retire', immediate:true, preferredSize:'0,20', captionWidth:100 ]),
+
+                new FormControl( "checkbox", [caption:'State', text:'INFO', name:'entity.state_info', immediate:true, preferredSize:'0,20', captionWidth:100 ]),
+                new FormControl( "checkbox", [caption:'',  text:'ASSESSMENT', name:'entity.state_assessment', immediate:true, preferredSize:'0,20', captionWidth:100 ]),
+                new FormControl( "checkbox", [caption:'',  text:'PAYMENT', name:'entity.state_payment', immediate:true, preferredSize:'0,20', captionWidth:100 ]),                                                
+                new FormControl( "checkbox", [caption:'',  text:'RELEASE', name:'entity.state_release', immediate:true, preferredSize:'0,20', captionWidth:100 ]),
+                new FormControl( "checkbox", [caption:'',  text:'COMPLETED', name:'entity.state_completed', immediate:true, preferredSize:'0,20', captionWidth:100 ]),                        
+
+                new FormControl( "combo", [caption:'Barangay', name:'entity.barangay', items:'barangaylist',  expression:'#{item.name}', preferredSize:'0,20', captionWidth:100]),
+                new FormControl( "combo", [caption:'Classification', name:'entity.classification', items:'classificationlist', expression:'#{item.name}', preferredSize:'0,20', captionWidth:100]),
+                new FormControl( "lookup", [caption:'Line of Business', name:'entity.lob', handler:'lob:lookup', expression:'#{item.name}', preferredSize:'0,20', captionWidth:100]),
+            ]    
+        },
+    ] as FormPanelModel; 
+
+    
+    void buildReportData(entity, asyncHandler){
+        svc.getReport( entity, asyncHandler );
+    }
+
+    Map getParameters(){
+        def apptypes = [];
+        if (entity.type_new) apptypes << 'NEW';
+        if (entity.type_renew) apptypes << 'RENEW';
+        if (entity.type_retire) apptypes << 'RETIRE';
+        
+        return [
+            APPYEAR         :   entity.year,
+            STATE           :   ( apptypes? apptypes.join(', '): '(ALL)'), 
+            BARANGAYNAME    :   ( entity.barangay? entity.barangay.name : '(ALL)' ),
+            CLASSIFICATION  :   ( entity.classification? entity.classification.name : '(ALL)' ),
+            LOB             :   ( entity.lob? entity.lob.name : '(ALL)' ),
+        ] 
+   }
+
+    List getStatelist() {
+        return svc.getApplicationStates();
+    }
+
+    List getBarangaylist() {
+        return brgySvc.getList([:]);
+    }
+
+    List getClassificationlist() {
+        return lobClassficationSvc.getList([:]);
+    }
+
+}
+    ]]>
+    </code>
+    
+</workunit>

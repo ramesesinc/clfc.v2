@@ -1,0 +1,53 @@
+<workunit>
+    <invokers>
+        <invoker type="business_application:section" caption="General" index="0" />
+        
+        <!-- toolbars -->
+        <invoker type="formActions" caption="View Business" index="0" action="viewBusiness"/>        
+    </invokers>
+    
+    <code>
+        <![CDATA[    
+        import com.rameses.rcp.annotations.*
+        import com.rameses.rcp.common.*
+        import com.rameses.osiris2.client.*
+        import com.rameses.osiris2.common.*
+        import com.rameses.common.*;
+        import java.rmi.server.*
+        import com.rameses.util.*;
+        
+        
+        class  BusinessApplicationOptionInfoController {
+        
+            def entity;
+            def task;
+            
+            String title = "General Information"
+            
+            String entityName = "business_application:section:general";
+           
+            def lobModel = [
+                fetchList: { o->
+                    return entity.lobs;
+                }
+            ] as BasicListModel;
+            
+            def appInfoModel = [
+                fetchList: { o->
+                    return entity.appinfos;
+                }
+            ] as BasicListModel;
+
+            def viewBusiness() {
+               return Inv.lookupOpener( "business:open", [entity:entity.business] );
+            }
+
+        }
+        ]]>
+    </code>
+    
+    <pages>
+        <page template="com.rameses.gov.etracs.bpls.view.ApplicationFormGeneralInfo"/>
+    </pages>
+    
+</workunit>

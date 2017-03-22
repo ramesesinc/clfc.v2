@@ -1,0 +1,116 @@
+<workunit>
+    <invokers>
+        <invoker folderid="/explorer/report/treasury" action="init" caption="Statement of Receipts Sources" target="window" index="3" 
+            role="REPORT" permission="srs.viewreport" />
+
+        <invoker type="formActions" action="_close" caption="Cancel" mnemonic="c"  icon="images/toolbars/cancel.png" immediate="true" visibleWhen="#{mode=='init'}"/>
+        <invoker type="formActions" action="print" caption="Print" mnemonic="p" shortcut="ctrl + P" visibleWhen="#{mode=='init'}"/>
+        <invoker type="formActions" action="preview" caption="Preview" mnemonic="v"   visibleWhen="#{mode=='init'}"/>
+        <invoker type="formActions" action="_close" caption="Close" mnemonic="c"  icon="images/toolbars/cancel.png" immediate="true" visibleWhen="#{mode=='view'}"/>
+        <invoker type="formActions" action="back" caption="Back" mnemonic="c"  immediate="true" visibleWhen="#{mode=='view'}"/>
+        <invoker type="formActions" action="export" caption="Export to Microsoft Excel" immediate="true" visibleWhen="#{mode=='view'}"/>
+    </invokers>
+    
+    <code>
+
+        <![CDATA[
+        import com.rameses.rcp.common.*;
+        import com.rameses.rcp.annotations.*;
+        import com.rameses.osiris2.client.*;
+        import com.rameses.osiris2.reports.*;
+        import com.rameses.gov.treasury.tool.statementofreceipts.*;
+
+        class StatementOfReceiptsController extends com.rameses.etracs.shared.ReportController {
+        
+            @Service('SREStatementOfReceiptsService') 
+            def svc;
+            
+            @Service('OrgService')
+            def orgSvc;
+
+            String title = 'Statement of Receipts Sources'
+            String reportpath = 'com/rameses/gov/sre/etracs/reports/'
+            String reportName = reportpath + 'statement_of_receipts_sources.jasper'
+            
+            def months;
+            def acctgroups;
+            def funds;
+            def data;
+
+            def periods = [
+                [type:'quarterly', title:'Quarterly'],
+                [type:'monthly', title:'Monthly'],
+                [type:'daily', title:'Daily'],
+                [type:'asofqtr', title:'As of Quarter'],
+                [type:'asofmonth', title:'As of Month'], 
+                [type:'asofday', title:'As of Day'] 
+            ];
+            
+            def detailtypes = [true, false];
+
+            def initReport(){
+                entity.optwithdetail = false;  
+                entity.type = 'standard'
+                entity.period = periods[0]; 
+                entity.withdetail = false;                
+                months = dtSvc.getMonthsByQtr(0);                
+                def options = svc.getReportOptions();
+                acctgroups = options.acctgroups?.collect{ it.acctgroup };
+                funds = options.funds; 
+                return 'default'
+            }
+            
+            def getReportData(){
+                def var = orgSvc.getRoot();
+                entity.lgu = var.name;
+                data = svc.getReport(entity);
+                return data.reportdata
+            }
+
+            def formControl = [
+                getFormControls: {
+                    return [
+                        new FormControl( "combo", [caption:'Period', name:'entity.period', items:'periods', expression:'#{item.title}', immediate:true, preferredSize:'200,20', captionWidth:120]), 
+                        new FormControl( "integer", [caption:'Year', name:'entity.year', required:true, depends:'entity.period', visibleWhen:'#{entity.period?.type=="quarterly"}',  preferredSize:'80,20', captionWidth:120]),
+                        new FormControl( "combo", [caption:'Quarter', name:'entity.qtr', items:'quarters', immediate:true, depends:'entity.period', visibleWhen:'#{entity.period?.type=="quarterly"}', preferredSize:'80,20', captionWidth:120]),
+                        new FormControl( "combo", [caption:'Month', name:'entity.month', items:'monthsByQtr', depends:'entity.qtr', expression:'#{item.name}', dynamic:true, preferredSize:'80,20', captionWidth:120]),
+                        new FormControl( "combo", [caption:'Report Type', name:'entity.type', items:'reportTypes', expression:'#{item.name}', dynamic:true, preferredSize:'250,20', captionWidth:120]), 
+                        new FormControl( "combo", [caption:'Acct Group', name:'entity.acctgroup', items:'acctgroups', preferredSize:'250,20', captionWidth:120]),  
+                        new FormControl( "combo", [caption:'Fund', name:'entity.fund', items:'funds', expression:'#{item.title}', dynamic:true, preferredSize:'250,20', captionWidth:120])
+                    ]    
+                },
+           ] as FormPanelModel;
+
+           Map getParameters(){
+                return [
+                    TITLE:data.title, 
+                    PERIOD:data.period, 
+                    TOTALACTUAL: data.totalactual, 
+                    TOTALTARGET: data.totaltarget, 
+                    TOTALEXCESS: data.totalexcess, 
+                    TOTALPERCENTAGE: data.totalpercentage,
+                    TOTALPERCENTAGEVALUE: data.totalpercentagevalue 
+                ] 
+           }
+
+           def getReportTypes(){
+                return ['standard', 'extended','details']
+           }
+           
+           void export(){
+                EsreXlsxExporter exporter = new EsreXlsxExporter();
+                exporter.entity = entity;
+                exporter.data = data.reportdata;
+                exporter.export();
+           }
+
+        }
+
+        ]]>        
+    </code>
+    <pages>
+        <page template="com.rameses.gov.treasury.accounts.SRSCriteriaPage" />
+        <page name="preview" template="com.rameses.osiris2.common.ui.ReportPreviewPage"/>
+    </pages>                
+
+</workunit>

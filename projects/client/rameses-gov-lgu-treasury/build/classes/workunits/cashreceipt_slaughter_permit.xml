@@ -1,0 +1,43 @@
+<workunit extends="wtemplates/gov/treasury/BasicCashReceiptController.xml">
+    <invokers>
+        <invoker type="cashreceipt:slaughter" action="init" />
+    </invokers>
+    
+    <code>
+        <![CDATA[    
+        import com.rameses.rcp.annotations.*
+        import com.rameses.rcp.common.*
+        import com.rameses.osiris2.client.*
+        import com.rameses.osiris2.common.*
+        import com.rameses.enterprise.treasury.cashreceipt.*
+        
+        class  SlaughterPermitController extends BasicCashReceipt {
+            def permitAmount;
+            def account;
+        
+            def getLookupAccts() {
+                return InvokerUtil.lookupOpener("slaughteraccount:lookup", [
+                    "query.collectiontypeid" : entity.collectiontype.objid,
+                    onselect : { o ->
+                        account = o;
+                        entity.items = [o];
+                    }
+                ]);
+            }
+            
+            void setPermitAmount( amount ) {
+                this.permitAmount = amount;
+                entity.amount = amount;
+                entity.items[0].amount = amount;
+                updateBalances();
+            }
+        }
+        ]]>
+        
+    </code>
+    
+    <pages>
+        <page name="default" template="com.rameses.gov.treasury.cashreceipt.SlaughterPermitPage"/>
+    </pages>
+    
+</workunit>

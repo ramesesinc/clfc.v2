@@ -1,0 +1,59 @@
+<workunit>
+    
+    <invokers>
+        <invoker type="business_application:section" caption="Assessment" index="1" action="load"/>
+        <!-- toolbars -->
+        <invoker type="formActions" caption="Calculate" role="ASSESSOR" 
+            action="assessmentInfo.calculate" 
+            xvisibleWhen="#{task.state.contains('assessment) &amp;&amp; task?.owner==true}"/>
+        <invoker type="formActions" caption="Save" role="ASSESSOR" 
+            action="save" xvisibleWhen="#{task.state.contains('assessment) &amp;&amp; task?.owner==true}"/>
+    </invokers>
+    
+    <code>
+        <![CDATA[    
+        import com.rameses.rcp.annotations.*
+        import com.rameses.rcp.common.*
+        import com.rameses.osiris2.client.*
+        import com.rameses.osiris2.common.*
+        import com.rameses.common.*;
+        import java.rmi.server.*
+        import com.rameses.util.*;
+        
+        class  BusinessApplicationAssessmentController {
+        
+            @Binding
+            def binding;
+
+            @Caller
+            def caller;
+                        
+            @Script("BusinessAssessmentInfoUtil")
+            def assessmentInfo;
+            
+            @Service("BusinessApplicationService")
+            def appSvc;
+            
+            String title = "Assessment";
+            def task;
+            def entity;
+            String entityName = "business_application:assessment";
+            
+            public void load() {
+                assessmentInfo.analyzer = false;
+                assessmentInfo.load();
+            }
+            
+            public void save() {
+                appSvc.saveAssessment( entity );
+            }
+            
+        }
+        ]]>
+    </code>
+    
+    <pages>
+        <page template="com.rameses.gov.etracs.bpls.view.AssessmentInfoPage"/>
+    </pages>
+    
+</workunit>

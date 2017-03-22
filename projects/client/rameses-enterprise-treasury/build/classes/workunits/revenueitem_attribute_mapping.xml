@@ -1,0 +1,81 @@
+<workunit>
+    <invokers>
+        <invoker folderid="/explorer/master/treasury"  caption="Revenue Item Mapping" index="2" role="MASTER" />
+   </invokers>
+   <code>
+    <![CDATA[
+    import com.rameses.osiris2.common.*;
+    import com.rameses.rcp.common.*;
+    import com.rameses.rcp.annotations.*;
+    import com.rameses.osiris2.client.*;
+    import com.rameses.common.*;
+    import java.rmi.server.UID;
+
+    public class RevenueItemAttributeMappingController  {
+    
+        @Service("RevenueItemAttributeService")
+        def service;
+        
+        def selectedAttribute;
+        def selectedItem;
+        def searchtext;
+        
+        def getAttributeTypes() {
+            return service.getAttributeTypes();
+        }
+        
+        void search() {
+            listModel.reload();
+        }
+        
+        def listModel = [
+            fetchList : { o->
+                o.searchtext = searchtext;
+                o.attributeid = selectedAttribute.objid;
+                return service.getMappingList(o);
+            }
+        ] as EditorListModel;
+        
+        def getLookupAccount() {
+            def p = [:];
+            def h = selectedAttribute.handler;
+            boolean islov = false;
+            
+            if( h.startsWith("lov:")) {
+                p.key = h.split(":")[1];
+                h = "lov:lookup";
+                islov = true;
+            }
+            p.onselect = { o->
+                def z = [objid:'REVATT'+new UID()];
+                z.revitemid = selectedItem.objid; 
+                if(islov) {
+                    z.account = [ objid:o, title:o, code: o ];
+                }
+                else {
+                    z.account = o;
+                }
+                z.attribute = selectedAttribute;
+                service.create( z );
+                selectedItem.account = z.account;
+                selectedItem.attributeid = z.objid;
+                return "_close";
+            };
+            p.onempty = { o->
+                service.removeEntity( [objid: selectedItem.attributeid] );
+                selectedItem.account = [:];
+            }
+            
+            
+            return Inv.lookupOpener( h, p ); 
+        }
+        
+    }    
+    ]]>
+   </code>
+   
+   <pages>
+       <page template="com.rameses.enterprise.treasury.revitem.RevenueItemMappingPage"/>
+   </pages>
+   
+</workunit>

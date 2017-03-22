@@ -1,0 +1,3 @@
+"lobModel.item.assessmenttype" [ 1==1 ] {
+    editable: false;
+}

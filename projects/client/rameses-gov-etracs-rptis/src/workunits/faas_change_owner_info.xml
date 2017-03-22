@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workunit>
+    <invokers>
+        <invoker type="faas:changeinfo" action="init" 
+            caption="Owner and Administrator" target="popup"  
+            role="ADMIN" permission="faas.change_owner_info" index="2" />
+        
+        <invoker type="formActions" action="_close" caption="Cancel" mnemonic="c" immediate="true" />
+        <invoker type="formActions" action="save" caption="Save" mnemonic="s" />
+   </invokers>
+   <code>       
+<![CDATA[
+
+import com.rameses.rcp.annotations.* 
+import com.rameses.rcp.common.* 
+import com.rameses.osiris2.client.*
+import com.rameses.osiris2.common.*
+import com.rameses.gov.etracs.rpt.faas.change.ui.*;
+
+
+public class ChangeOwnerInfoController extends ChangeFaasInfoController
+{
+    String title = 'Modify Owner Information';
+    
+    
+    public def getAction(){
+        return 'change_owner_info';
+    }
+    
+    
+    public def getModifiedEntity(){
+        return [
+            taxpayer      : entity.taxpayer,
+            owner         : entity.owner,
+            administrator : entity.administrator,
+        ]
+    }
+    
+    public void updateEntityInfo(newinfo){
+        entity.taxpayer      = newinfo.taxpayer
+        entity.owner         = newinfo.owner
+        entity.administrator = newinfo.administrator
+    }
+    
+    
+    def getLookupTaxpayer(){
+        return InvokerUtil.lookupOpener('entity:lookup',[
+            onselect : { 
+                updateOwnershipInfo(it);
+            },
+            onempty  : { 
+                changeinfo.newinfo.taxpayer = null;
+                changeinfo.newinfo.owner    = null;
+            } 
+        ])
+    }     
+    
+    
+    void updateOwnershipInfo(taxpayer){
+        def address = taxpayer.address.text 
+        changeinfo.newinfo.taxpayer = taxpayer;
+        changeinfo.newinfo.taxpayer.address = address
+        changeinfo.newinfo.owner = [name:taxpayer.name, address:address];
+        binding.refresh('changeinfo.*');
+    }    
+     
+}
+       
+]]>       
+    </code>
+
+    <pages> 
+        <page template="com.rameses.gov.etracs.rpt.faas.change.ui.ChangeOwnerInfoPage"/>
+    </pages>
+</workunit>
+
+

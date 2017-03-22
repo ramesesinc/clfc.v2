@@ -1,0 +1,71 @@
+<workunit>
+    <invokers>
+        <invoker folderid="/home/business/business_application" caption="Change Owner"  
+            action="start" target="window" role="BUSINESSINFO" index="100" />
+    </invokers>
+    
+    <code>
+         <![CDATA[    
+        import com.rameses.rcp.annotations.*
+        import com.rameses.rcp.common.*
+        import com.rameses.osiris2.client.*
+        import com.rameses.osiris2.common.*
+        import java.rmi.server.*;
+        import com.rameses.util.*;
+        
+        public class BusinessChangeOwnerApplication extends PageFlowController {
+        
+            @Script("BusinessSearchUtil")
+            def searchList;
+            
+            @Script("BusinessApplicationUtil")
+            def application;
+
+            @Script("BusinessOwnerUtil")
+            def owner;
+            
+            def entity;
+            
+            void open() {
+                application.init( [businessid:searchList.selectedItem.objid, apptype: 'CHANGE_BUSINESS_OWNER'] );
+            }
+            
+            void submit() {
+                if( entity.has_processing == true ) {
+                    if(!MsgBox.confirm('There are still open application processed. Continuing will update their information. Proceed?')) 
+                        throw new BreakException();
+                }  
+                else {
+                    if(!MsgBox.confirm('You are about to update the business information. Proceed?')) 
+                        throw new BreakException();
+                }
+                application.save();
+                MsgBox.alert('Update completed');
+            }
+        }
+        ]]>
+    </code>    
+    
+    <pageflow>
+        <start>
+            <transition to="search" />
+        </start>
+        
+        <page name="search" title="Search Business Name (Change Owner)">
+            <transition to="edit-owner" caption="Next" name="next" mnemonic="N" immediate="false" action="open"/>
+        </page>
+        
+        <page name="edit-owner" title="Business Owner">
+            <transition to="search" caption="Back" mnemonic="B" name="back" />
+            <transition to="end" caption="Submit" name="save" mnemonic="N" action="submit" />
+        </page>
+
+        <end/>
+    </pageflow>
+    
+    <pages>
+        <page name="search" template="com.rameses.gov.etracs.bpls.view.SearchBusinessPage"/>
+        <page name="edit-owner" template="com.rameses.gov.etracs.bpls.view.EditBusinessOwnerPage"/>
+    </pages>
+    
+</workunit>

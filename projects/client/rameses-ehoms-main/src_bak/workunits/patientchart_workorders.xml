@@ -1,0 +1,5 @@
+<workunit> 
+    <invokers>
+        <invoker type="patientchart:option" index="2" caption="Work Orders"/>
+    </invokers>   
+</workunit>

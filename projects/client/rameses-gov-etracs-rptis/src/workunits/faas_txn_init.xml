@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workunit extends="rpt_wtemplates/FAASTxnInitController.xml">
+    <invokers>
+        <invoker type="quick_launcher" code="TR01" action="init" caption="Transfer of Ownership" 
+                 txntype="TR" role="APPRAISER,EXAMINER,RECEIVER" permission="faas.createTransfer" index="1"  />
+        <invoker folderid="/explorer/txn/rpt/online" action="init" caption="Transfer of Ownership" 
+                 txntype="TR" role="APPRAISER,EXAMINER,RECEIVER" permission="faas.createTransfer" index="1"  />
+        <invoker folderid="/home/rpt/txn" action="init" caption="Transfer of Ownership" 
+                 txntype="TR" role="APPRAISER,EXAMINER,RECEIVER" permission="faas.createTransfer" index="1"  />
+        
+        <invoker type="quick_launcher" code="CC01" action="init" caption="Change Classification" 
+                 txntype="CC" role="APPRAISER,EXAMINER,RECEIVER" permission="faas.createChangeClassification" index="5"  />
+        <invoker folderid="/explorer/txn/rpt/online" action="init" caption="Change Classification" 
+                 txntype="CC" role="APPRAISER,EXAMINER,RECEIVER" permission="faas.createChangeClassification" index="5"  />
+        <invoker folderid="/home/rpt/txn" action="init" caption="Change Classification" 
+                 txntype="CC" role="APPRAISER,EXAMINER,RECEIVER" permission="faas.createChangeClassification" index="5"  />
+        
+        <invoker type="quick_launcher" code="RE01" action="init" caption="Re-Assessment" 
+                 txntype="RE" role="APPRAISER,EXAMINER,RECEIVER" permission="faas.createReassessment" index="8"  />
+        <invoker folderid="/explorer/txn/rpt/online" action="init" caption="Re-Assessment" 
+                 txntype="RE" role="APPRAISER,EXAMINER,RECEIVER" permission="faas.createReassessment" index="8"  />
+        <invoker folderid="/home/rpt/txn" action="init" caption="Re-Assessment" 
+                 txntype="RE" role="APPRAISER,EXAMINER,RECEIVER" permission="faas.createReassessment" index="8"  />
+                    
+    </invokers>
+</workunit>
+
+

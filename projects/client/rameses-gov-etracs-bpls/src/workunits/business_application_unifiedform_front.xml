@@ -1,0 +1,68 @@
+<workunit>
+    <invokers>
+        <invoker type="business_application:unifiedform" caption="Print Front" action="viewReport" index="1"/>
+
+        <!--
+        <invoker type="business_application:new:formActions" visibleWhen1="#{state=='save-success'}"
+            caption="Print Application" action="viewReport" index="10" icon="images/toolbars/printer.png"/>
+        -->
+        <!--
+        <invoker type="business_application:section:formActions" 
+            caption="Print Unified Form" action="viewReport" index="9"  icon="images/toolbars/printer.png"/>
+        -->
+        
+        <invoker type="formActions" caption="Close" action="_close"/>
+    </invokers>
+    
+    <code>
+        <![CDATA[    
+        import com.rameses.rcp.annotations.*
+        import com.rameses.rcp.common.*
+        import com.rameses.osiris2.client.*
+        import com.rameses.osiris2.common.*
+        import java.rmi.server.*;
+         import com.rameses.osiris2.reports.*;
+        
+        class  BusinessApplicationPrintoutReportController  {
+        
+            def data;
+            def entity;
+            def title = "Business Application"
+            
+            def reportPath = "com/rameses/gov/etracs/bpls/reports/unifiedform/"
+            
+            @Service("ReportParameterService") 
+            def paramsvc
+            
+            @Service("BusinessApplicationUnifiedFormService") 
+            def service;
+         
+            @FormId
+            String formId;
+            
+            @FormTitle
+            String formTitle;
+            
+            void viewReport() {
+                data = service.getReport( [objid: entity.objid] );
+                report.viewReport();
+            } 
+            
+            def report = [
+                getReportName : { return reportPath + "main.jasper" },
+                getReportData : { return  data },
+                getParameters : { return paramsvc.getStandardParameter() },
+                getSubReports : { return [
+                    new SubReport("ITEM", reportPath + "item.jasper")
+                ] as SubReport[]; }
+            ] as ReportModel
+           
+        }
+        ]]>
+    </code>
+    
+    <pages>
+        <page template="com.rameses.osiris2.common.ui.ReportPreviewPage"/>
+    </pages>
+    
+</workunit>
