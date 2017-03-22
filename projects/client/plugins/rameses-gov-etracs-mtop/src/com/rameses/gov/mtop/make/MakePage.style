@@ -1,0 +1,7 @@
+"selectedModel" [mode != 'edit'] {
+    enabled:false;
+}
+
+"selectedModel" [mode == 'edit'] {
+    enabled:true;
+}

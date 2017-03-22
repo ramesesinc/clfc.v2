@@ -1,0 +1,11 @@
+"permit.txnno|permit.txndate" [permit.txnmode != 'CAPTURE'] {
+    readonly:true;
+}
+
+"permit.txnno|permit.txndate" [permit.txnmode == 'CAPTURE'] {
+    readonly:false;
+}
+
+"permit.txnno|permit.txndate" [permit.objid != null] {
+    readonly:true;
+}

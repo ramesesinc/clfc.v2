@@ -1,0 +1,56 @@
+<workunit>
+    <invokers>
+        <invoker type="waterworks:generalinfo" action="init" caption="General Information" target="window"/>
+    </invokers>
+    
+    <code>
+        <![CDATA[
+        import com.rameses.rcp.common.*;
+        import com.rameses.rcp.annotations.*;
+        import com.rameses.osiris2.client.*;
+        import com.rameses.osiris2.common.*
+        import java.rmi.server.UID;
+        import java.util.*;
+        
+        class GeneralInfoController{
+        
+            @Service('WaterworksAccountService')
+            def acctSvc;
+        
+            @Service('WaterworksMeterService')
+            def meterSvc;
+            
+            def entity;
+            def opener;
+            def data;
+            
+            void init(){
+                entity.address = acctSvc.getAddress(entity);
+                entity.location = meterSvc.getLocation(['objid':entity.meterid]);
+                opener = Inv.lookupOpener("address:component:local",[entity:entity.address]);
+                data = [
+                    [name:'January',value:20],
+                    [name:'February',value:10],
+                    [name:'March',value:26],
+                    [name:'April',value:30],
+                    [name:'May',value:15],
+                    [name:'June',value:23]
+                ];
+            }
+            
+            def showEntity(){
+                def action = "";
+                if(entity.accounttype == 'INDIVIDUAL') action = "individualentity:open";
+                if(entity.accounttype == 'JURIDICAL') action = "juridicalentity:open";
+                def params = ['objid':entity.entity.objid];
+                return Inv.lookupOpener(action,[entity:params]);
+            }
+
+        }
+        ]]>
+    </code>
+    
+    <pages>
+        <page template="com.rameses.gov.etracs.waterworks.account.GeneralInfoPage"/>
+    </pages>
+</workunit>

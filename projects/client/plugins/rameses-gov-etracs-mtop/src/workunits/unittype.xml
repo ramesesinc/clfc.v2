@@ -1,0 +1,47 @@
+<workunit>
+    
+   <invokers>
+         <invoker type="unittype:create" caption="Unit Type" action="create" target="popup" />
+         <invoker type="unittype:open" caption="Unit Type" action="open"  target="popup" />
+   </invokers>
+   
+   <code>
+       <![CDATA[
+        import com.rameses.osiris2.common.*;
+        import com.rameses.rcp.common.*;
+        import com.rameses.rcp.annotations.*;
+        import com.rameses.osiris2.client.*;
+        
+        class UnitTypeController extends CRUDController {
+        
+            String serviceName = "UnitTypeService"; 
+            String entityName = "unitype"; 
+            String title = "Unit Type"; 
+            
+            boolean allowApprove = false
+            
+            @PropertyChangeListener
+            def listener = [
+                "entity.suffixtype": { o-> 
+                    if( o != 'OTHER' ) entity.suffixname = null;
+                    
+                    
+                    entity.suffixtype = o;
+                    binding.refresh("entity.suffixname");
+                }
+            ]
+            
+            List getSuffixTypes() {
+                return ['MONTH_RENEWAL', 'OTHER'];
+            }
+            
+        }      
+        
+       ]]>
+   </code>
+   
+   <pages>
+       <page template="com.rameses.gov.mtop.unitype.UnitTypePage" />
+   </pages>
+   
+</workunit>

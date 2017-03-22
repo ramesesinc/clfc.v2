@@ -1,0 +1,5 @@
+<workunit extends="wtemplates/ServiceLookupController.xml" serviceName="WaterworksRouteLookupService">
+    <invokers>
+        <invoker type="waterworksroute:lookup" caption="Route Lookup" target="popup"/>
+    </invokers>
+</workunit>

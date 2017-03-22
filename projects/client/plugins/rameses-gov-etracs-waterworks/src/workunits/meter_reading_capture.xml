@@ -1,0 +1,117 @@
+<workunit>
+    <invokers>
+        <invoker folderid="/explorer/txn/waterworks" caption="Capture Reading" action="init" target="window"/>
+        <invoker type="waterworksreading:capture" caption="Capture Reading" action="init" target="popup"/>
+        <invoker type="formActions" caption="Close" action="_close" immediate="true"/>
+        <invoker type="formActions" caption="Save" action="save" visibleWhen="#{mode == 'init'}"/>
+    </invokers>
+    
+    <code>
+        <![CDATA[
+        import com.rameses.rcp.common.*;
+        import com.rameses.rcp.annotations.*;
+        import com.rameses.osiris2.client.*;
+        import com.rameses.osiris2.common.*
+        import java.rmi.server.UID;
+        
+        class CaptureReadingController{
+        
+            @Service('DateService')
+            def dateSvc;
+            
+            @Service('WaterworksMeterReadingService')
+            def readingSvc;
+            
+            @Service('WaterworksAccountService')
+            def accountSvc;
+            
+            @Service('BarangayService')
+            def barangaySvc;
+        
+            @Binding
+            def binding;
+        
+            def entity;
+            def mode;
+            def title;
+            def curmonth;
+            def months;
+            def barangays;
+            
+            void init(){
+                title = 'Capture Reading';
+                entity = [:];
+                entity.list = [];
+                mode = 'init';
+                entity.year = dateSvc.getServerYear();
+                def month = dateSvc.getServerMonth();
+                months = dateSvc.getMonths();
+                months.each{
+                    if(it.index == month) entity.month = it;
+                }
+                barangays = barangaySvc.getList([searchtext:"%"]);
+            }
+            
+            void save(){
+                if(!MsgBox.confirm("You are about to save this record. Continue?")) return;
+                entity.list.each{item ->
+                    item.objid = 'MR' + new UID().toString();
+                    item.method = 'CAPTURE';
+                    item.month = entity.month.index;
+                    item.year = entity.year;
+                    item.consumed = item.currentreading - item.previousreading;
+                    if(item.currentreading) readingSvc.create(item);
+                }
+                mode = "read";
+            }
+            
+            def reading;
+            def readingHandler = [
+                fetchList : {
+                    return entity.list;
+                },
+                onColumnUpdate : {item, colname ->
+                    if(colname == 'currentreading'){
+                        if(reading.currentreading < reading.previousreading){
+                            reading.currentreading = null;
+                            throw new Exception("The current reading must be greater than previous reading.");
+                        }
+                    }
+                }
+            ] as EditorListModel;
+            
+            @PropertyChangeListener
+            def listener = [
+                "entity.barangay" : {o ->
+                    def params = [barangayid:entity.barangay.objid, month:entity.month.index, year:entity.year];
+                    entity.list = readingSvc.getReadingListByBarangay(params);
+                    readingHandler.reload();
+                }
+            ];
+            
+            @PropertyChangeListener
+            def listener2 = [
+                "entity.month" : {o ->
+                    def params = [barangayid:entity.barangay.objid, month:entity.month.index, year:entity.year];
+                    entity.list = readingSvc.getReadingListByBarangay(params);
+                    readingHandler.reload();
+                }
+            ];
+            
+            @PropertyChangeListener
+            def listener3 = [
+                "entity.year" : {o ->
+                    def params = [barangayid:entity.barangay.objid, month:entity.month.index, year:entity.year];
+                    entity.list = readingSvc.getReadingListByBarangay(params);
+                    readingHandler.reload();
+                }
+            ];
+
+        }
+        ]]>
+    </code>
+    
+    <pages>
+        <page template="com.rameses.gov.etracs.waterworks.reading.CaptureReadingPage"/>
+    </pages>
+</workunit>

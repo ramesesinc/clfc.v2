@@ -1,0 +1,5 @@
+<workunit extends="wtemplates/ListController.xml" serviceName="MakeService" entityName="make" allowApprove="false">
+    <invokers>
+         <invoker folderid="/explorer/master/mtop" caption="Makes" index="2" />
+    </invokers>
+</workunit>

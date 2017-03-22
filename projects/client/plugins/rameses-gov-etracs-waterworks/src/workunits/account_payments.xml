@@ -1,0 +1,40 @@
+<workunit>
+    <invokers>
+        <invoker type="waterworks:payment" caption="Application History" target="window" action="init"/>
+    </invokers>
+    
+    <code>
+        <![CDATA[
+        import com.rameses.rcp.common.*;
+        import com.rameses.rcp.annotations.*;
+        import com.rameses.osiris2.client.*;
+        import com.rameses.osiris2.common.*
+        import java.rmi.server.UID;
+        
+        class PaymentController{
+        
+            @Service('WaterWorksPaymentService')
+            def paymentSvc;
+        
+            def entity;
+            def payments;
+        
+            void init(){
+                payments = paymentSvc.getList(entity);
+            }
+            
+            def payment;
+            def paymentModel = [
+                fetchList: {
+                    return payments;
+                }
+            ] as BasicListModel;
+
+        }
+        ]]>
+    </code>
+    
+    <pages>
+        <page template="com.rameses.gov.etracs.waterworks.account.PaymentInfoPage"/>
+    </pages>
+</workunit>

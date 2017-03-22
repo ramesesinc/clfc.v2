@@ -1,0 +1,5 @@
+<workunit>
+    <invokers>
+        <invoker type="collectiontype:handler" caption="Waterworks" name="waterworks" formtype="serial" formno="51"  index="100" />
+    </invokers>
+</workunit>

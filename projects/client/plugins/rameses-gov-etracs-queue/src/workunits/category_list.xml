@@ -1,0 +1,5 @@
+<workunit extends="wtemplates/ListController.xml" serviceName="QueueCategoryService" entityName="queue_category">
+    <invokers>
+        <invoker folderid="/explorer/master/queue" caption="Categories" index="1" xrole="MASTER"/>
+    </invokers>
+</workunit>

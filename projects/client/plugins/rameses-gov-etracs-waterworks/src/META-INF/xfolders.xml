@@ -1,0 +1,41 @@
+<folders>
+    <folder id="explorer">
+            <folder id="txn">
+                <folder id="waterworks" caption="WaterWorks" index="2000"/>
+            </folder>
+            
+            <folder id="master">
+                <folder id="waterworks" caption="WaterWorks" index="2000"/>
+            </folder>
+
+            <folder id="txn">
+                <folder id="waterworks" caption="WaterWorks" index="2000"/>
+            </folder>
+
+            <folder id="report" index="1000">
+
+            </folder>
+    </folder>
+    
+    <folder id="menu">
+            <folder id="master">
+                <folder id="waterworks" caption="WaterWorks" index="2000"/>
+            </folder>
+
+            <folder id="txn">
+                <folder id="waterworks" caption="WaterWorks" index="2000"/>
+            </folder>
+
+            <folder id="report">
+
+            </folder>
+    </folder>
+    
+    <folder id="home">
+            <folder id="waterworks" caption="WaterWorks">
+                <folder id="application" caption="Applications">
+                    
+                </folder>
+            </folder>
+    </folder>
+</folders>

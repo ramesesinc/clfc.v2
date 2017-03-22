@@ -1,0 +1,85 @@
+"entity.newbusiness|entity.businessgross"[hasbusinessinfo == true]{
+    enabled:false;
+}
+
+
+"entity.newbusiness|entity.businessgross"[hasbusinessinfo != true]{
+    enabled:true;
+}
+
+"entity.businessgross"[entity.newbusiness == true]{
+    enabled:false;
+}
+
+
+"entity.additional_remarks" [entity.additional == true]{
+    enabled:true;
+    required:true;
+}
+
+"entity.additional_remarks" [entity.additional != true]{
+    enabled:false;
+    required:false;
+}
+
+ 
+
+"entity.payer.middlename" [ hasmiddlename == true ]{
+    enabled:false;
+}
+
+"entity.payer.tin" [ hastin == true ]{
+    enabled:false;
+}
+
+"entity.payer.seniorcitizen" [ hassenior == true ]{
+    enabled:false;
+}
+
+
+
+
+"entity.payer.middlename" [ hasmiddlename == false ]{
+    enabled:true;
+}
+
+"entity.payer.tin" [ hastin == false ]{
+    enabled:true;
+}
+
+"entity.payer.seniorcitizen" [ hassenior == false ]{
+    enabled:true;
+}
+
+
+
+
+"entity.businessgross|entity.annualsalary|entity.proeprtyincome"[entity.additional == true]{
+    enabled:true;
+}
+
+
+"entity.payer.acr"[ entity.payer.citizenship == 'FILIPINO']{
+    enabled:false;
+    required:false;
+}
+
+"entity.payer.acr"[ entity.payer.citizenship != 'FILIPINO']{
+    enabled:true;
+    required:true;
+}
+
+"entity.payer.seniorcitizen" [true == true]{
+    enabled:false;
+}
+
+"entity.barangay" [ctctype == 'individual']{
+    enabled:false;
+}
+
+
+"entity.barangay" [ctctype != 'individual']{
+    enabled:true;
+    required:true;
+}
+

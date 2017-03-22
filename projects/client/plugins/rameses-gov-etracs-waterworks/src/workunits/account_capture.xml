@@ -1,0 +1,105 @@
+<workunits>
+    <invokers>
+        <invoker type="waterworksaccount:create" caption="Capture Account" action="init" target="window"/>
+        <invoker type="formActions" caption="Close" action="_close" immediate="true"/>
+        <invoker type="formActions" caption="Save" action="save" visibleWhen="#{mode == 'create'}"/>
+        <invoker type="formActions" caption="Edit" action="edit" visibleWhen="#{mode == 'read'}"/>
+        <invoker type="formActions" caption="Delete" action="delete" visibleWhen="#{mode == 'read'}"/>
+        
+        <invoker type="formActions" caption="Save" action="update" visibleWhen="#{mode == 'edit'}"/>
+    </invokers>
+    
+    <code>
+        <![CDATA[
+        import com.rameses.rcp.common.*;
+        import com.rameses.rcp.annotations.*;
+        import com.rameses.osiris2.client.*;
+        import com.rameses.osiris2.common.*
+        import java.rmi.server.UID;
+        
+        class CaptureAccountController{
+        
+            @Service('WaterworksRouteService')
+            def routeSvc;
+            
+            @Service('WaterworksAccountService')
+            def accountSvc;
+            
+            @Binding
+            def binding;
+        
+            def entity;
+            def title;
+            def mode;
+            def accounttypes;
+            def states;
+            def routes;
+        
+            void init(){
+                entity = [:];
+                title = "Capture Account";
+                mode = 'create'
+                
+                accounttypes = ["INDIVIDUAL","JURIDICAL"];
+                states = ["ACTIVE","CLOSED","DISCONNECTED"];
+                routes = routeSvc.getList(['searchtext':'%']);
+            }
+            
+            void save(){
+                if(!MsgBox.confirm('You are about to save this record. Continue?')) return;
+                entity.objid = 'ACT' + new UID().toString();
+                accountSvc.create(entity);
+                mode = 'read';
+            }
+            
+            void edit(){
+                mode = 'read';
+            }
+            
+            void delete(){
+                if(!MsgBox.confirm('You are about to delete this record. Continue?')) return;
+                
+            }
+            
+            def getLookupEntity(){
+                def action = "entity:lookup";
+                /*
+                if(entity.accounttype == 'INDIVIDUAL') action = "individualentity:lookup";
+                if(entity.accounttype == 'JURIDICAL') action = "juridicalentity:lookup";
+                */
+                def h = {o ->
+                    entity.entityid = o.objid;
+                    entity.name = o.name;
+                    entity.address = o.address.text;
+                    accountSvc.createEntity(['objid': entity.entityid, 'name':entity.name, 'address':entity.address]);
+                    binding.refresh("entity.*");
+                }
+                return Inv.lookupOpener(action,[onselect:h]);
+            }
+            
+            def getLookupMeter(){
+                def h = {o ->
+                    entity.meterid = o.objid;
+                    entity.serialno = o.serialno;
+                    entity.brand = o.brand;
+                    binding.refresh("entity.*");
+                }
+                return Inv.lookupOpener("waterworksmeter:lookup",[onselect:h]);
+            }
+            
+            @PropertyChangeListener
+            def listener = [
+                "entity.route" : {o ->
+                    entity.routedesc = o.description;
+                    binding.refresh("entity.*");
+                }
+            ];
+
+        }
+        ]]>
+    </code>
+    
+    <pages>
+        <page template="com.rameses.gov.etracs.waterworks.application.CaptureAccountPage"/>
+    </pages>
+</workunits>

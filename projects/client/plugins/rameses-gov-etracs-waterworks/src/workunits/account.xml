@@ -1,0 +1,217 @@
+<workunit>
+    <invokers>
+        <invoker folderid="/explorer/txn/waterworks" caption="Capture Account" action="init" target="window"/>
+        <invoker type="waterworksaccount:create" caption="Capture Account" action="init" target="window"/>
+        <invoker type="waterworksaccount:open" caption="Account (Open)" action="open" target="window" xrole="MASTER"/>
+        <invoker type="formActions" caption="Close" action="_close" immediate="true"/>
+        <invoker type="formActions" caption="Save" action="save" visibleWhen="#{mode == 'create'}"/>
+        
+        <invoker type="formActions" caption="Save" action="update" visibleWhen="#{mode == 'edit'}"/>
+    </invokers>
+    
+    <code>
+        <![CDATA[
+        import com.rameses.rcp.common.*;
+        import com.rameses.rcp.annotations.*;
+        import com.rameses.osiris2.client.*;
+        import com.rameses.osiris2.common.*
+        import java.rmi.server.UID;
+        
+        class AccountController{
+        
+            @Service('WaterworksRouteService')
+            def routeSvc;
+            
+            @Service('WaterworksAccountService')
+            def accountSvc;
+            
+            @Service('WaterworksMeterReadingService')
+            def readingSvc;
+            
+            @Service('WaterworksMeterService')
+            def meterSvc;
+            
+            @Service('DateService')
+            def dateSvc;
+            
+            @Binding
+            def binding;
+        
+            def entity;
+            def meter;
+            def route;
+            def title;
+            def mode;
+            def accounttypes;
+            def states;
+            def routes;
+            def opener;
+            def months;
+            
+            def options = [
+                ['action':'waterworks:generalinfo', 'caption':'General Information'],
+                ['action':'waterworks:meterinfo', 'caption':'Meter Information'],
+                ['action':'waterworks:apphistory', 'caption':'Application History'],
+                ['action':'waterworks:payment', 'caption':'Payments']
+            ];
+            
+            def optionHandler = [
+                getItems: { return options },
+                onselect: {o ->
+                    opener = Inv.lookupOpener(o.action,[entity:entity]);
+                    binding.refresh('subform');
+                }
+            ] as ListPaneModel;
+            
+            def open(){
+                mode = 'read';
+                title = entity.acctno + ' (' + entity.name + ')';
+                
+                accounttypes = ["INDIVIDUAL","JURIDICAL"];
+                states = ["ACTIVE","CLOSED","DISCONNECTED"];
+                routes = routeSvc.getList(['searchtext':'%']);
+                return 'open'
+            }
+            
+            def init(){
+                entity = [:];
+                entity.address = [:];
+                entity.meter = [:];
+                entity.route = [:];
+                entity.readingyear = dateSvc.getServerYear();
+                months = dateSvc.getMonths();
+                title = "Capture Account";
+                mode = 'create'
+ 
+                accounttypes = ["INDIVIDUAL","JURIDICAL"];
+                states = ["ACTIVE","CLOSED","DISCONNECTED"];
+                routes = routeSvc.getList(['searchtext':'%']);
+                
+                opener = Inv.lookupOpener("address:component:local",[entity:entity.address]);
+                return 'create';
+            }
+            
+            def save(){
+                println entity.location;
+                if(!MsgBox.confirm('You are about to save this record. Continue?')) return;
+                entity.objid = 'ACT' + new UID().toString();
+                entity.address.parentid = entity.objid;
+                //create account
+                accountSvc.create(entity);
+                //create meterreading
+                createMeterReading();
+                if(entity.location){ 
+                    entity.location.parentid = entity.meter.objid;
+                    meterSvc.createLocation(entity.location);
+                }
+                entity = accountSvc.getAccount(entity);
+                mode = 'read';
+                title = entity.acctno + ' (' + entity.name + ')';
+                return 'open';
+            }
+            
+            void createMeterReading(){
+                def data = [:];
+                data.objid = "MR" + new UID().toString();
+                data.acctid = entity.objid;
+                data.meterid = entity.meter.objid;
+                data.dtread = dateSvc.getServerDate();
+                data.year = entity.readingyear;
+                data.month = entity.readingmonth.index;
+                data.previousreading = 0;
+                data.currentreading = entity.previousreading;
+                data.consumed = entity.consumption;
+                data.method = "CAPTURE";
+                readingSvc.create(data);
+            }
+            
+            def edit(){
+                mode = 'edit';
+                def meter = accountSvc.getMeter(['objid':entity.meterid]);
+                if(meter){
+                    entity.serialno = meter.serialno;
+                    entity.brand = meter.brand;
+                }
+                entity.route = accountSvc.getRoute(entity);
+                if(entity.route){
+                    entity.routeid = entity.route.objid;
+                    entity.routedesc = entity.route.description;
+                }
+                binding.refresh("entity.*");
+                return 'create';
+            }
+            
+            def update(){
+                if(!MsgBox.confirm('You are about to update this record. Continue?')) return;
+                accountSvc.update(entity);
+                entity = accountSvc.getAccount(entity);
+                mode = 'read';
+                title = entity.acctno + ' (' + entity.entity.name + ')';
+                return 'open';
+            }
+            
+            def delete(){
+                if(!MsgBox.confirm('You are about to delete this record. Continue?')) return;
+                accountSvc.delete(entity);
+                return '_close';
+            }
+            
+            def getLookupEntity(){
+                def action = "";
+                if(entity.accounttype == 'INDIVIDUAL') action = "individualentity:lookup";
+                if(entity.accounttype == 'JURIDICAL') action = "juridicalentity:lookup";
+                def h = {o ->
+                    entity.entityid = o.objid;
+                    entity.name = o.name;
+                    entity.homeaddress = o.address.text;
+                    binding.refresh("entity.*");
+                }
+                return Inv.lookupOpener(action,[onselect:h]);
+            }
+            
+            def getLookupMeter(){
+                def h = {o ->
+                    entity.meterid = o.objid;
+                    entity.meter = o;
+                    binding.refresh("entity.meter.*");
+                }
+                return Inv.lookupOpener("waterworksmeter:lookup",[onselect:h]);
+            }
+            
+            def getLookupRoute(){
+                def h = {o ->
+                    entity.route = o;
+                    binding.refresh("entity.route.*");
+                }
+                return Inv.lookupOpener("waterworksroute:lookup",[onselect:h]);
+            }
+            
+            def getLookupBarangay(){
+                def h = {o ->
+                    entity.address = o;
+                    entity.address.barangayid = o.objid;
+                    binding.refresh("entity.*");
+                }
+                return Inv.lookupOpener("barangay:lookup",[onselect:h]);
+            }
+            
+            @PropertyChangeListener
+            def listener = [
+                "entity.paid" : {o ->
+                    if(o){
+                        entity.balance = 0.00;
+                    }else{
+                        entity.balance = null;
+                    }
+                    binding.refresh("entity.*");
+                }
+            ];
+        }
+        ]]>
+    </code>
+    
+    <pages>
+        <page name="open" template="com.rameses.gov.etracs.waterworks.account.MainAccountPage"/>
+        <page name="create" template="com.rameses.gov.etracs.waterworks.account.CaptureAccountPage"/>
+    </pages>
+</workunit>

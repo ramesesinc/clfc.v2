@@ -1,0 +1,57 @@
+<workunit>
+    <invokers>
+        <invoker type="waterworks:meterinfo" caption="Meter Information" target="window" action="init"/>
+    </invokers>
+    
+    <code>
+        <![CDATA[
+        import com.rameses.rcp.common.*;
+        import com.rameses.rcp.annotations.*;
+        import com.rameses.osiris2.client.*;
+        import com.rameses.osiris2.common.*
+        import java.rmi.server.UID;
+        
+        class GeneralInfoController{
+        
+            @Service('WaterworksMeterService')
+            def meterSvc;
+            
+            @Service('WaterworksMeterReadingService')
+            def readingSvc;
+        
+            def entity;
+            def acctid;
+        
+            void init(){
+                acctid = entity.objid;
+                def meterid = entity.meterid;
+                def route = entity.route;
+                entity = meterSvc.getMeterInfo(['objid':meterid]);
+                entity.reader = [:];
+                def latest = readingSvc.getLatestReading(['meterid':meterid]);
+                if(latest){
+                    entity.currentreading = latest.currentreading;
+                    entity.previousreading = latest.previousreading;
+                    entity.consumed = latest.consumed;
+                    entity.dtread = latest.dtread;
+                    entity.month = latest.year + " - " + latest.month;
+                    if(latest.reader) entity.reader = latest.reader;
+                }
+                entity.reading = readingSvc.getMeterReading(['acctid':acctid]);
+            }
+            
+            def reading;
+            def readingModel = [
+                fetchList: {
+                    return entity.reading;
+                }
+            ] as BasicListModel;
+
+        }
+        ]]>
+    </code>
+    
+    <pages>
+        <page template="com.rameses.gov.etracs.waterworks.account.MeterInfoPage"/>
+    </pages>
+</workunit>

@@ -1,0 +1,61 @@
+<workunit>
+    <invokers>
+        <invoker type="meter:create" caption="Meter (New)" action="init" target="popup" role="MASTER"/>
+        <invoker type="meter:open" caption="Meter" action="open" target="popup" role="MASTER"/>
+        <invoker type="formActions" caption="Close" action="_close"  immediate="true"/>
+        <invoker type="formActions" caption="Save" action="save" visibleWhen="#{mode == 'create'}"/>
+        <invoker type="formActions" caption="New" action="init" visibleWhen="#{mode == 'read'}"/>
+    </invokers>
+    
+    <code>
+        <![CDATA[
+           import com.rameses.osiris2.common.*;
+           import com.rameses.rcp.common.*;
+           import com.rameses.rcp.annotations.*;
+           import com.rameses.osiris2.client.*;
+           import java.rmi.server.*;
+
+           class MeterController{
+           
+               @Service("WaterworksRateService")
+               def rateSvc;
+               
+               @Service("WaterworksMeterService")
+               def meterSvc;
+           
+               def entity;
+               def mode;
+               def handler;
+               def sizes;
+               
+               void init(){
+                   entity =  [:];
+                   sizes = rateSvc.getList();
+                   mode = 'create';
+               }
+               
+               void save(){
+                   if(entity.startseries > entity.endseries) throw new Exception("Invalid Serial Series! End Series must be greater than Start Series.");
+                   if(!MsgBox.confirm("You are about to generate " + ((entity.endseries - entity.startseries)+1) + " meters. Continue?")) return;
+                   for(int i = entity.startseries; i <= entity.endseries; i++){
+                       def data = [:];
+                       data.objid = "MTR" + new UID().toString();
+                       data.serialno = entity.prefix!=null ? entity.prefix + String.valueOf(i) : String.valueOf(i);
+                       data.brand = entity.brand;
+                       data.capacity = entity.capacity;
+                       data.size = entity.metersize.metersize;
+                       data.rateid = entity.metersize.objid;
+                       meterSvc.create(data);
+                   }
+                   if(handler) handler();
+                   mode = 'read';
+               }
+
+           }
+        ]]>
+    </code>
+    
+    <pages>
+        <page template="com.rameses.gov.etracs.waterworks.meter.MeterPage"/>
+    </pages>
+</workunit>

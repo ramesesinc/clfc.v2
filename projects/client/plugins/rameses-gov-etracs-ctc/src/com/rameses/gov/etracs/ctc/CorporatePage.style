@@ -1,0 +1,87 @@
+"entity.newbusiness|entity.businessgross"[hasbusinessinfo == true]{
+    enabled:false;
+}
+
+
+"entity.newbusiness|entity.businessgross"[hasbusinessinfo != true]{
+    enabled:true;
+}
+
+"entity.businessgross"[entity.newbusiness == true]{
+    enabled:false;
+}
+
+
+
+"entity.realpropertyav" [haspropertyinfo == true]{
+    enabled:false;
+}
+
+
+"entity.realpropertyav" [haspropertyinfo != true]{
+    enabled:true;
+}
+
+"entity.additional_remarks" [entity.additional == true]{
+    enabled:true;
+    required:true;
+}
+
+"entity.additional_remarks" [entity.additional != true]{
+    enabled:false;
+    required:false;
+}
+
+
+
+"entity.payer.tin" [ hastin == true ]{
+    enabled:false;
+}
+
+
+"entity.payer.orgtype" [ hasorgtype == true ]{
+    enabled:false;
+}
+
+"entity.payer.nature" [ hasnature == true ]{
+    enabled:false;
+}
+
+"entity.payer.dtregistered" [ hasdtregistered == true ]{
+    enabled:false;
+}
+
+"entity.payer.placeregistered" [ hasplaceregistered == true ]{
+    enabled:false;
+}
+
+
+
+"entity.payer.tin" [ hastin == false ]{
+    enabled:true;
+}
+
+
+"entity.payer.orgtype" [ hasorgtype == false ]{
+    enabled:true;
+}
+
+"entity.payer.nature" [ hasnature == false ]{
+    enabled:true;
+}
+
+"entity.payer.dtregistered" [ hasdtregistered == false ]{
+    enabled:true;
+}
+
+"entity.payer.placeregistered" [ hasplaceregistered == false ]{
+    enabled:true;
+}
+
+
+
+
+
+"entity.realpropertyav|entity.businessgross"[entity.additional == true]{
+    enabled:true;
+}

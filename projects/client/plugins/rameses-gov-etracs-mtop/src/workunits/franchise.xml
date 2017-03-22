@@ -1,0 +1,59 @@
+<workunit>
+    
+   <invokers>
+         <invoker type="franchise:create" caption="Franchise" action="create" target="popup" /> 
+   </invokers>
+   
+   <code>
+       <![CDATA[
+        import com.rameses.osiris2.common.*;
+        import com.rameses.rcp.common.*;
+        import com.rameses.rcp.annotations.*;
+        import com.rameses.osiris2.client.*;
+        
+        class FranchiseController { 
+            
+            @Binding
+            def binding 
+        
+            String title = 'Franchise'
+            def mode 
+            def entity
+            
+            @Service('FranchiseService')
+            def svc
+            
+            @Service("UnitTypeService")
+            def unittypeSvc 
+            
+            
+            void create() {
+                mode= 'create'
+                entity = [:]
+            }
+            
+            void doOk() {
+                svc.generateFranchise(entity ) 
+                MsgBox.alert("Franchise successfully generated.   ")
+                entity = [:]
+                binding.refresh("entity");
+            }
+            
+            def getUnittypeList() {
+                return unittypeSvc.getList([:]);
+            }
+            
+            def doCancel() {
+                return "_close"
+            }
+            
+        }      
+        
+       ]]>
+   </code>
+   
+   <pages>
+       <page template="com.rameses.gov.etracs.mtop.franchise.GenerateFranchisePage" />
+   </pages>
+   
+</workunit>

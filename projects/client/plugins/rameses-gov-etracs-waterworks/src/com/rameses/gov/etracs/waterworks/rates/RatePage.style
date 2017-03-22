@@ -1,0 +1,7 @@
+"entity.metersize|rate|add|modify|delete"[mode == 'read']{
+    enabled: false;
+}
+
+"entity.metersize|rate|add|modify|delete"[mode != 'read']{
+    enabled: true;
+}

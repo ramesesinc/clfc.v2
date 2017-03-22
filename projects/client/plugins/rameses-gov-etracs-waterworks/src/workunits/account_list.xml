@@ -1,0 +1,6 @@
+<workunit extends="wtemplates/ListController.xml" serviceName="WaterWorksAccountService" entityName="waterworksaccount">
+    <invokers>
+        <invoker folderid="/explorer/master/waterworks" caption="Accounts" index="0"/>
+        <invoker folderid="/home/waterworks" caption="Accounts" index="0"/>
+    </invokers>
+</workunit>

@@ -1,0 +1,69 @@
+<workunit>
+    <invokers>
+        <invoker folderid="/explorer/txn/queue" caption="Code Generator" action="init" target="popup"/>
+    </invokers>
+    
+    <code>
+        <![CDATA[
+            import com.rameses.osiris2.common.*;
+            import com.rameses.rcp.common.*;
+            import com.rameses.rcp.annotations.*;
+            import com.rameses.osiris2.client.*;
+
+            class CodeGeneratorController{
+            
+                @Service('QueueSectionService')
+                def sectionSvc;
+                
+                @Service('QueueCategoryService')
+                def categorySvc;
+                
+                @Service('QueueCodeService')
+                def codeSvc;
+            
+                def entity;
+                def sections;
+                def sectionlist;
+                def categories;
+                
+                void init(){
+                    entity = [:];
+                    entity.sequence = true;
+                    sections = [[objid: '12345', name: 'ALL']];
+                    categories = categorySvc.getList([:]); println categories
+                    sectionlist = sectionSvc.getList([:]);
+                    sectionlist.each{ sections << it }
+                }
+                
+                def generate(){
+                    if(entity.quantity < 1) throw new Exception("Quantity is required!");
+                    if(entity.section.objid == '12345'){
+                        if(!MsgBox.confirm('You are about to generate ' +entity.quantity+ ' codes for each sections. Continue?')) return;
+                        categories.each{
+                            entity.category = it;
+                            sectionlist.each{
+                                entity.section = it;
+                                entity.index = codeSvc.getCurrentCodeIndex(entity);
+                                codeSvc.generate(entity);
+                            }
+                        }
+                    }else{
+                        if(!MsgBox.confirm('You are about to generate ' +entity.quantity+ ' codes for ' +entity.section.name+ '. Continue?')) return;
+                        categories.each{
+                            entity.category = it;
+                            entity.index = codeSvc.getCurrentCodeIndex(entity);
+                            codeSvc.generate(entity);
+                        }
+                    }
+                    MsgBox.alert('The codes were successfully generated!');
+                    return '_close';
+                }
+
+            }
+        ]]>
+    </code>
+    
+    <pages>
+        <page template="com.rameses.queue.generator.CodeGeneratorPage"/>
+    </pages>
+</workunit>

@@ -1,0 +1,13 @@
+<folders>
+    <folder id="explorer">
+        <folder id="master">
+            <folder id="mtop" caption="MTOP" index="20"/>
+        </folder>
+        <folder id="txn">
+            <folder id="mtop" caption="MTOP" index="20"/>
+        </folder>
+        <folder id="report">
+            <folder id="mtop" caption="MTOP" index="20"/>
+        </folder>
+    </folder>
+</folders> 

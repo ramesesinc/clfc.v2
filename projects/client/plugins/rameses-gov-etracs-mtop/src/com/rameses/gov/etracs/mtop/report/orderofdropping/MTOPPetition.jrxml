@@ -1,0 +1,610 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="MTOPPetition"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="612"
+		 pageHeight="792"
+		 columnWidth="468"
+		 columnSpacing="0"
+		 leftMargin="72"
+		 rightMargin="72"
+		 topMargin="72"
+		 bottomMargin="72"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="PARENTLGUNAME" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="LGUNAME" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="MAYOROFFICENAME" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="MAYORNAME" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="MAYORTITLE" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="LOGOLGU" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="LGUTYPE" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="PRINTDATE" isForPrompting="false" class="java.util.Date"/>
+	<parameter name="MUNICIPALNAME" isForPrompting="false" class="java.lang.String"/>
+
+	<field name="owner_name" class="java.lang.String"/>
+	<field name="routedesc" class="java.lang.String"/>
+	<field name="franchiseno" class="java.lang.String"/>
+	<field name="make" class="java.lang.String"/>
+	<field name="motorno" class="java.lang.String"/>
+	<field name="chassisno" class="java.lang.String"/>
+	<field name="plateno" class="java.lang.String"/>
+	<field name="type" class="java.lang.String"/>
+	<field name="effectiveto" class="java.util.Date"/>
+	<field name="ctcdateissued" class="java.util.Date"/>
+	<field name="ctcno" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="648"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						mode="Transparent"
+						x="0"
+						y="0"
+						width="468"
+						height="11"
+						forecolor="#000000"
+						backcolor="#FFFFFF"
+						key="staticText-1"/>
+					<box>					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Top" rotation="None" lineSpacing="Single">
+						<font fontName="Tahoma" pdfFontName="Helvetica" size="9" isBold="false" isItalic="false" isUnderline="false" isPdfEmbedded ="false" pdfEncoding ="Cp1252" isStrikeThrough="false" />
+					</textElement>
+				<text><![CDATA[Republic of the Philippines]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="0"
+						y="11"
+						width="468"
+						height="11"
+						forecolor="#000000"
+						backcolor="#FFFFFF"
+						key="textField-1"/>
+					<box leftPadding="3">					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" rotation="None" lineSpacing="Single">
+						<font fontName="Tahoma" pdfFontName="Helvetica" size="9" isBold="false" isItalic="false" isUnderline="false" isPdfEmbedded ="false" pdfEncoding ="Cp1252" isStrikeThrough="false" />
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{PARENTLGUNAME}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="0"
+						y="22"
+						width="468"
+						height="11"
+						forecolor="#000000"
+						backcolor="#FFFFFF"
+						key="textField-2"/>
+					<box leftPadding="3">					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" rotation="None" lineSpacing="Single">
+						<font fontName="Tahoma" pdfFontName="Helvetica" size="9" isBold="false" isItalic="false" isUnderline="false" isPdfEmbedded ="false" pdfEncoding ="Cp1252" isStrikeThrough="false" />
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{LGUNAME}]]></textFieldExpression>
+				</textField>
+				<image  scaleImage="FillFrame" vAlign="Top" hAlign="Left" isUsingCache="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Opaque"
+						x="145"
+						y="0"
+						width="43"
+						height="43"
+						forecolor="#000000"
+						backcolor="#FFFFFF"
+						key="image-1"/>
+					<box></box>
+					<graphicElement stretchType="NoStretch" fill="Solid" />
+					<imageExpression class="java.net.URL"><![CDATA[new URL($P{LOGOLGU})]]></imageExpression>
+				</image>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="0"
+						y="47"
+						width="468"
+						height="19"
+						forecolor="#000000"
+						backcolor="#FFFFFF"
+						key="textField-3"/>
+					<box leftPadding="3">					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" rotation="None" lineSpacing="Single">
+						<font fontName="Tahoma" pdfFontName="Helvetica-Bold" size="11" isBold="true" isItalic="false" isUnderline="false" isPdfEmbedded ="false" pdfEncoding ="Cp1252" isStrikeThrough="false" />
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{MAYOROFFICENAME}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="306"
+						y="83"
+						width="46"
+						height="13"
+						key="staticText-2"/>
+					<box leftPadding="2">					<topPen lineWidth="0.0" lineStyle="Solid"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Tahoma" pdfFontName="Helvetica" size="9" isBold="false"/>
+					</textElement>
+				<text><![CDATA[Case No:]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="352"
+						y="83"
+						width="116"
+						height="13"
+						key="textField-4"/>
+					<box>					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Tahoma" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{franchiseno}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="109"
+						width="171"
+						height="13"
+						key="textField"/>
+					<box>					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Tahoma" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{owner_name}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="0"
+						y="122"
+						width="171"
+						height="13"
+						key="staticText-3"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font fontName="Tahoma" size="9"/>
+					</textElement>
+				<text><![CDATA[Petitioner]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="0"
+						y="135"
+						width="171"
+						height="31"
+						key="staticText-4"/>
+					<box></box>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font fontName="Tahoma" size="9"/>
+					</textElement>
+				<text><![CDATA[PETITION TO WITHDRAW UNIT/S
+FROM PUBLIC SERVICE]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="0"
+						y="166"
+						width="468"
+						height="13"
+						key="staticText-5"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font fontName="Tahoma" size="9"/>
+					</textElement>
+				<text><![CDATA[PETITION]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="0"
+						y="180"
+						width="468"
+						height="22"
+						key="staticText-6"/>
+					<box></box>
+					<textElement textAlignment="Justified" verticalAlignment="Top">
+						<font fontName="Tahoma" size="9"/>
+					</textElement>
+				<text><![CDATA[          COMES NOW, the undersigned petitioner and unto this Sangguniang Panlungsod, most respectfully states:]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="204"
+						width="468"
+						height="40"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Justified" isStyledText="true">
+						<font fontName="Tahoma" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["          1.  The petitioner is a grantee of a CTOP under the above entitled case dated" +
+"<style isUnderline='true'> " + new SimpleDateFormat("dd MMMM yyyy").format($P{PRINTDATE}) +
+" </style> valid up to <style isUnderline='true'> " +
+new SimpleDateFormat("dd MMMM yyyy").format($F{effectiveto}) +
+" </style> for the operation of MCH service on the route: <style isUnderline='true'> " +
+$F{routedesc} + " </style> with the use of <style isUnderline='true'> one </style> ( 1 ) unit/s which is more " +
+"particularly described as follows."]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="28"
+						y="250"
+						width="92"
+						height="13"
+						key="staticText-7"
+						positionType="Float"/>
+					<box>					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font fontName="Tahoma" pdfFontName="Helvetica-Bold" size="8" isBold="true" isUnderline="false"/>
+					</textElement>
+				<text><![CDATA[MAKE]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="135"
+						y="250"
+						width="98"
+						height="13"
+						key="staticText-8"
+						positionType="Float"/>
+					<box>					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font fontName="Tahoma" pdfFontName="Helvetica-Bold" size="8" isBold="true" isUnderline="false"/>
+					</textElement>
+				<text><![CDATA[MOTOR NO.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="246"
+						y="250"
+						width="98"
+						height="13"
+						key="staticText-9"
+						positionType="Float"/>
+					<box>					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font fontName="Tahoma" pdfFontName="Helvetica-Bold" size="8" isBold="true" isUnderline="false"/>
+					</textElement>
+				<text><![CDATA[CHASSIS NO.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="357"
+						y="250"
+						width="98"
+						height="13"
+						key="staticText-10"
+						positionType="Float"/>
+					<box>					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center">
+						<font fontName="Tahoma" pdfFontName="Helvetica-Bold" size="8" isBold="true" isUnderline="false"/>
+					</textElement>
+				<text><![CDATA[PLATE NO.]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="28"
+						y="264"
+						width="92"
+						height="13"
+						key="textField-5"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Tahoma" pdfFontName="Helvetica" size="9" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{make}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="135"
+						y="264"
+						width="98"
+						height="13"
+						key="textField-6"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Tahoma" pdfFontName="Helvetica" size="9" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{motorno}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="246"
+						y="264"
+						width="98"
+						height="13"
+						key="textField-7"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Tahoma" pdfFontName="Helvetica" size="9" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{chassisno}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="357"
+						y="264"
+						width="98"
+						height="13"
+						key="textField-8"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Tahoma" pdfFontName="Helvetica" size="9" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{plateno}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="0"
+						y="290"
+						width="468"
+						height="29"
+						key="staticText-11"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Justified" verticalAlignment="Top">
+						<font fontName="Tahoma" size="9"/>
+					</textElement>
+				<text><![CDATA[           2.  That petitioner requests that his/her first above mentioned be withdrawn from public service for the reason that:]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="319"
+						width="468"
+						height="18"
+						key="textField"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center">
+						<font fontName="Tahoma" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{type}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="0"
+						y="341"
+						width="468"
+						height="29"
+						key="staticText-12"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Justified" verticalAlignment="Top" isStyledText="true">
+						<font fontName="Tahoma" size="9"/>
+					</textElement>
+				<text><![CDATA[          WHEREFORE, it is most respectfully prayed of this Sangguniang Panlungsod that after due consideration the herein petition be granted.]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="374"
+						width="468"
+						height="13"
+						key="textField-9"
+						positionType="Float"/>
+					<box></box>
+					<textElement verticalAlignment="Middle" isStyledText="true">
+						<font fontName="Tahoma" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["      " + $P{MUNICIPALNAME} + " " + $P{LGUTYPE} + ", Philippines, <style isUnderline='true'> " + 
+new SimpleDateFormat("dd MMMM yyyy").format($P{PRINTDATE}) + " </style>."]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="283"
+						y="406"
+						width="185"
+						height="13"
+						key="textField-10"
+						positionType="Float"/>
+					<box>					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Tahoma" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{owner_name}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="283"
+						y="419"
+						width="185"
+						height="13"
+						key="staticText-13"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font fontName="Tahoma" size="9"/>
+					</textElement>
+				<text><![CDATA[Petitioner]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="0"
+						y="439"
+						width="468"
+						height="13"
+						key="staticText-14"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font fontName="Tahoma" size="9"/>
+					</textElement>
+				<text><![CDATA[VERIFICATION]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="456"
+						width="468"
+						height="52"
+						key="textField"
+						positionType="Float"/>
+					<box></box>
+					<textElement isStyledText="true">
+						<font fontName="Tahoma" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["          I, <style isUnderline='true' isBold='true'> " + $F{owner_name} + " </style> after having been sworn in accordance with law hereby " +
+"depose and say I am the applicant in the above mentioned case; that I have understood the contents thereof and that the allegations " +
+"contained therein are true and correct to my own personal knowledge."]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="283"
+						y="513"
+						width="185"
+						height="13"
+						key="textField-11"
+						positionType="Float"/>
+					<box>					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Tahoma" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{owner_name}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="283"
+						y="526"
+						width="185"
+						height="13"
+						key="staticText-15"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font fontName="Tahoma" size="9"/>
+					</textElement>
+				<text><![CDATA[Affiant]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="283"
+						y="610"
+						width="185"
+						height="13"
+						key="textField-12"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Tahoma" pdfFontName="Helvetica-Bold" size="9" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{MAYORNAME}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="283"
+						y="624"
+						width="185"
+						height="13"
+						key="textField-13"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Tahoma" size="8"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{MAYORTITLE}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="550"
+						width="468"
+						height="52"
+						key="textField-14"
+						positionType="Float"/>
+					<box></box>
+					<textElement isStyledText="true">
+						<font fontName="Tahoma" size="9"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["          SUBSCRIBED AND SWORN to before me this <style isUnderline='true'> " +
+new SimpleDateFormat("d").format($P{PRINTDATE}) + " </style> day of <style isUnderline='true'>" +
+new SimpleDateFormat("MMMM yyyy").format($P{PRINTDATE}) + " </style> at " +
+$P{MUNICIPALNAME} + " " + $P{LGUTYPE} + ", affiant exhibiting to me his/her Community " +
+"Tax Certificate No. <style isUnderline='true'> " + $F{ctcno} + " </style> on " +
+"<style isUnderline='true'> " + new SimpleDateFormat("yyyy-MM-dd").format($F{ctcdateissued}) +
+" </style> at " + "<style isUnderline='true'> " + $P{MUNICIPALNAME} + " " + $P{LGUTYPE} + " </style>."]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="208"
+						y="177"
+						width="52"
+						height="0"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch">
+					<pen lineWidth="0.5" lineStyle="Solid"/>
+</graphicElement>
+				</line>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>

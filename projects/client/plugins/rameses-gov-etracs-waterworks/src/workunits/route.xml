@@ -1,0 +1,69 @@
+<workunit>
+    <invokers>
+        <invoker type="waterworksroute:create" caption="Route" action="create" role="MASTER" target="popup"/>
+        <invoker type="waterworksroute:open" caption="Route" action="open" role="MASTER" target="popup"/>
+        <invoker type="formActions" caption="Close" action="_close" immediate="true"/>
+        <invoker type="formActions" caption="Save" action="save" visibleWhen="#{mode == 'create'}"/>
+        <invoker type="formActions" caption="Edit" action="edit" visibleWhen="#{mode == 'read'}"/>
+        <invoker type="formActions" caption="Delete" action="delete" visibleWhen="#{mode == 'read'}"/>
+        <invoker type="formActions" caption="Update" action="update" visibleWhen="#{mode == 'edit'}"/>
+    </invokers>
+    
+    <code>
+        <![CDATA[
+        import com.rameses.rcp.common.*;
+        import com.rameses.rcp.annotations.*;
+        import com.rameses.osiris2.client.*;
+        import com.rameses.osiris2.common.*
+        
+        class RouteController{
+        
+            @Service("WaterworksRouteService")
+            def routeSvc;
+            
+            def entity;
+            def title;
+            def mode;
+            
+            void create(){
+                entity = [:];
+                title = 'New Route';
+                mode = 'create';
+            }
+            
+            void open(){
+                title = entity.name;
+                mode = 'read';
+            }
+            
+            void save(){
+                if(entity.path == null || entity.path.isEmpty()) throw new Exception("You must draw the path!");
+                if(entity.path.size() < 3) throw new Exception("You must draw the path!");
+                if(!MsgBox.confirm('You are about to save this route. Continue?')) return;
+                entity = routeSvc.create(entity);
+                mode = 'read';
+            }
+            
+            void edit(){
+                mode = 'edit';
+            }
+            
+            def delete(){
+                if(!MsgBox.confirm('You are about to delete this record. Continue?')) return;
+                return '_close';
+            }
+            
+            void update(){
+                if(!MsgBox.confirm('You are about to update this record. Continue?')) return;
+                routeSvc.update(entity);
+                mode = 'read';
+            }
+        
+        }
+        ]]>
+    </code>
+    
+    <pages>
+        <page template="com.rameses.gov.etracs.waterworks.route.RoutePage"/>
+    </pages>
+</workunit>

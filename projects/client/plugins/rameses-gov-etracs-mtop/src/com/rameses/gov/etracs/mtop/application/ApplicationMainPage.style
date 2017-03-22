@@ -1,0 +1,31 @@
+"application.*" [mode != 'view'] {
+    readonly:false;
+}
+
+"application.*" [mode == 'view' || application.txntype != 'NEW'] {
+    readonly:true;
+}
+
+"application.*" [mode != 'view' && application.txnmode == 'CAPTURE'] {
+    readonly:false;
+}
+
+"application.txndate|application.txnno" [application.txnmode == 'ONLINE'] {
+    readonly: true;
+}
+
+"application.ctcno" [mode != 'view' && ( application.txntype == 'RENEW' || application.txntype == 'RETIRE' )] {readonly:false;}
+"application.ctcdateissued" [mode != 'view' && ( application.txntype == 'RENEW' || application.txntype == 'RETIRE' )] {readonly:false;}
+"application.ctcplaceissued" [mode != 'view' && ( application.txntype == 'RENEW' || application.txntype == 'RETIRE' )] {readonly:false;}
+
+"unitType|make|model|route" [mode != 'view'] {
+    readonly:false;
+}
+
+"unitType|make|model|route" [mode == 'view' || application.txntype != 'NEW'] {
+    readonly:true;
+}
+
+"unitType|make|model|route" [mode != 'view' && application.txnmode == 'CAPTURE'] {
+    readonly:false;
+}
