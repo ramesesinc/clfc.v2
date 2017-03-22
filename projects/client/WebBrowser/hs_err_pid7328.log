@@ -1,0 +1,18 @@
+#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  Internal Error (thread.cpp:1371), pid=7328, tid=6964
+#  guarantee(cur_sp > stack_yellow_zone_base()) failed: not enough space to reguard - increase StackShadowPages
+#
+# JRE version: 6.0_45-b06
+# Java VM: Java HotSpot(TM) Client VM (20.45-b01 mixed mode, sharing windows-x86 )
+# If you would like to submit a bug report, please visit:
+#   http://java.sun.com/webapps/bugreport/crash.jsp
+#
+
+---------------  T H R E A D  ---------------
+
+Current thread (0x040b4000):  JavaThread "JavaFX Application Thread" [_thread_in_vm, id=6964, stack(0x04bb0000,0x04c00000)]
+
+Stack: [0x04bb0000,0x04c00000],  sp=0x04bb2f1c,  free space=11k
+Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)

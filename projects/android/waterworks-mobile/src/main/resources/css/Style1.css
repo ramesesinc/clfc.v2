@@ -1,0 +1,128 @@
+#header-container
+{
+    -fx-background-color: #2e609b;
+}
+
+#header-title
+{
+    -fx-font-family: "Tahoma";
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-fill: white;
+}
+
+#footer-container
+{
+    -fx-background-color: #2e609b;
+}
+
+.footer-title
+{
+    -fx-font-family: "Tahoma";
+    -fx-font-size: 15px;
+    -fx-fill: white;
+}
+
+.bold
+{
+    -fx-font-weight: bold;
+}
+
+#login-title{
+    -fx-font-family: "Tahoma";
+    -fx-font-size: 32px;
+    -fx-font-weight: bold;
+}
+
+.login-field
+{
+    -fx-font-family: "Tahoma";
+    -fx-font-size: 18px;
+    -fx-background-color: white;
+    -fx-border-radius: 8px;
+    -fx-border-color: grey;
+    -fx-border-width: 1px;
+}
+
+.login-label
+{
+    -fx-font-family: "Tahoma";
+    -fx-font-size: 18px;
+}
+
+#login-button
+{
+    -fx-font-family: "Arial";
+    -fx-font-size: 23px;
+    -fx-font-weight: bold;
+    -fx-padding: 7px 20px 7px 20px; 
+    -fx-border-radius: 8px;
+    -fx-base: #3897ee;
+    -fx-text-fill: white;
+}
+
+.terminal-notice
+{
+    -fx-font-size: 19px;
+    -fx-background-color: yellow;
+    -fx-border-width: 1px;
+    -fx-border-color: grey;
+    -fx-border-radius: 8px;
+    -fx-padding: 15px 25px;
+}
+
+.terminal-radio
+{
+    -fx-font-size: 19px;
+    -fx-font-weigh: bold;
+}
+
+.terminal-label
+{
+    -fx-font-size: 19px;
+    -fx-font-weigh: bold;
+}
+
+.terminal-field
+{
+    -fx-font-family: "Tahoma";
+    -fx-font-size: 19px;
+    -fx-background-color: white;
+    -fx-border-radius: 8px;
+    -fx-border-color: grey;
+    -fx-border-width: 1px;
+}
+
+.terminal-button
+{
+    -fx-font-family: "Arial";
+    -fx-font-size: 23px;
+    -fx-font-weight: bold;
+    -fx-padding: 7px 20px 7px 20px; 
+    -fx-border-radius: 8px;
+    -fx-base: #3897ee;
+    -fx-text-fill: white;
+}
+
+#setting-button{
+    -fx-background-radius: 5px;
+}
+
+.home-title{
+    -fx-font-size: 26px;
+    -fx-fill: black;
+}
+
+.home-desc{
+    -fx-font-size: 18px;
+    -fx-fill: grey;
+}
+
+#search-account
+{
+    -fx-background-image:url('search.png');
+    -fx-background-repeat: no-repeat;
+    -fx-background-position: left center;
+    -fx-font-size: 19px;
+    -fx-padding: 2 2 2 15;
+}
