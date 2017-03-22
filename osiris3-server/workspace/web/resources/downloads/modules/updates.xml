@@ -1,0 +1,47 @@
+<app>
+    <env>
+		app.title=ETRACS 2.5 (Municipality)
+        app.host=localhost:8070
+		app.cluster=osiris3
+        app.context=etracs25
+		app.help=http://localhost:8080/help
+		app.loader=com.rameses.osiris2.client.OsirisAppLoader
+		readTimeout=50000
+		connectionTimeout=5000
+    </env>    
+    <modules>
+		<!--  osiris3 core libraries -->
+		<module file="core/osiris2-client-themes.jar"/>
+		<module file="core/osiris2-client-ui.jar"/>
+		<module file="core/osiris2-framework.jar"/>
+		<module file="core/osiris2-report.jar"/>
+		<module file="core/rameses-client-ui.jar"/>
+		<module file="core/rameses-common2.jar"/>
+		<module file="core/rameses-custom-impl.jar"/>
+
+		<!-- client shared modules -->
+		<module file="shared/client-system.jar" />
+		<module file="shared/client-ui-extended.jar" />
+		<module file="shared/rameses-client-menu.jar" />
+		<module file="shared/rameses-client-report.jar" />
+		<module file="shared/rameses-enterprise-accounts.jar" />
+		<module file="shared/rameses-enterprise-inventory.jar" />
+		<module file="shared/rameses-enterprise-admin.jar" />
+		<module file="shared/rameses-enterprise-entity.jar" />
+		<module file="shared/rameses-enterprise-treasury.jar" />
+		<module file="shared/rameses-rules-developer.jar" />
+
+		<!-- main-app -->
+		<module file="rameses-etracs-main.jar" />
+		
+		<!-- plugins -->
+		<module file="rameses-gov-etracs-rptis.jar" />
+		<module file="rameses-gov-etracs-signatory-template.jar" />
+		<module file="rameses-gov-etracs-bpls.jar" />
+		<module file="rameses-gov-lgu.jar" />
+		<module file="rameses-gov-lgu-treasury.jar" />
+		<module file="rameses-gov-treasury.jar" />
+
+    </modules>
+</app>
+
