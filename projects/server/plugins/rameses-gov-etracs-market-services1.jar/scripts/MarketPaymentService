@@ -1,0 +1,24 @@
+import com.rameses.annotations.*;
+import com.rameses.util.*;
+import java.rmi.server.*;
+import com.rameses.services.extended.*;
+
+class MarketPaymentService extends ActiveCrudListService {
+
+	@ActiveDB(value="market_payment", em="market")
+	def em;
+
+	public void afterCreate(o) {
+		o.items.each {
+			it.objid = "MPMTD"+new UID();
+			it.parentid = o.objid;
+			em.create( it, "item" );
+		}
+	}
+
+	@ProxyMethod
+	public def getPaymentDetailsByDate(o) {
+		return em.getPaymentDetailsByDate( o );
+	}
+
+}	

@@ -1,0 +1,45 @@
+<!-- REQUISITION ISSUE SLIP -->
+<workunit extends="wtemplates/StockIssueController.xml">
+    <invokers>
+        <invoker folderid="/menu/txn/treasury" caption="Accountable Form Issuance" action="create" role="AFO"/> 
+        <invoker folderid="home/af" caption="AF Issue" action="create" role="AFO" target="window"/>
+        <invoker type="quick_launcher" code="AFISS" caption="Accountable Form Issuance" action="create" role="AFO" target="window"/>
+        
+        <invoker type="issueafrequest:create" caption="Accountable Form Issuance" action="create" role="AFO" target="window"/>
+        <invoker type="issueafrequest_ISSUE:open" caption="Accountable Form Issuance" action="open" role="AFO" target="window"/>
+        <invoker type="afquery_ISSUANCE:open" caption="Accountable Form Issuance" action="open" role="AFO" target="window"/>
+    </invokers>
+    
+    <code>
+<![CDATA[
+
+import com.rameses.rcp.annotations.*
+import com.rameses.rcp.common.*
+import com.rameses.osiris2.client.*
+import com.rameses.osiris2.common.*
+import java.rmi.server.*;
+import com.rameses.enterprise.inventory.stock.*;
+
+class AFIssuance extends StockIssueController {
+
+    String title = "Accountable Form Issuance";
+    def entityName = "afstockissue";    
+    
+    
+    def getLookupRequest() {
+        return InvokerUtil.lookupOpener( "afrequest:lookup", [
+            "query.reqtype": "ISSUANCE",
+            onselect: { o->
+                request = o;
+                binding.refresh('request');
+            }
+        ]);
+    }
+}
+]]>
+    </code>
+    
+    <pages>
+        <page name="initial" template="com.rameses.gov.treasury.af.AFIssuanceInitialPage"/>
+    </pages>    
+</workunit>

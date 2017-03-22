@@ -1,0 +1,45 @@
+import com.rameses.annotations.*;
+import com.rameses.common.*
+import com.rameses.services.extended.*
+import com.rameses.util.*
+
+
+class AFInventoryReportService  
+{ 
+	@ActiveDB('afinventory_report')
+	def adb 
+
+	@Env
+	def env 
+ 
+	@Service('DateService')
+	def dtSvc
+
+	@Service('ReportParameterService')
+	def reportSvc
+
+	@ProxyMethod
+	public def generateReport( params ) {
+		def p = [year:params.year, month:params.month.index]
+		def items = adb.getAFInventoryReport( p )
+		if(!items) throw new Exception("No record(s) found. ")
+		
+		def data =[:]
+		data.items = items.each{
+		 	it.minlineno = new BigDecimal( it.minlineno )
+		 	it.qtyreceived = new BigDecimal(it.qtyreceived )
+		 	it.qtyissued = new BigDecimal(it.qtyissued )
+		 	it.qtyending = new BigDecimal(it.qtyending )
+		}
+		data.info = [
+			PREPAREDBY 		: env.FULLNAME,
+			PREPAREDBYTITLE : env.JOBTITLE,
+			TREASURERNAME	: reportSvc.standardParameter.TREASURERNAME, 
+			TREASURERTITLE	: reportSvc.standardParameter.TREASURERTITLE,
+			PERIOD			: 'FOR THE MONTH OF ' + params.month.caption + ', ' + params.year,
+		]
+		return data
+	}
+
+	
+}

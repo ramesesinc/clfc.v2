@@ -1,0 +1,31 @@
+import com.rameses.annotations.*;
+import com.rameses.common.*;
+
+class BPLobCountReportService
+{
+	
+	@Service('NumberService')
+	def numSvc;
+	
+	@ActiveDB("bpreport")
+	def em
+
+	@ProxyMethod
+	public def getReport( params ) { 
+		params.barangayid = ( params.barangay ? params.barangay.objid : '%' );
+		params.classificationid = ( params.classification ? params.classification.objid : '%' );
+		params.state = params.statemap;
+		params.whereclausestate = 'AND a.state LIKE $P{state}';
+
+		def list = em.getLOBCountList( params );
+		if( ! list ) throw new Exception('No records found.');
+		list.each {
+			it.newcount  = Integer.parseInt(it.newcount+""); 
+			it.renewcount  = Integer.parseInt(it.renewcount+""); 
+			it.addlobcount  = Integer.parseInt(it.addlobcount+""); 
+			it.retirecount  = Integer.parseInt(it.retirecount+""); 
+		}
+		return list 		
+	}
+
+}

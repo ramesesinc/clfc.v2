@@ -1,0 +1,7 @@
+<schema>
+	<element name="waterworks_account_entity" tablename="waterworks_account_entity">
+		<field name="objid" primary="true"/>
+		<field name="name" required="true"/>
+		<field name="address" required="true"/>
+	</element>
+</schema>

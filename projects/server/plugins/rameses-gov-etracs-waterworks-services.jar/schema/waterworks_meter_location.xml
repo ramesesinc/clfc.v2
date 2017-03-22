@@ -1,0 +1,8 @@
+<schema>
+	<element name="waterworks_meter_location" tablename="waterworks_meter_location">
+		<field name="parentid" required="true"/>
+		<field name="latitude" required="true"/>
+		<field name="longitude" required="true"/>
+		<field name="address" required="true"/>
+	</element>
+</schema>

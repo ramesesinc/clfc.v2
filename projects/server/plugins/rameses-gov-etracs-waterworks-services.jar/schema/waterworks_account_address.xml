@@ -1,0 +1,7 @@
+<schema>
+	<element name="waterworks_account_address" tablename="waterworks_account_address">
+		<field name="parentid" primary="true"/>
+		<field name="barangayid" required="true"/>
+		<field name="name" required="true"/>
+	</element>
+</schema>

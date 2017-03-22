@@ -1,0 +1,101 @@
+import com.rameses.annotations.*;
+import com.rameses.util.*;
+import java.rmi.server.*;
+import com.rameses.services.extended.*;
+import market.facts.*;
+
+public class MarketCashReceiptService  {
+
+	@ActiveDB(value="market_cashreceipt", em="market")
+	def em;
+
+	@Service("DateService")
+	def dateSvc;
+
+	@Service("MarketBillRuleService")
+	def billSvc;
+
+
+	@Service("MarketAccountService")
+	def acctSvc;
+
+	@ActiveDB(value="market_billing", em="market")
+	def billingEm;
+
+	@ActiveDB(value="market_payment", em="market")
+	def paymentEm;
+
+	@ProxyMethod
+	public def getLedger( o ) {
+		if( !o?.ownerid )
+			throw new Exception("Please specify ownerid");
+		return em.getLedger(o);
+	}
+
+	@ProxyMethod
+	public def getBillItems(o) {
+		if( !o.acctid )
+			throw new Exception("Please specify acctid");
+		
+		def mu = acctSvc.open( [objid: o.acctid] ); 
+		
+		def m = [objid: o.acctid];
+		m.startdate = mu.startdate;
+		m.compromise = billingEm.findCompromise( o );
+		m.billdate  = dateSvc.serverDate;
+		m.billingtype = (!o.compromise) ? 0 : 1;
+
+		if( o.partialpmt ) m.totalpaid = o.partialpmt;
+		m.rate = mu.rate;
+
+
+		//run the calc rate again to get the account
+		def r = billSvc.execute(m);
+
+		def res = [:];
+		res.billitems = r.items;
+		res.items = [];
+		res.items << [ item: r.account, amount: r.items.sum{it.amtdue} ];
+
+		//calc surcharge		
+		def surcharge = r.items.sum{ it.surcharge }
+		if(surcharge>0) {
+			res.items << [ item: r.surchargeaccount, amount: surcharge ];			
+		}
+		//calc interest
+		def interest = r.items.sum{ it.interest }
+		if(interest>0) {
+			res.items << [ item: r.interestaccount, amount: interest ];			
+		}
+		return res;
+	}
+
+	@ProxyMethod
+	public def postReceivables(o) throws Exception {
+		if( !o.acctid )
+			throw new Exception("Please specify acctid");
+		
+		
+		def pmt = [:];
+		pmt.objid = o.objid;
+		pmt.txnno = o.info.serialno;
+		pmt.txndate = new DateBean(o.info.txndate).date;
+		pmt.acctid = o.acctid;
+		pmt.particulars = 'payment for months ' + o.billitems.min{it.month}.month + " to " + o.billitems.max{it.month}.month;
+		pmt.amount = o.info.amount;
+		paymentEm.create( pmt );
+
+		o.billitems.each {
+			def r = [:];
+			r.objid = "PMTITEM"+new UID();
+			r.parentid = pmt.objid;
+			r.amtpaid = it.amtdue;
+			r.surchargepaid = it.surcharge;
+			r.interestpaid = it.interest;
+			r.imonth = it.month;
+			r.iyear = it.year;
+			paymentEm.create( r, "item" );
+		}
+	}
+
+}

@@ -1,0 +1,62 @@
+<workunit>
+    <invokers>
+        <invoker type="captureremittance:formActions" caption="View Receipts" 
+            visibleWhen="#{mode == 'create' }" index="5" immediate="true"/>
+
+        <invoker type="captureremittance:formActions" caption="View Receipts" action="initView"
+            visibleWhen="#{mode == 'read' }" index="5" immediate="true"/>    
+            
+        <invoker type="formActions" caption="Back" action="_close" icon="images/toolbars/arrow_left.png"/>
+    </invokers>
+    
+    <code>
+        <![CDATA[    
+        import com.rameses.osiris2.common.*;
+        import com.rameses.rcp.common.*;
+        import com.rameses.rcp.annotations.*;
+        import java.rmi.server.*;
+        import com.rameses.osiris2.client.*;
+        import com.rameses.util.*;
+        import com.rameses.osiris2.reports.*;
+        
+        class CaptureRemittanceCashReceiptCController {
+        
+            @Service("RemittanceService")
+            def service;
+            
+            @Service("RemittanceCaptureService")
+            def rcSvc;
+        
+            String title = "Remittance (Capture) ";
+                
+            def entity;
+            boolean remitted = false;
+            
+            def initView() {
+                remitted = true;
+            }
+            
+            
+            def receiptsListModel = [
+                fetchList: { 
+                    if( !remitted) {
+                        def list = []
+                        for( item in entity.items) {
+                            list.addAll( rcSvc.getUnremittedReceipts( item ) );
+                        }
+                        if( list ) list.sort{a,b-> return a.receiptno <=> b.receiptno}
+                        return list;
+                    }        
+                    else
+                        return service.getRemittedReceipts( [objid:entity.objid] );
+                }
+            ] as BasicListModel;
+        }      
+       ]]>
+    </code>
+    
+   <pages>
+      <page template="com.rameses.enterprise.treasury.remittance.ViewReceiptsPage" /> 
+   </pages>
+   
+</workunit>

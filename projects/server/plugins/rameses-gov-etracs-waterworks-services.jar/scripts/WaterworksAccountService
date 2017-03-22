@@ -1,0 +1,76 @@
+import com.rameses.annotations.*;
+import com.rameses.util.*;
+import java.rmi.server.*;
+import com.rameses.common.*;
+import com.rameses.services.extended.*;
+
+class WaterworksAccountService extends ActiveListService{
+
+	@ActiveDB(value='waterworks_account', em="waterworks")
+	def em;
+
+	@ActiveDB(value='waterworks_account_entity', em="waterworks")
+	def entity;
+
+	@ActiveDB(value='waterworks_account_address', em="waterworks")
+	def addr;
+
+	def getColumns(params){
+		return [
+			[name: 'acctno', caption: 'Account No.', width: 120],
+			[name: 'dtstarted', caption: 'Date Started', width: 100],
+			[name: 'state', caption: 'State', width: 100],
+			[name: 'name', caption: 'Name', width: 150],
+			[name: 'homeaddress', caption: 'Address', width: 150]
+		];
+	}
+
+	void beforeList(params){
+		params.searchtext = params.searchtext ? params.searchtext : '%';
+	}
+
+	@ProxyMethod
+	def create(params){
+		em.create(params);
+	}
+
+	@ProxyMethod
+	def update(params){
+		em.update(params);
+	}
+
+	@ProxyMethod
+	def delete(params){
+		em.delete(params);
+	}
+
+	@ProxyMethod
+	def getAccount(params){
+		return em.findAccount(params);
+	}
+
+	@ProxyMethod
+	def getAccountByRoute(params){
+		return em.getAccountByRoute(params);
+	}
+
+	@ProxyMethod
+	def getMeter(params){
+		return em.findMeter(params);
+	}
+
+	@ProxyMethod
+	def getRoute(params){
+		return em.findRoute(params);
+	}
+
+	@ProxyMethod
+	def getBill(params){
+		return em.getBill(params);
+	}
+
+	@ProxyMethod
+	def getAddress(params){
+		return addr.findAddress(params);
+	}
+}

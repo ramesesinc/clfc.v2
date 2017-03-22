@@ -1,0 +1,104 @@
+<!-- REQUISITION ISSUE SLIP -->
+<workunit extends="wtemplates/StockRequestController.xml">
+    
+    <invokers>
+        <invoker type="home.action" caption="AF Request"  index="1" role="COLLECTOR" target="window" action="initCollector"/>
+        <invoker type="quick_launcher" code="AFRIS" caption="Accountable Form RIS" index="1" role="COLLECTOR" target="window" action="initCollector"/>
+        <invoker folderid="/menu/txn/treasury" caption="AF Request" index="10" role="COLLECTOR" action="initCollector"/>
+        
+        <invoker type="home.action" caption="AF Request" index="1" role="AFO" target="window" action="initAFO"/>
+        <invoker type="quick_launcher" code="AFRIS" caption="Accountable Form RIS" aindex="1" role="AFO" target="window" action="initAFO"/>
+        <invoker folderid="/menu/txn/treasury" caption="AF Request" index="10" role="AFO" action="initAFO"/>
+        
+        
+        <invoker type="afrequest:create" caption="AF Request" action="create" role="COLLECTOR,AFO" target="window"/>
+        <invoker type="afrequest:open" caption="AF Request" action="open" role="COLLECTOR,AFO" target="window"/>
+        
+        <!--
+        <invoker type="stockrequest:type" caption="Issuance" reqtype="ISSUANCE" role="COLLECTOR"/>
+        <invoker type="stockrequest:issuance:open" caption="Stock Issue Request" action="open"  target="window"/>
+        <invoker type="formActions" caption="Reports" name="popupReports"   
+            visibleWhen="#{mode == 'read' }" category="stockrequest:reports" />       
+        -->    
+        <invoker type="afris:type" caption="Collection" reqtype="ISSUANCE" role="COLLECTOR, AFO"/>
+        <invoker type="afris:type" caption="Purchase Stock" reqtype="PURCHASE" role="AFO"/>
+        <invoker type="afris:type" caption="Sale" reqtype="SALE" role="COLLECTOR, AFO"/>
+    </invokers>
+    
+    <code>
+        <![CDATA[
+        
+        import com.rameses.rcp.annotations.*
+        import com.rameses.rcp.common.*
+        import com.rameses.osiris2.client.*
+        import com.rameses.osiris2.common.*
+        import java.rmi.server.*;
+        import com.rameses.enterprise.inventory.stock.*;
+        
+        class AFRIS extends StockRequestController {
+        
+            String title = "Request Accountable Form";
+            
+            @Service("UsergroupMemberLookupService")
+            def ugmSvc;
+            
+            @Script("User")
+            def user;
+        
+            def reqType;
+            def reqTypes;
+            
+            def requestedbylist;
+            
+            def role 
+            
+            @PropertyChangeListener
+            def listener = [
+                "reqType": {o->
+                    entity.reqtype = o.properties.reqtype
+                    if( role == 'AFO' ) {
+                        if( o.properties.reqtype == 'PURCHASE') {
+                            requestedbylist = [ [objid: user.env.USERID, name:user.env.FULLNAME, title:user.env.JOBTITLE ]]
+                            entity.requester = requestedbylist[0]
+                       } else {
+                           requestedbylist = ugmSvc.getList(['_tag':'COLLECTOR']);
+                        }   
+                    } else {
+                        requestedbylist = [ [objid: user.env.USERID, name:user.env.FULLNAME, title:user.env.JOBTITLE ]]
+                        entity.requester = requestedbylist[0]
+                    }
+                 }
+            ]
+            
+            void initCollector() {
+                 role = 'COLLECTOR'
+                 create()
+            }
+            
+            void initAFO() {
+                role = 'AFO'
+                create()
+            }
+            
+            void create() {
+                reqTypes = InvokerUtil.lookupOpeners( "afris:type", [:] );
+                entity = [items:[]];
+                entity.state = "DRAFT";
+                entity.itemclass = "AF";
+                super.create();
+            }
+            
+            void open() {
+                super.open();
+                title = "Request Accountable Form - " + entity.reqno;
+                reqTypes = InvokerUtil.lookupOpeners( "afris:type", [:] )
+                reqType = reqTypes.find{ it.properties.reqtype == entity.reqtype }
+                requestedbylist = [ entity.requester ]
+                
+            }
+            
+        }
+        
+        ]]>
+    </code>
+</workunit>

@@ -1,0 +1,27 @@
+import com.rameses.annotations.*;
+import com.rameses.util.*;
+import java.rmi.server.*;
+import com.rameses.common.*;
+import com.rameses.services.extended.*;
+
+class WaterworksCashReceiptService extends ActiveListService {
+
+	@ActiveDB(value='waterworks_account', em="waterworks")
+	def em;
+
+	@ActiveDB(value="waterworks_payment", em="waterworks")
+	def paymentEm;
+
+	@Service("DateService")
+	def dateSvc;
+
+	@Service("WaterWorksAccountService")
+	def acctSvc;
+
+	@ProxyMethod
+	public def getLedgerList(o) {
+		println o;
+		return [];
+	}
+
+}

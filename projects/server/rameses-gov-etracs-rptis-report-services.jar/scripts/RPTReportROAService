@@ -1,0 +1,76 @@
+import com.rameses.annotations.*
+import com.rameses.common.*;
+import com.rameses.services.extended.*;
+import java.rmi.server.UID;
+import java.math.BigDecimal;
+
+class RPTReportROAService
+{
+    @ActiveDB('rptreport_roa')
+    def em;
+
+    @Service('DateService')
+    def dtsvc;
+
+    @Service('RPTUtil')
+    def util
+
+    @Async
+    @ProxyMethod
+    public def getROA(params){
+
+        def barangay = params.barangay ? params.barangay.name : 'ALL'
+        def classification = params.classification ? params.classification.name : 'ALL';
+
+        params.lguid = params.lgu.objid 
+        util.buildCurrentPeriodFilter(params)
+
+        params.barangay = params.barangay ? params.barangay.objid : '%';
+        params.classification = params.classification ? params.classification.objid : '%';
+        params.ry = dtsvc? dtsvc.getServerYear() : '';
+        println 'parasm -> ' + params 
+        def roalist = [];
+        def currentlist = em.getCurrentFaasRecord(params);
+        currentlist.each{obj ->
+            roalist.add(obj);
+            def cancelledlist = em.getCancelledFaasRecord(obj);
+            cancelledlist.each{item ->
+                roalist.add(item);
+            }
+        }
+
+        if (!roalist)
+            throw new Exception('Record(s) not found.')
+
+        roalist.each{
+            it.barangay = barangay;
+            it.classification = classification;
+        };
+        def p = [
+            PERIOD      : params.period,
+            PERIODTYPE  : params.periodtype,
+            TITLE       : params.title,
+            FORLGUNAME  : params.lgu.lgutype.toUpperCase() + ' OF ' + params.lgu.name,
+        ]
+        return [
+            parameters  : p, 
+            reportdata  : roalist,
+        ]
+    }
+
+    @ProxyMethod
+    public def getSections(){
+        return [];
+    }
+
+    @ProxyMethod
+    public def getLGU(params){
+      return em.getLGU(params);
+    }
+
+    @ProxyMethod
+    public def getBarangay(params){
+      params.index = params.lgu? params.lgu.objid:'';
+      return em.getBarangay(params);
+    }
+}

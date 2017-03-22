@@ -1,0 +1,69 @@
+import com.rameses.annotations.*
+import com.rameses.common.*
+import java.rmi.server.UID;
+import com.rameses.util.*;
+import com.rameses.io.*;
+import com.rameses.services.extended.*;
+
+class EntityService extends ActiveCrudService {
+	
+	@ActiveDB('entity')
+	def em
+
+	@Service("EntityAddressService")
+    def addrSvc;
+
+    @Service('SequenceService')
+	def seqSvc;
+
+
+    public void beforeCreate(o) {
+    	o.entityname = (o.name.length() > 50 ? o.name[0..50] : o.name )
+
+    	if(!o.type)
+    		throw new Exception("Entity type is required");
+    	if(!o.entityno) {
+    		String stype = o.type.toUpperCase();
+    		def prefix = stype[0];
+			o.entityno = prefix + seqSvc.getNextFormattedSeries( stype+ "_ENTITY" ); 
+		}
+		if(!o.address) 
+    		throw new Exception("Address is required in entity");
+
+    	if (! o.address.objid )
+    		o.address.objid = 'A' + new UID();
+    }
+
+    public void afterCreate(o){
+    	o.address.parentid = o.objid;
+		o.address = addrSvc.create( o.address ); 
+    }
+
+    public void beforeUpdate(o) {
+    	if(!o.address) 
+    		throw new Exception("Address is required in entity");
+		o.address.parentid = o.objid;
+		o.address = addrSvc.save( o.address ); 
+    }
+
+    public void beforeRemoveEntity(o) {
+    	addrSvc.removeEntityAddress([parentid:o.objid]);
+    }	
+
+
+	public void afterOpen(o) {
+		if(o.address && o.address?.objid) {
+	        def x = addrSvc.open( [objid:o.address.objid] );
+	        o.address.putAll(x);
+		}
+		else {
+			o.address = [:];	
+		}
+	}
+
+    @ProxyMethod
+    public def getTypes() {
+        return [];
+    }
+
+}

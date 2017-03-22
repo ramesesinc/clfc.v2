@@ -1,0 +1,119 @@
+import com.rameses.annotations.*;
+import com.rameses.common.*;
+
+class MunicipalityFAASRemoteCallHandler
+{   
+	@Service('FAASService')
+	def faasSvc
+
+	@Service('RPUService')
+	def rpuSvc 
+
+	@Service('RealPropertyService')
+	def rpSvc
+
+	@Service('RPTLedgerService')
+	def ledgerSvc
+
+	@ActiveDB('faas_task')
+	def task;
+
+	@Service('DBImageService')
+	def imageSvc
+
+	@Service('EntityService')
+	def entitySvc 
+
+	@Service('RPTUtil')
+	def util
+
+
+	public void approveFaasByProvince(faasdata){
+		println 'MunicipalityFAASRemoteCallHandler.approveFaasByProvince...'
+		def state = null;
+		try{
+			state = faasSvc.getState( faasdata.objid )
+		}
+		catch(e){
+			//faas does not exist
+			state = null;
+		}
+
+		if (state  && ! state.matches('CURRENT|CANCELLED')){
+			println 'Approving faas...'
+			doApproveFaas(faasdata)
+		}
+		else {
+			println 'Creating new faas...'
+			doCreateFaas(faasdata)
+		}
+	}
+
+	private void doCreateFaas(faasdata){
+		entitySvc.save(faasdata.taxpayer)
+		faasSvc.createFaas(faasdata);
+		saveImageData(faasdata)
+		faasSvc.approveFaasByRemote(faasdata)
+		postLedger(faasdata)
+		println 'FAAS has been successfully created.'
+	}
+
+	void postLedger(faas){
+		if (faas.txntype.objid.matches('SD|CS') && faas.rpu.rputype == 'land'){
+            ledgerSvc.postNewLedger(faas)
+        }
+        else if (faas.txntype.objid.matches('SD|CS') && faas.rpu.rputype != 'land'){
+            ledgerSvc.postLedgerFaasData(faas);
+        }
+		else if ( faas.txntype.newledger || util.isTrue(faas.datacapture)) {
+            postNewLedger(faas)
+        }
+        else {
+        	ledgerSvc.postLedgerFaasData(faas);
+        }		
+	}
+
+    void postNewLedger(faas){
+        def manualledger = ledgerSvc.findLedgerbyTdNo(faas)
+            
+        if (!manualledger)
+            manualledger = ledgerSvc.findLedgerbyPrevTdNo(faas)
+
+        if (!manualledger)
+            manualledger = ledgerSvc.findLedgerByFullPin(faas)
+
+        if (!manualledger){
+            ledgerSvc.postNewLedger(faas);
+        }
+        else {
+            ledgerSvc.reconcileManualLedger(faas, manualledger)
+        }
+    }
+
+	private void doApproveFaas(faasdata){
+		def faas = faasSvc.openFaas(faasdata)
+		faas.approver = faasdata.approver
+		faasSvc.approveFaas(faas)
+		saveTasks(faasdata)
+		faasSvc.updateSignatoryInfo(faasdata.tasks.find{it.state == 'approver'})
+		println 'FAAS has been successfully approved.'
+	}
+
+	void saveTasks( faas ) {
+		task.deleteOpenTask(faas)
+		faas.tasks.each{
+			task.save(it)
+		}
+	}
+
+	void saveImageData(faas){
+		if (!faas.image) return
+		
+		faas.image.headers.each{
+			imageSvc.saveHeader(it)
+		}
+		faas.image.chunks.each{
+			imageSvc.saveItem(it)
+		}
+	}
+}

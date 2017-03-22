@@ -1,0 +1,27 @@
+import com.rameses.annotations.*;
+import com.rameses.util.*;
+import java.rmi.server.*;
+import com.rameses.common.*;
+import com.rameses.services.extended.*;
+
+class WaterworksScheduleService extends ActiveCrudListService{
+
+	@ActiveDB(value='waterworks_schedule', em='waterworks')
+	def em;
+
+	@ProxyMethod
+	def getColumns(params){
+		return [
+			['name':'year', 'caption':'Year', 'alignment':'center'],
+			['name':'month', 'caption':'Month', 'alignment':'center'],
+			['name':'duedate', 'caption':'Due Date', 'alignment':'center'],
+			['name':'cuttingdate', 'caption':'Cutting Date', 'alignment':'center']
+		];
+	}
+
+	@ProxyMethod
+	def getSchedule(params){
+		return em.findSchedule(params);
+	}
+
+}

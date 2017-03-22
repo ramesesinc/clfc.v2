@@ -1,0 +1,6 @@
+<schema>
+	<element name="waterworks_rate" tablename="waterworks_rate">
+		<field name="objid" primary="true"/>
+		<field name="metersize" required="true"/>
+	</element>
+</schema>

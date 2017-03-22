@@ -1,0 +1,43 @@
+import com.rameses.annotations.*
+import com.rameses.common.*;
+
+class ProvinceFAASWorkflowInterceptor
+{
+	@Env
+	def env
+
+	@Service('RPTCloudNotificationService')
+	def svc
+
+	@Service('FAASService')
+	def faasSvc
+
+	@Service('RPTUtil')
+	def util
+
+	@Service('FAASSupportService')
+	def supportSvc 	
+
+
+	@After(pattern="FAASWorkflowService.signal", eval="#{args[0].state.matches('approver')}") 
+	public void submitToLguOnlineFaas( evt ) {
+		println 'submitToLguOnlineFaas...'
+		def faas = evt.args[0].data;
+		faasSvc.approveFaas(faas)
+		notifyMunicipality(faas)
+	}
+
+	@After(pattern="FAASService.approveFaas", eval="#{result.datacapture == 1 || result.datacapture == true}") 
+	public void submitToLguDataCaptureFaas( evt ) {
+		println 'submitToLguDataCaptureFaas....'
+		def faas = evt.result
+		notifyMunicipality(faas)
+	}
+
+	void notifyMunicipality(faas){
+		println 'notify municipality....'
+		def asyncreq = svc.createAsyncRequest('MunicipalityFAASRemoteCallHandler', 'approveFaasByProvince',  supportSvc.getFaasData(faas))
+		svc.sendAsyncMessage(asyncreq[0], faas.lguid)
+	}
+	
+}

@@ -1,0 +1,22 @@
+import com.rameses.annotations.*;
+import com.rameses.util.*;
+import java.rmi.server.*;
+import com.rameses.services.extended.*;
+import com.rameses.rules.common.*;
+import bpls.facts.*;
+import bpls.actions.*;
+
+public class BusinessPermitTypeService  {
+
+	@ActiveDB("business_permit_type")
+	def em;
+
+	@ProxyMethod
+	public def getList() {
+		def list = [
+			[objid:'BUSINESS', title: 'BUSINESS PERMIT', options:[address_type:'basic', show_office:true]]
+		];
+		return list;
+	}
+
+}	

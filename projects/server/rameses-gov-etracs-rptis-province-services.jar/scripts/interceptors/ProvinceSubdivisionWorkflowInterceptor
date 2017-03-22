@@ -1,0 +1,27 @@
+import com.rameses.annotations.*
+import com.rameses.common.*;
+import com.rameses.services.extended.*;
+
+class ProvinceSubdivisionWorkflowInterceptor
+{
+	@Service('RPTCloudNotificationService')
+	def svc
+
+	@ActiveDB('subdivision_task')
+	def taskEm;
+	
+
+	@After(pattern="SubdivisionWorkflowService.signal", eval="#{args[0].state.matches('approver|provapprover') && args[0].action == 'completed' }") 
+	public void submitToLguOnlineSubdivision( evt ) {
+		println 'submitToLguOnlineSubdivision...'
+		def subdivision = evt.args[0].data;
+		subdivision.tasks = taskEm.getTasks(subdivision)
+		notifyMunicipality(subdivision)
+	}
+
+	void notifyMunicipality(subdivision){
+		println 'notify municipality....'
+		def asyncreq = svc.createAsyncRequest('MunicipalitySubdivisionRemoteCallHandler', 'approveSubdivisionByProvince',  subdivision)
+		svc.sendAsyncMessage(asyncreq[0], subdivision.lguid)
+	}
+}

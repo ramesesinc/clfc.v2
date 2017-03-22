@@ -1,0 +1,150 @@
+import com.rameses.annotations.*
+import java.rmi.server.*;
+import com.rameses.common.*
+import com.rameses.rules.common.*;
+import com.rameses.services.extended.*
+import rptis.landtax.facts.*;
+import rptis.landtax.actions.*;
+
+
+class RPTReceiptManualService
+{
+
+	@ActiveDB('cashreceiptrpt')
+	def em
+
+	@Service('DateService')
+	def dtSvc
+
+	@Service('NumberService')
+	def numSvc
+
+	@Service('RPTBillingService')
+	def billingSvc
+
+	@Service('LGUService')
+	def lguSvc 
+
+	@Resource("RuleService")
+	def ruleSvc;
+
+	@Service('RPTLedgerService')
+	def ledgerSvc 
+
+	@Service('RPTUtil')
+	def util
+
+
+	def RULESET 			= 'rptbilling'
+	def FACT_PACKAGE 		= 'rptbilling.'
+	def SCHEMA_RECEIPT_ITEM_ONLINE = 'cashreceiptitem_online'
+	
+
+	@ProxyMethod
+	public def createReceipt( receipt ) {
+		def pdate = dtSvc.parseDate(receipt.txndate, null)
+		receipt.year = pdate.year
+		receipt.qtr = pdate.qtr
+		receipt.month = pdate.month
+		receipt.day = pdate.day
+		
+		em.create(receipt)
+		receipt.ledgers.each{ledger -> 
+			ledger.rptitems.each{ rli ->
+				def ledgeritem = em.findLedgerItemByYear([rptledgerid:ledger.objid, year:rli.year])
+				rli.rptledgerid = ledger.objid
+				rli.rptreceiptid = receipt.objid 
+				rli.total = rli.amount 
+				rli.partialled = rli.partial 
+				rli.rptledgeritemid = ledgeritem?.objid 
+				em.create(rli, SCHEMA_RECEIPT_ITEM_ONLINE)
+			}
+
+			//sort items by year and qtr 
+			ledger.rptitems.sort{a,b -> 
+			    def sa = a.year + '-' + a.qtr 
+			    def sb = b.year + '-' + b.qtr 
+			    return sa <=> sb 
+			}
+
+			def lastitem = ledger.rptitems.last()
+			def lastqtrpaid = lastitem.toqtr
+
+			def params = [
+				rptreceiptid    : receipt.objid, 
+				rptledgerid		: ledger.objid,
+				lastbilledyear  : lastitem.year,
+				lastbilledqtr   : lastqtrpaid,
+				lastyearpaid    : lastitem.year,
+				lastqtrpaid     : lastqtrpaid,
+				partialbasic 	: (lastitem.partial ? lastitem.basic : 0.0),
+				partialbasicint : (lastitem.partial ? lastitem.basicint : 0.0),
+				partialbasicdisc: (lastitem.partial ? lastitem.basicdisc : 0.0),
+				partialsef 		: (lastitem.partial ? lastitem.sef : 0.0),
+				partialsefint 	: (lastitem.partial ? lastitem.sefint : 0.0),
+				partialsefdisc 	: (lastitem.partial ? lastitem.sefdisc : 0.0),
+				partialledyear 	: (lastitem.partial ? lastitem.year : null),
+				partailledqtr 	: (lastitem.partial ? lastqtrpaid : null),
+			]
+
+			em.updateLedgerYearQtrPaid(params)
+			em.updateLedgerItemPaymentInfo(params)
+		}
+
+
+		receipt.taxes.each {
+			it.rptreceiptid = receipt.objid 
+			em.create( it, "account") 
+		}
+	}
+
+	@ProxyMethod
+	public def getItemsForPrinting( receipt ) {
+		def items = em.getManualItemsForPrinting(receipt)
+		util.buildPeriodCovered(items)
+		return items;
+	}
+
+
+	@ProxyMethod
+	public void postLguShares( receipt ) {
+		def bill = [taxes:[], facts:[], items:[]]
+		receipt.ledgers.each{ledger -> 
+			bill.facts = []
+			bill.ledger = ledger
+			receipt.ledger = ledger
+			bill.items = ledger.rptitems 
+			def receiptdate = dtSvc.parse('yyyy-MM-dd', receipt.receiptdate)
+			bill.facts << new CurrentDate(receiptdate)
+			createLedgerFacts(bill, receipt)
+			bill.actions = billingSvc.buildActions(bill, bill.facts)
+			billingSvc.buildShares(bill)
+		}
+		receipt.taxes = bill.taxes 
+	}
+
+
+	void createLedgerFacts(bill, receipt){
+		def rptledger = ledgerSvc.openLedger(receipt.ledger);
+
+		def brgy = lguSvc.lookupBarangayById(rptledger.barangayid)
+		if (brgy.munidistrict.orgclass.equalsIgnoreCase('municipality')){
+			rptledger.lguid = brgy.munidistrict.objid 
+		}
+		else{
+			rptledger.lguid = brgy.provcity.objid 
+		}
+		
+		def ledgerfact = new RPTLedgerFact(rptledger)
+		bill.facts << ledgerfact
+
+		receipt.ledger.rptitems.eachWithIndex{item, idx ->
+			item.qtr = (item.qtr == null ? 0 : item.qtr );
+			item._pdate = dtSvc.parseDate(receipt.receiptdate, null)
+			bill.facts << billingSvc.createLedgerItemFact( ledgerfact, item, idx )
+		}
+	}
+
+
+
+}

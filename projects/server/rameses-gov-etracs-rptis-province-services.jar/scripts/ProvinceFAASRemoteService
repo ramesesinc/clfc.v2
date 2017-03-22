@@ -1,0 +1,186 @@
+import com.rameses.annotations.*;
+import com.rameses.common.*;
+import com.rameses.services.extended.*
+
+class ProvinceFAASRemoteService
+{   
+	@Env 
+	def env 
+
+	@Service('FAASWorkflowService')
+	def workflowSvc
+
+	@Service('FAASService')
+	def faasSvc
+
+	@Service('EntityService')
+	def entitySvc
+
+	@Service('RealPropertyService')
+	def rpSvc
+
+	@Service('RPUService')
+	def rpuSvc 
+
+	@Service('ExaminationService')
+	def examinationSvc
+
+	@Service('RPTRequirementService')
+	def reqSvc 
+
+	@Service('NotificationService')
+	def notificationService
+
+	@Service('DBImageService')
+	def imageSvc
+
+	@ActiveDB('faas_task')
+	def faasTask
+
+
+	public void postDataCapturedFaas(faas){
+		boolean createrecord = faasSvc.findFaasById(faas.objid) == null;
+		if (createrecord){
+			saveEntity(faas)
+			def taxpayer = [objid:faas.taxpayer.objid, name:faas.taxpayer.name, address:faas.taxpayer.address.text]
+			faas.taxpayer = taxpayer
+			faasSvc.createFaas(faas)
+			faasSvc.saveSignatory(faas.signatory)
+			saveImageData(faas)
+			println 'Data captured FAAS has been successfully created.'
+		}
+	}
+
+	public void postManualApprovedTransaction(faas){
+		boolean createrecord = faasSvc.findFaasById(faas.objid) == null;
+		if (createrecord){
+			saveEntity(faas)
+			def taxpayer = [objid:faas.taxpayer.objid, name:faas.taxpayer.name, address:faas.taxpayer.address.text]
+			faas.taxpayer = taxpayer
+			faas.state = 'FORAPPROVAL'
+			faas.datacapture = 0
+			faasSvc.createFaas(faas)
+			faasSvc.manuallyApproveFaas(faas)
+			faasSvc.saveSignatory(faas.signatory)
+			saveImageData(faas)
+			println 'Manually Approved FAAS has been successfully created.'
+		}
+	}
+
+	void saveImageData(faas){
+		if (!faas.image) return
+		
+		faas.image.headers.each{
+			try{
+				imageSvc.saveHeader(it)
+			}
+			catch(e){
+				println e.message
+			}
+		}
+		faas.image.chunks.each{
+			try{
+				imageSvc.saveItem(it)
+			}
+			catch(e){
+				println e.message
+			}
+		}
+	}
+
+
+	public void postMunicipalityApprovedFaas(faas){
+		boolean createrecord = faasSvc.findFaasById(faas.objid) == null;
+		if (createrecord){
+			createFaasRecord(faas)
+			faasSvc.approveFaasByRemote(faas)
+		}
+		println 'Municipality approved FAAS successfully posted...'
+	}
+
+
+	public void postFaasForProvinceApproval(faas){
+		boolean createrecord = faasSvc.findFaasById(faas.objid) == null;
+		if (createrecord){
+			removeOpenTask(faas)
+			createFaasRecord(faas)
+
+			def tasks = workflowSvc.start([refid:faas.objid, data:faas])
+			if (tasks)
+				faas.taskid = tasks[0].objid
+
+			notifyGroup(faas)
+			println 'FAAS has been successfully created.'
+		}
+	}
+
+	public void postFaasImages(faas){
+		saveImageData(faas)
+		println 'Saving FAAS images .... done'
+	}
+
+	public void postRequirements(faas){
+		faas.requirements.each{
+			reqSvc.save(it)
+		}
+		saveImageData(faas)
+	}
+
+
+	void createFaasRecord(faas){
+		saveEntity(faas)
+		def taxpayer = [objid:faas.taxpayer.objid, name:faas.taxpayer.name, address:faas.taxpayer.address.text]
+		faas.taxpayer = taxpayer
+		faasSvc.createFaas(faas)
+		
+		faas.examinationfindings.each{
+			examinationSvc.save(it)
+		}
+
+		faas.requirements.each{
+			reqSvc.create(it)
+		}
+
+		faas.tasks?.each{
+			faasTask.create(it)
+		}
+
+		saveImageData(faas)
+	}
+
+	void removeOpenTask(faas){
+		if (faas.tasks){
+			def opentask = faas.tasks.find{it.enddate == null}
+			faas.tasks.remove(opentask)
+		}
+	}
+
+	void saveEntity(faas){
+		def addr = faas.taxpayer.address
+		if (!addr) {
+			addr = [parentid:faas.taxpayer.objid, type:'local']
+			faas.taxpayer.address = addr;
+		}
+		if (!addr.text) addr.text = '.'
+		try{
+			entitySvc.save(faas.taxpayer)
+		}
+		catch(e){
+			e.printStackTrace();
+		}
+	}
+
+	void notifyGroup(faas){
+        def msg = [
+            objid     		: faas.objid,
+            senderid  		: env.REQUESTER.USERID,
+            sender    		: env.REQUESTER.NAME,
+            recipientid   	: 'assign-receiver',
+            recipienttype 	: 'group',
+            message   		: 'FAAS No. ' + (faas.tdno ? faas.tdno : faas.utdno) + '    (assign-receiver) submitted by ' + env.REQUESTER.NAME + '.',
+            filetype  		: 'faas',
+            data 	  		: [objid: faas.objid, taskid:faas.taskid],
+        ]
+        notificationService.addMessage(msg);
+	}
+}

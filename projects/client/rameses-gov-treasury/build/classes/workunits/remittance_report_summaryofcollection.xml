@@ -1,0 +1,61 @@
+<workunit>
+    <invokers>
+        <invoker type="remittance:reports" caption="Remittance Summary of Collection By SRE" action="viewSRE" target="self" index="9"/>
+        <invoker type="remittance:reports" caption="Remittance Summary of Collection By NGAS" action="viewNGAS" target="self" index="10"/>
+        
+        <invoker type="formActions" caption="Back" action="_close" mnemonic="b" shortcut="ctrl B" icon="images/toolbars/arrow_left.png"/>
+    </invokers>
+    
+    <code>
+        <![CDATA[    
+        import com.rameses.osiris2.common.*;
+        import com.rameses.rcp.common.*;
+        import com.rameses.rcp.annotations.*;
+        import java.rmi.server.*;
+        import com.rameses.osiris2.client.*;
+        import com.rameses.util.*;
+        import com.rameses.osiris2.reports.*;
+        
+        class RemittanceCollectionSummaryReportController extends com.rameses.etracs.shared.ReportController {
+        
+            @Binding
+            def binding;
+        
+            @Service("RemittanceReportService")
+            def svc
+            
+            String title = "Remittance Summary of Collection"; 
+            def reportpath = "com/rameses/gov/treasury/remittance/report/"
+            String reportName = reportpath + 'reportbycollectionsummary.jasper' 
+            
+            def chart
+            
+            def viewNGAS() {
+                chart = 'NGAS'
+                return preview()
+            }
+
+            def viewSRE() {
+                chart = 'SRE'
+                return preview()
+            }
+
+            def data      
+            def getReportData(){
+                data = svc.generateSummaryOfCollection( entity, chart) 
+                return data.items
+            }
+            
+             Map getParameters(){
+                return data.header
+             }
+            
+        }      
+       ]]>
+    </code>
+    
+   <pages>
+       <page name="preview" template="com.rameses.osiris2.common.ui.ReportPreviewPage"/>
+   </pages>
+   
+</workunit>

@@ -1,0 +1,40 @@
+<workunit extends="wtemplates/enterprise/treasury/BasicCashReceiptController.xml">
+    <invokers>
+        <invoker type="cashreceipt:misc" action="init" />
+    </invokers>
+    
+    <code>
+        <![CDATA[    
+        import com.rameses.rcp.annotations.*
+        import com.rameses.rcp.common.*
+        import com.rameses.osiris2.client.*
+        import com.rameses.osiris2.common.*
+        import com.rameses.enterprise.treasury.cashreceipt.*
+        
+        class  MiscCashReceiptController extends BasicCashReceipt {
+            
+            String entityName = "misc_cashreceipt"
+            
+            @Service("CollectionGroupService")
+            def colGroupSvc
+            
+            def getCollectionGroupHandler() {
+                return InvokerUtil.lookupOpener("collectiongroup:lookup", [ 
+                    onselect: { o-> 
+                            entity.items= colGroupSvc.getRevenueItems(o.objid)
+                            itemListModel.reload();
+                            entity.amount = entity.items.sum{it.amount}
+                            super.updateBalances(); 
+                    }]  );
+            }
+            
+        }
+        ]]>
+        
+    </code>
+    
+    <pages>
+        <page template="com.rameses.enterprise.treasury.cashreceipt.MiscCashReceiptPage"/>
+    </pages>
+    
+</workunit>

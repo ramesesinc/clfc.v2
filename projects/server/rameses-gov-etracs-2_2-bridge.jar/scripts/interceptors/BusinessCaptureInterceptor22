@@ -1,0 +1,181 @@
+import com.rameses.annotations.*
+import com.rameses.common.*
+import java.rmi.server.UID;
+import com.rameses.util.*;
+
+class BusinessCaptureInterceptor22 {
+	
+	@ActiveDB(value="etracs22", em="etracs22")
+	def em;
+
+	@Service("DateService")
+	def dateSvc;
+
+	@After(pattern="BusinessCaptureService.getSources")
+	public def addSource(def evt) {
+		def result = evt.result;
+		result << [title: 'ETRACS 2.2', code:'etracs22'];
+	}
+
+	@After(pattern="BusinessCaptureService.search", eval="#{ args[0].source == 'etracs22' }")
+	public def hookSearch(def evt) {
+		def params = evt.args[0]; 
+		params.searchlevel = 0;
+
+		if ( params.tradename ) {
+			if ( !params.ownername ) params.ownername = '%';
+
+			params.searchlevel = 1;
+
+		} else if ( params.ownername ) {
+			params.searchlevel = 2; 
+
+		} 
+
+		params._pagingKeys = 'b.objid'; 
+		def slist = em.getList( params );
+		evt.result.addAll( slist );
+	}
+
+
+	@After(pattern="BusinessCaptureService.getInfo", eval="#{ args[0].source == 'etracs22' }")
+	public def loadInfo(def evt) {
+		def p = evt.args[0];
+		def result = evt.result;
+
+		def binfo = em.findInfo([ objid: p.objid ]); 
+		if (binfo.business == null) binfo.business = [:]; 
+		if (binfo.business.owner == null) binfo.business.owner = [:]; 
+
+		binfo.info = em.serializer.read(binfo.info);
+		binfo.business.owner.lastname = binfo.info.lastname;
+		binfo.business.owner.firstname = binfo.info.firstname;
+		binfo.business.owner.middlename = binfo.info.middlename;
+		binfo.business.owner.birthdate = binfo.info.birthdate;
+		binfo.business.owner.gender = binfo.info.gender;
+		result.putAll(binfo);
+
+		result.lobs = em.getLobs([ businessid: p.objid, activeyear: binfo.activeyear ]); 
+		if (result.lobs.find{ it.assessmenttype == 'RENEW' }) result.apptype = 'RENEW'; 
+		else if (result.lobs.find{ it.assessmenttype == 'NEW' }) result.apptype = 'NEW'; 
+	}
+
+	@After(pattern="BusinessCaptureService.getReceivables", eval="#{ args[0].source == 'etracs22' }")
+	public void loadReceivables(def evt) {
+		def p = evt.args[0];
+		def result = evt.result;
+
+		def credits = [];
+		def taxfees = []; 
+		def receivables = [];	
+
+		em.getApplications([ businessid: p.oldbusinessid, activeyear: p.activeyear ]).each{ o-> 
+			if ( o.taxfees ) { 
+				em.serializer.read( o.taxfees ).each{ tf-> 
+					taxfees << tf; 
+				} 
+			}
+			if ( o.receivables ) {
+				em.serializer.read( o.receivables ).each{ rcv-> 
+					receivables << rcv; 
+				}
+			}
+			if ( o.credits ) { 
+				em.serializer.read( o.credits ).each{ cr-> 
+					credits << cr; 
+				}
+			} 
+		}
+
+		def lobs = p.lobs; 
+
+		def computeBalance = { o-> 
+			if ( o.interest == null ) o.interest = 0.0;
+			if ( o.surcharge == null ) o.surcharge = 0.0;
+			if ( o.discount == null ) o.discount = 0.0;
+
+			return (o.amount+o.interest+o.surcharge)-(o.amtpaid+o.discount); 
+		}
+
+		if ( receivables ) {
+			receivables.each { o-> 
+				if ( !o.interest ) o.interest = 0.0;
+				if ( !o.surcharge ) o.surcharge = 0.0;
+				if ( !o.discount ) o.discount = 0.0;
+				if ( !o.amtpaid ) o.amtpaid = 0.0; 
+				if ( !o.amount ) o.amount = 0.0; 
+			}
+
+			def rcvs = []; 
+			receivables.groupBy{[ acctid: it.acctid, lobid: it.lobid ]}.each {k,v-> 
+				def nfo = v[0]; 
+				nfo.amount = v.sum{ it.amount } 
+				nfo.amtpaid = v.sum{ it.amtpaid } 
+				nfo.interest = 0.0;
+				nfo.surcharge = 0.0;
+				nfo.discount = 0.0;
+				nfo.iqtr = null;
+				rcvs << nfo; 
+			}
+			receivables = rcvs.findAll{(it.amount != it.amtpaid)};  
+		}
+		
+		receivables.each{ o-> 
+			def x = lobs.find{ it.lobid==o.lobid } 
+			if (x) {
+				o.oldlobid = x.oldlobid;
+				o.oldlobname = x.oldname; 
+			} 
+
+			x = taxfees.find{ it.acctid==o.acctid } 
+			if (x == null) x = [:]; 
+			if (x.systype == 'BUSINESS_TAX') {
+				o.taxfeetype = 'TAX'; 
+			} else if (x.systype == 'REG_FEE') {
+				o.taxfeetype = 'REGFEE'; 
+			} else if (x.systype == 'OTHER_FEE') {
+				o.taxfeetype = 'OTHERCHARGE'; 
+			} else {
+				o.taxfeetype = 'OTHERCHARGE'; 
+			}
+			o.assessmenttype = appinfo.txntype; 
+		}
+
+		def acctMap = [:];
+		def acctFinder = { acctid->
+			if( !acctMap.containsKey(acctid)) {
+				def oldAcct = em.findAccount( [acctid: acctid] );
+				acctMap.put( acctid, oldAcct );
+			}
+			return acctMap[acctid];
+		} 
+
+		result.receivables = []; 
+		receivables.groupBy{[ acctid: it.acctid, lobid: it.lobid ]}.each{k,v-> 
+			def x = v[0]; 
+			def tf = [objid: x.objid];
+			tf.account = acctFinder( k.acctid ); 
+			tf.lob = [objid: x.lobid, name: x.lobname];
+			tf.oldlob = [objid: x.oldlobid, name: x.oldlobname]; 
+			tf.oldaccount = [objid: x.acctid, title: x.accttitle, code: x.acctno]; 
+			tf.amount = v.sum{ it.amount? it.amount: 0.0 }
+			tf.interest = v.sum{ it.interest? it.interest: 0.0 }
+			tf.surcharge = v.sum{ it.surcharge? it.surcharge: 0.0 }
+			tf.discount = v.sum{ it.discount? it.discount: 0.0 }
+			tf.amtpaid = v.sum{ it.amtpaid? it.amtpaid: 0.0 }
+			tf.total = computeBalance( tf ); 
+			tf.taxfeetype = x.taxfeetype; 			
+			tf.assessmenttype = x.assessmenttype; 
+			result.receivables << tf; 
+		} 
+		result.totals = [:]; 
+	}
+
+	@After(pattern="BusinessApplicationService.create", eval="#{ args[0].source == 'etracs22' }")
+	public def onCreateApplication(def evt) {
+		def r = evt.args[0];
+		def result = evt.result;
+		def m = [:];
+		em.save( [oldbusinessid: r.oldbusinessid, businessid:result.business.objid ], "business" );
+	}
+}

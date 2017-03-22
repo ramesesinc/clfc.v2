@@ -1,0 +1,8 @@
+package machassessment;
+
+import rptis.facts.*;
+import rptis.mach.facts.*;
+import java.util.*;
+import com.rameses.rules.common.*;
+
+global RuleAction action;

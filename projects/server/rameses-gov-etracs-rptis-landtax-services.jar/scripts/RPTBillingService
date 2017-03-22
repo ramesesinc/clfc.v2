@@ -1,0 +1,856 @@
+import com.rameses.annotations.*;
+import java.rmi.server.*;
+import com.rameses.rules.common.*;
+import com.rameses.util.*;
+import com.rameses.services.extended.*;
+import rptis.landtax.facts.*;
+import rptis.landtax.actions.*;
+
+
+public class RPTBillingService
+{
+	@ActiveDB('rptbill')
+	def em 
+
+	@ActiveDB("rule")
+	def ruleDB;
+
+	@Env
+	def env
+
+	@Service('RPTUtil')
+	def util
+
+	@Service('Var')
+	def var 
+
+	@Service('DateService')
+	def dtSvc 
+
+	@Service('NumberService')
+	def numSvc
+
+	@Service('SequenceService')
+	def seqSvc
+
+	@Service('RPTLedgerService')
+	def ledgerSvc 
+
+	@Resource("RuleService")
+	def ruleSvc;
+
+	@Service('LGUService')
+	def lguSvc 
+
+
+
+
+	def RULESET 			= 'rptbilling'
+	def FACT_PACKAGE 		= 'rptbilling.'
+	def MAX_ADVANCE_YEARS 	= 3 
+	
+	def SCHEMA_BILL_LEDGER 	= 'rptbill_ledger'
+	def SCHEMA_BILL_ITEM 	= 'rptbill_item'
+	def SCHEMA_BILL_ACCT 	= 'rptbill_account'
+
+	def BARCODE_PREFIX 		= '56001:'
+
+
+
+	@ProxyMethod
+	public def initBill(ledgerid){
+		def pdate = dtSvc.parseCurrentDate()
+		return [
+			objid 				: 'RB' + new java.rmi.server.UID(),
+			billtoyear 			: pdate.year,
+			billtoqtr			: 4,
+			advancebill			: false,
+			fullpayment    		: true,
+            qtrlypaymentavailed : false, 
+            advancepayment      : false,
+            currentdate 		: pdate.date,
+            cy 					: pdate.year,
+            rptledgerid 		: ledgerid,
+		]
+	}
+
+
+	@ProxyMethod
+	public def saveBill(bill){
+		def pdate = dtSvc.parseCurrentDate()
+		def cy = pdate.year 
+		def lguid = env.ORGCODE
+		if (!lguid) throw new Exception('The lgu_objid info in sys_var must be set.')
+		lguid = lguid.replaceAll('-', '')
+		def b = [
+			objid 			: 'B' + new java.rmi.server.UID(),
+			barcode 		: generateBarcode(),
+			expirydate  	: bill.expirydate,
+			taxpayer 		: bill.taxpayer,
+			dtposted 		: pdate.date,
+			postedby		: env.NAME,
+			postedbytitle	: env.JOBTITLE,
+			billtoyear		: bill.billtoyear,
+			billtoqtr 		: bill.billtoqtr,
+		]
+		em.create(b)
+		bill.ledgers.each{
+			def ledger = [
+				rptbillid		: b.objid, 
+				rptledgerid 	: it.objid,
+				partialbasic 	: 0.0,
+				partialbasicint : 0.0,
+				partialbasicdisc : 0.0,
+				partialsef 		: 0.0,
+				partialsefint 	: 0.0,
+				partialsefdisc 	: 0.0,
+				partialledyear 	: 0.0,
+				partialledqtr 	: 0.0,
+			]
+			em.create(ledger, SCHEMA_BILL_LEDGER)
+		}
+		return b 
+	}
+
+
+	@ProxyMethod
+	public def generateBill( bill ) {
+		if (! bill.rptledgerid)
+			throw new Exception('Ledger to bill is required.')
+
+		bill.rptledger = em.findOpenLedgerById(bill)
+        if (!bill.rptledger) throw new Exception('Ledger is fully paid or is exempted.')
+
+        ledgerSvc.postLedgerItemsUptoYear(bill.rptledger, bill.billtoyear)
+
+		bill.expirydate = bill.rptledger.expirydate
+
+		validateBillParam(bill)
+
+        if (bill.rptledger.recalcbill == 1 || bill.forceRecalcBill == true){
+        	println 'Recalculating ledger -> ' + bill.rptledger.tdno 
+        	bill.incentives = em.getIncentivesByLedgerId(bill)
+        	buildLedgerItems(bill)
+        	calculateBill(bill)
+        	saveRptBill(bill)
+        }
+		return bill
+	}
+
+
+	@ProxyMethod
+	public def generateBillByLedgerId(ledgerid){
+		def bill = initBill(ledgerid)
+		bill.billdate = dtSvc.serverDate
+		return generateBill(bill)
+	}
+
+	@ProxyMethod
+	public def generateBillByLedgerId2(ledgerid, billtoyear, billtoqtr ){
+		def bill = initBill(ledgerid)
+		bill.billdate = dtSvc.serverDate
+		bill.billtoyear = billtoyear
+		bill.billtoqtr = billtoqtr
+		return generateBill(bill)
+	}
+
+	@ProxyMethod
+	public def generateBillByLedgerId3(params){
+		util.required('LedgerId', params.ledgerid)
+		def bill = initBill(params.ledgerid)
+		if (params.billdate)
+			bill.billdate = dtSvc.parse('yyyy-MM-dd', params.billdate)
+		else
+			bill.billdate = dtSvc.serverDate
+		
+		if (params.billtoyear != null)
+			bill.billtoyear = params.billtoyear
+		if (params.billtoqtr != null)
+			bill.billtoqtr = params.billtoqtr
+			
+		bill.forceRecalcBill = params.forceRecalcBill
+
+		return generateBill(bill)
+	}
+
+	@ProxyMethod
+	public def generateBillItemsByLedger(ledgerid){
+		def bill = initBill(ledgerid)
+		bill.billdate = dtSvc.serverDate
+		bill.rptledger = em.findOpenLedgerById(bill)
+        if (!bill.rptledger) throw new Exception('Ledger is fully paid or is exempted.')
+
+        ledgerSvc.postLedgerItemsUptoYear(bill.rptledger, bill.billtoyear)
+        
+        bill.rptledger.faases = em.getLedgerFaases(bill)
+        bill.incentives = em.getIncentivesByLedgerId(bill)
+        buildLedgerItems(bill)
+		calculateBill(bill)
+		return bill.items
+	}
+
+	@ProxyMethod
+	public def generateNoLedgerBill(bill){
+		buildLedgerItems(bill)
+		calculateBill(bill)
+		return bill
+	}
+
+	@ProxyMethod
+	public def getBillByBarcode(param){
+		def bill= em.findBillByBarcode(param)
+		if (!bill) 
+			throw new Exception('Invalid barcode or associated bill has already expired.')
+		if (bill.expirydate <= dtSvc.serverDate) 
+			throw new Exception('Bill has already expired.')
+		bill.collectiontype = em.findCollectionTypeByBarcodeKey(param)
+		if (!bill.collectiontype) 
+			throw new Exception('Collection Type is not defined for barcode key ' + param.barcodekey + '.')
+		bill.ledgers = em.getBillLedgers(bill)
+		return bill 
+	}
+
+
+	@ProxyMethod
+	public def loadProperties(bill){
+		bill.billdate = dtSvc.serverDate
+		if (!bill.taxpayer) throw new Exception('Taxpayer is required.')
+		bill.taxpayerid = bill.taxpayer.objid
+		return  em.getBilledLedgers(buildParams(bill))
+	}
+
+	@ProxyMethod
+	public def getUnpaidPropertiesForPayment(bill){
+		bill.billdate = dtSvc.serverDate
+		if (!bill.taxpayer) throw new Exception('Taxpayer is required.')
+		bill.taxpayerid = bill.taxpayer.objid
+		return  em.getUnpaidPropertiesForPayment(buildParams(bill))
+	}
+	
+
+
+	/*========================================================
+	*
+	* NOTE: billing is now by ledger
+	*
+	========================================================*/
+	@ProxyMethod
+	public def buildParams(bill){
+		def cdate = dtSvc.parseCurrentDate()
+		if (!bill.billdate)
+			bill.billdate = dtSvc.serverDate
+		def pdate = dtSvc.parseDate(bill.billdate, null)
+		def params = [
+			rptledgerid : bill.rptledgerid,
+			taxpayerid : bill.taxpayerid,
+			billtoyear  : bill.billtoyear, 
+			billtoqtr   : bill.billtoqtr,
+			toyear  	: bill.billtoyear, 
+			toqtr   	: bill.billtoqtr, 
+			currdate    : cdate.date,
+			currentyr   : cdate.year,
+			currentqtr  : cdate.qtr,
+			nextbilldate : bill.expirydate,
+			billdate   : pdate.date,
+			billyear   : pdate.year,
+			billqtr    : pdate.qtr,
+			rputype    : bill.rputype, 
+			forpayment : 0,
+		]
+		if (bill.rptledgerid) {
+			params.filters = ' rl.objid = $P{rptledgerid}'
+			params.ppfilters = ' rl.objid = $P{rptledgerid}'
+		}
+		else {
+			params.filters = ' rl.taxpayer_objid = $P{taxpayerid} '
+			params.ppfilters = ' pp.taxpayer_objid = $P{taxpayerid} '
+		}
+		if (bill.rputype ){
+			params.filters += ' AND rl.rputype = $P{rputype} '
+			params.ppfilters += ' AND rl.rputype = $P{rputype} '
+		}
+
+		if (bill.barangay){
+			params.barangayid = bill.barangay.objid 
+			params.filters += ' AND rl.barangayid = $P{barangayid}'
+			params.ppfilters += ' AND rl.barangayid = $P{barangayid}'
+		}
+
+		//TODO: temp hack since datasource for MSSQL does not reliably 
+		// support order by with limit 
+		params.mssqlcountfilter = ''
+		params.mysqlcountfilter = ''
+		if (bill.payoption && bill.payoption == 'bycount' && bill.itemcount > 0){
+			params.mssqlcountfilter = ' TOP ' + bill.itemcount
+			params.mysqlcountfilter = ' LIMIT ' + bill.itemcount 
+		}
+		return params
+	}
+
+
+	void saveRptBill(bill){
+		bill.barcode = generateBarcode()
+		bill.postedby = (env.FULLNAME ? env.FULLNAME : 'system')
+		bill.postedbytitle = (env.JOBTITLE ? env.JOBTITLE  : 'system')
+		bill.dtposted = dtSvc.serverDate
+
+		if (!bill.taxpayer)
+			bill.taxpayer = bill.rptledger.taxpayer 
+
+		bill.expirydate = getExpiryDate(bill)
+	    bill.validuntil = dtSvc.add(bill.expirydate, '-1d')
+		em.save(bill)
+		saveBillLedger(bill)
+		insertBillLedgerItems(bill)
+		insertBillLedgerAccounts(bill)
+		em.updateLedgerNextBillDate(buildParams(bill))
+	}
+
+	void saveBillLedger(bill){
+		bill.rptledger.rptbillid = bill.objid 
+		bill.rptledger.rptledgerid = bill.rptledger.objid 
+		if (bill.items){
+			def lastitem = bill.items.last() 
+			bill.rptledger.partialledyear = lastitem.year 
+			bill.rptledger.partialledqtr = lastitem.qtr
+			em.save(bill.rptledger, SCHEMA_BILL_LEDGER)
+		}
+	}
+
+	void insertBillLedgerItems(bill){
+		em.deleteRptBillLedgerItem(bill)
+		if (bill.items)
+			bill.items.last().toqtr = bill.billtoqtr 
+		bill.items.each{
+			it.objid  = 'RBI' + new java.rmi.server.UID()
+			it.rptbillid = bill.objid 
+			it.year = (int) it.year 
+			it.fromqtr = (int) it.fromqtr 
+			it.toqtr = (int) it.toqtr 
+			it.qtr = (int) it.qtr
+			em.create(it, SCHEMA_BILL_ITEM)
+		}
+	}
+
+	void insertBillLedgerAccounts(bill){
+		em.deleteRptBillLedgerAccount(bill)
+		bill.taxes.each{
+			it.rptledgerid = bill.rptledger.objid
+			it.rptbillid = bill.objid 
+			em.create(it, SCHEMA_BILL_ACCT)
+		}
+	}
+
+		
+	void insertManualBillAccounts(bill) {
+		em.deleteRptBillLedgerAccount([rptledgerid:bill.ledger.objid])
+		bill.taxes.each{
+			it.rptledgerid = bill.ledger.objid
+			em.save(it, SCHEMA_BILL_ACCT)
+		}
+	}
+
+	def generateBarcode(){
+		def cy = dtSvc.serverYear
+		def lguid = var.lgu_objid
+		if (!lguid) throw new Exception('The lgu_objid info in sys_var must be set.')
+		lguid = lguid.replaceAll('-', '')
+		return BARCODE_PREFIX + lguid + cy + seqSvc.getNextFormattedSeriesA('RPTBILL-' + cy,7)
+	}
+
+
+	void buildLedgerItems(bill){
+		bill._pdate 	= dtSvc.parseDate(bill.billdate, null)
+		def cy 			= bill._pdate.year 
+		bill.items 		= []
+
+		if (!bill.taxpayer){
+			bill.taxpayer = bill.rptledger.taxpayer 
+		}
+		bill.items = em.getOpenLedgerItems(bill).each{
+			it._pdate = bill._pdate
+	        it.partialled = 0
+	        it.taxdifference = (it.taxdifference == 1)
+	        it.firstitem = false
+		}
+
+		if ( !bill.items ) return; 
+
+		//adjust fromqtr for firstitem 
+		//firstitem is based on year 
+		def firstitems = bill.items.findAll{it.fromyear == bill.items.first().fromyear} 
+
+		firstitems.first().firstitem = true 
+		firstitems.each{first->
+			first.fromqtr = (first.paidqtr == 4 ? 4 :first.paidqtr + 1)
+		}
+
+		//adjust toqtr for lastitem,
+		//duplicate lastitem possible for same year 
+		def last = bill.items.last()
+		def lastitems = bill.items.findAll{it.fromyear == last.fromyear && it.fromqtr == last.fromqtr}
+		lastitems.each{
+			it.toqtr = bill.billtoqtr;
+		}
+	}
+
+
+	@ProxyMethod 
+	public int calculateNoOfMonthsFromQtr(pdate, year, qtr) {
+		if (qtr == null || qtr == 0) qtr = 1 
+		int currYear = pdate.year
+		int currMonth = pdate.month
+		qtr = ( qtr == 0 ? 1 : qtr )
+		if(year < currYear) {
+			return ((currYear - year) * 12 - (3 * (qtr-1))) + currMonth 
+		}
+		else {
+			int nm = currMonth - (3 * (qtr-1))
+			return nm < 0 ? 0 : nm
+		}
+	}
+	
+	@ProxyMethod 
+	public int calculateNoOfMonthsFromJan(pdate, year, qtr) {
+		int currYear = pdate.year
+		int currMonth = pdate.month
+		int nmon = 0;
+		if(year < currYear) {
+			nmon = ( currYear - year ) * 12 + currMonth
+		}
+		else {
+			nmon = currMonth
+		}
+		return nmon 
+	}
+
+	/*============================================================
+	** bill: [billdate, paymentoption, rptledger, items]
+	============================================================*/
+	@ProxyMethod
+	public def calculateBill( bill ) {
+		def facts = createFacts(bill)
+		def actions = buildActions(bill, facts)
+
+		def grps = ruleDB.getRulegroups( [ruleset: RULESET] );
+		grps.each{g ->
+			ruleSvc.execute( RULESET, facts, actions, g.name);
+		}
+		return bill 
+	}
+
+	@ProxyMethod
+	public def buildSharesOnly( bill ) {
+		def grps = ['SUMMARY', 'BRGY_SHARE', 'LGU_SHARE', 'PROV_SHARE']
+		grps.each{g ->
+			ruleSvc.execute( RULESET, bill.facts, bill.actions, g);
+		}
+		return bill 
+	}
+
+	@ProxyMethod
+	public def buildShares( bill ) {
+		buildSharesOnly( bill )
+		insertManualBillAccounts(bill)
+		return bill 
+	}
+
+
+	/*====================================================================
+	* BUILD ACTIONS
+	====================================================================*/
+
+	def createVariableFact = { facts, rptledger, amount ->
+		def var = ruleSvc.createFact(RULESET, FACT_PACKAGE+'VariableInfoFact')
+		var.rptledger = rptledger
+		var.amount = amount 
+		facts << var
+		return var
+	}
+
+	def createTaxSummaryFact = {params ->
+		return new RPTLedgerTaxSummaryFact(params)
+	}
+
+
+	def createShareFact = { params ->
+		return new ShareInfoFact(params)
+	}
+
+	
+	def getRevenueItemByRevenuePeriod(params){
+		def acct    = null 
+		def lguacct = params.lguacct
+		params.revperiod = params.taxsummary.revperiod 
+	
+		if (params.sharetype.matches('basic|basicdisc'))
+		{
+			if (params.revperiod.equalsIgnoreCase('prior'))
+				acct = lguacct.basicprioracct
+			else if (params.revperiod.equalsIgnoreCase('previous'))
+				acct = lguacct.basicprevacct
+			else if (params.revperiod.equalsIgnoreCase('current'))
+				acct = lguacct.basiccurracct
+			else if (params.revperiod.equalsIgnoreCase('advance'))
+				acct = lguacct.basicadvacct
+		}
+		else if (params.sharetype.equalsIgnoreCase('basicint'))
+		{
+			if (params.revperiod.equalsIgnoreCase('prior'))
+				acct = lguacct.basicpriorintacct
+			else if (params.revperiod.equalsIgnoreCase('previous'))
+				acct = lguacct.basicprevintacct
+			else if (params.revperiod.equalsIgnoreCase('current'))
+				acct = lguacct.basiccurrintacct
+		}
+		else if (params.sharetype.matches('sef|sefdisc'))
+		{
+			if (params.revperiod.equalsIgnoreCase('prior'))
+				acct = lguacct.sefprioracct
+			else if (params.revperiod.equalsIgnoreCase('previous'))
+				acct = lguacct.sefprevacct
+			else if (params.revperiod.equalsIgnoreCase('current'))
+				acct = lguacct.sefcurracct
+			else if (params.revperiod.equalsIgnoreCase('advance'))
+				acct = lguacct.sefadvacct
+		}
+		else if (params.sharetype.equalsIgnoreCase('sefint'))
+		{
+			if (params.revperiod.equalsIgnoreCase('prior'))
+				acct = lguacct.sefpriorintacct
+			else if (params.revperiod.equalsIgnoreCase('previous'))
+				acct = lguacct.sefprevintacct
+			else if (params.revperiod.equalsIgnoreCase('current'))
+				acct = lguacct.sefcurrintacct
+		}
+		else if (params.sharetype.matches('basicidle|basicidledisc'))
+		{
+			if (params.revperiod.equalsIgnoreCase('previous'))
+				acct = lguacct.basicidleprevacct
+			else if (params.revperiod.equalsIgnoreCase('current'))
+				acct = lguacct.basicidlecurracct
+			else if (params.revperiod.equalsIgnoreCase('advance'))
+				acct = lguacct.basicidleadvacct
+		}
+		else if (params.sharetype.equalsIgnoreCase('basicidleint'))
+		{
+			if (params.revperiod.equalsIgnoreCase('previous'))
+				acct = lguacct.basicidleprevintacct
+			else if (params.revperiod.equalsIgnoreCase('current'))
+				acct = lguacct.basicidlecurrintacct
+		}
+
+		if (acct)
+			return [key:acct.objid, value:acct.title]
+		
+		throw new Exception('Invalid Share Type ' + params.sharetype + '.')
+	}
+
+
+	def getRevenueAccount = {params ->
+		def acct = params.acct 
+		if (acct)
+			return acct;
+
+		if ('barangay'.equalsIgnoreCase(params.lgutype)){
+			def barangayid = params.taxsummary.rptledger.barangayid
+			def barangay = params.taxsummary.rptledger.barangay
+			def brgyacct = em.findBrgyTaxAccountMapping([barangayid:barangayid])
+			if (! brgyacct) 
+				throw new Exception('Barangay Share Account Mapping is not defined for Barangay ' + barangay + '.')
+			params.lguacct = brgyacct
+			
+		}
+		else if ('municipality'.equalsIgnoreCase(params.lgutype)){
+			def lguid = params.taxsummary.rptledger.lguid
+			def lguacct = em.findMunicipalityTaxAccountMapping([lguid:lguid])
+			if (! lguacct) 
+				throw new Exception('LGU Share Account Mapping is not defined for LGU ' + lguid + '.')
+			params.lguacct = lguacct 
+		}
+		else if ('province'.equalsIgnoreCase(params.lgutype)){
+			def provacct = em.findProvinceTaxAccountMapping([:])
+			if (! provacct) 
+				throw new Exception('Province Share Account Mapping is not defined.')
+			params.lguacct = provacct
+		}
+		acct = getRevenueItemByRevenuePeriod(params)
+		return acct 
+	}
+
+	def createTaxItem = {params ->
+		return [
+			objid 		: 'BI' + new java.rmi.server.UID(),
+			revperiod	: params.taxsummary.revperiod,
+			revtype 	: params.sharetype.replace('disc',''),
+			item 		: [objid:params.acct.key, title:params.acct.value],
+			amount 		: 0.0,
+			discount    : 0.0,
+			sharetype 	: params.lgutype,
+		]
+	}
+
+	@ProxyMethod
+	public def buildActions(bill, facts){
+		def actions = new RuleAction();
+		actions.addCommand('split-by-qtr', new SplitByQtr(numSvc:numSvc, facts:facts, items:bill.items, createRPTLedgerItemFact:createRPTLedgerItemFact))
+		actions.addCommand('calc-basic', new CalcBasic(numSvc:numSvc, items:bill.items))
+		actions.addCommand('calc-sef', new CalcSEF(numSvc:numSvc, items:bill.items))
+		actions.addCommand('calc-firecode', new CalcFireCode(numSvc:numSvc, items:bill.items))
+		actions.addCommand('calc-idleland', new CalcIdleLand(numSvc:numSvc, items:bill.items))
+		actions.addCommand('apply-partial-payment-made', new ApplyPartialPaymentMade(numSvc:numSvc, items:bill.items))
+		actions.addCommand('apply-incentive', new ApplyIncentive(numSvc:numSvc, items:bill.items))
+		actions.addCommand('apply-partialpayment', new ApplyPartialPayment(numSvc:numSvc, items:bill.items))
+		actions.addCommand('remove-unpartialled-item', new RemoveUnpartialledItem(numSvc:numSvc, facts:facts, items:bill.items))
+		actions.addCommand('create-tax-summary', new CreateTaxSummary(numSvc:numSvc, facts:facts, items:bill.items, createTaxSummaryFact:createTaxSummaryFact))
+		
+		actions.addCommand('add-cityshare-acct', new AddShareInfo(numSvc:numSvc, facts:facts, taxes:bill.taxes, lgutype:'city', createShareFact:createShareFact, createTaxItem:createTaxItem, getRevenueAccount:getRevenueAccount))
+		actions.addCommand('add-provshare-acct', new AddShareInfo(numSvc:numSvc, facts:facts, taxes:bill.taxes, lgutype:'province', createShareFact:createShareFact, createTaxItem:createTaxItem, getRevenueAccount:getRevenueAccount))
+		actions.addCommand('add-munishare-acct', new AddShareInfo(numSvc:numSvc, facts:facts, taxes:bill.taxes, lgutype:'municipality', createShareFact:createShareFact, createTaxItem:createTaxItem, getRevenueAccount:getRevenueAccount))
+		actions.addCommand('add-brgyshare-acct', new AddShareInfo(numSvc:numSvc, facts:facts, taxes:bill.taxes, lgutype:'barangay', createShareFact:createShareFact, createTaxItem:createTaxItem, getRevenueAccount:getRevenueAccount))
+		
+		actions.addCommand('add-firecode-acct', new AddFireCodeAccount(numSvc:numSvc, items:bill.items, taxes:bill.taxes, createTaxItem:createTaxItem))
+		actions.addCommand('add-misc-account', new AddMiscAccount(numSvc:numSvc, taxes:bill.taxes))
+		return actions 
+	}
+
+
+	/*====================================================================
+	* CREATE FACTS
+	====================================================================*/
+	def createFacts(bill){
+		bill.taxes = []
+		def facts = []
+		def billdate = dtSvc.parse('yyyy-MM-dd',bill.billdate) 
+		facts << new CurrentDate(billdate)
+		facts << new EffectiveDate(billdate)
+		facts << createPaymentOptionFact(bill)
+		createRPTLedgerFact(bill, facts)
+		return facts
+	}
+
+
+	def createPaymentOptionFact(bill){
+		def paymentoption = 'FULL';
+		if (bill.billtoqtr != 4 )
+			paymentoption = 'QTRLY'
+		return new PaymentOptionFact(paymentoption)
+	}
+
+	void createRPTLedgerFact(bill, facts){
+		def rptledger = bill.rptledger
+
+		def brgy = lguSvc.lookupBarangayById(rptledger.barangayid)
+		if (brgy.munidistrict.orgclass.equalsIgnoreCase('municipality')){
+			rptledger.lguid = brgy.munidistrict.objid 
+		}
+		else{
+			rptledger.lguid = brgy.provcity.objid 
+		}
+
+		rptledger.undercompromise = determineUnderCompromise(rptledger)
+		def ledgerfact = new RPTLedgerFact(rptledger)
+		facts << ledgerfact 
+
+		// createAssessedValueFacts(facts, rptledger, ledgerfact )		
+
+		bill.items.eachWithIndex{ it, idx ->
+			it.fullypaid = checkIfFullyPaid(bill, ledgerfact, it)
+			it.qtrlypaymentavailed = checkIfQtrlyPaymentAvailed(bill, ledgerfact, it)
+			facts << createRPTLedgerItemFact(ledgerfact, it, idx)
+		}
+		bill.incentives.each{
+			facts << createIncentiveFact(ledgerfact, it)
+		}
+
+		createPartialPaymentMadeFact(ledgerfact, rptledger, facts)
+
+		if (bill.partial && bill.partial.amount > 0.0){
+			facts << new PartialPayment(ledgerfact, bill.partial.amount)
+		}
+	}
+
+
+	def determineUnderCompromise(rptledger){
+		def compromise = em.findCompromiseByLedger(rptledger)
+		if (compromise && compromise.state.matches('FORPAYMENT|FORAPPROVAL|APPROVED'))
+			return true
+		return false
+	}
+
+
+	void createAssessedValueFacts(facts, rptledger, ledgerfact ){
+		def avfactyears = var.landtax_av_fact_years
+		if (avfactyears == null) 
+			return 
+		avfactyears = avfactyears.toString().replaceAll(' ', '')
+		def avyears = avfactyears.tokenize(',')
+		def fromyear = avyears.min();
+		def toyear = avyears.max();
+		if (! rptledger.faases)
+			rptledger.faases = em.getLedgerFaasesByYear([rptledgerid:rptledger.objid, fromyear:fromyear, toyear:toyear])
+
+		avyears.each{yr ->
+			yr = Integer.parseInt(yr)
+			def lf = rptledger.faases.find{yr >= it.fromyear && (yr <= it.toyear || it.toyear == 0)}
+			if (lf){
+				facts << new AssessedValueFact(ledgerfact, [year:yr, assessedvalue:lf.assessedvalue])
+			}
+		}
+	}
+
+	@ProxyMethod
+	public def checkIfFullyPaid(bill, ledgerfact, item){
+		if (item.year < bill.billtoyear)
+			return true
+		if (item.year >= bill.billtoyear && bill.billtoqtr == 4)
+			return true
+		return false
+	}
+
+	@ProxyMethod
+	public def checkIfQtrlyPaymentAvailed(bill, ledgerfact, item){
+		if (item.year == ledgerfact.lastyearpaid)
+			return true;
+		if (item.year < bill.billtoyear)
+			return false
+		if (item.year == bill.billtoyear && bill.billtoqtr != 4)
+			return true 
+		return false
+	}
+
+	void createPartialPaymentMadeFact(ledgerfact, rptledger, facts){
+		def total = 0.0
+		rptledger.partialbasic = ( rptledger.partialbasic == null ? 0.0 : rptledger.partialbasic)
+		rptledger.partialbasicint = ( rptledger.partialbasicint == null ? 0.0 : rptledger.partialbasicint)
+		rptledger.partialbasicdisc = ( rptledger.partialbasicdisc == null ? 0.0 : rptledger.partialbasicdisc)
+		rptledger.partialsef = ( rptledger.partialsef == null ? 0.0 : rptledger.partialsef)
+		rptledger.partialsefint = ( rptledger.partialsefint == null ? 0.0 : rptledger.partialsefint)
+		rptledger.partialsefdisc = ( rptledger.partialsefdisc == null ? 0.0 : rptledger.partialsefdisc)
+
+		total += rptledger.partialbasic
+		total += rptledger.partialbasicint
+		total += rptledger.partialbasicdisc
+		total += rptledger.partialsef
+		total += rptledger.partialsefint
+		total += rptledger.partialsefdisc
+
+		if (total > 0.0){
+			facts << new PartialPaymentMade(ledgerfact, rptledger)
+		}
+	}
+
+	def createIncentiveFact(ledgerfact, incentive){
+		return new RPTIncentive(ledgerfact, incentive)
+	}
+
+
+	@ProxyMethod
+	public def createLedgerItemFact( ledgerfact, item, idx ) {
+		return createRPTLedgerItemFact( ledgerfact, item, idx )
+	}
+
+	def createRPTLedgerItemFact = {ledgerfact, item, idx -> 
+		item.numberofmonthsfromqtr = calculateNoOfMonthsFromQtr(item._pdate, item.year, item.qtr)
+		item.numberofmonthsfromjan = calculateNoOfMonthsFromJan(item._pdate, item.year, item.qtr)
+		item.backtax = determineBacktax(item)
+		return new RPTLedgerItemFact(ledgerfact, item, idx)
+	}
+
+	def determineBacktax( item ) {
+		if (util.isTrue(item.backtax)) return true
+
+		if (item.effectivityyear == null)
+			item.effectivityyear = item.effectiveyear 
+
+		def txntype_objid = item.txntype?.objid; 
+		return ( txntype_objid.toString().equalsIgnoreCase('ND') && item.year == item.effectivityyear ); 
+	}
+
+
+	@ProxyMethod
+	public void validateBillParam(bill){
+		def pdate = dtSvc.parseCurrentDate()
+
+		if (bill.billdate == null) {
+			bill.billdate = pdate.date 
+		}
+		else{
+			bill.billdate = dtSvc.parse('yyyy-MM-dd', bill.billdate)
+			bill.forceRecalcBill = true 
+		}
+
+		util.required('Bill To Year', bill.billtoyear)
+		util.required('Bill To Qtr', bill.billtoqtr)
+
+		if (bill.billtoyear < bill.rptledger.lastyearpaid)
+			throw new Exception('Bill To Year must be greater than or equal to Last Year Paid.')
+
+		if (bill.billtoyear == bill.rptledger.lastyearpaid && bill.billtoqtr <= bill.rptledger.lastqtrpaid && bill.rptledger.partialbasic == 0.0)
+			throw new Exception('Bill To Qtr must be greater than Last Qtr Paid.')
+		
+
+		def maxbilltoyear = pdate.year + MAX_ADVANCE_YEARS
+		if (bill.billtoyear > maxbilltoyear){
+			throw new Exception('Bill To Year must not exceed year ' +  maxbilltoyear + '.')
+		}
+
+		if (bill.advancepayment){
+			if (bill.billtoyear < pdate.year )
+				throw new Exception('Advance Year must be greater than current year.')
+		}
+		else if (bill.advancebill){
+			if ( bill.billdate < bill.currentdate )
+				throw new Exception('Advance Billing Date must be greater than current date.')
+		}
+		
+		if (bill.advancebill && bill.billdate <= (pdate.date - 1 ))
+            throw new Exception('Advance Billing Date must be greater than current date.')
+	}
+
+
+	def getExpiryDate(bill) { 
+		def dt = dtSvc.parseDate(bill.billdate,null);
+
+		//check in database if there is qtr deadline overrides
+		def qtr_deadline = em.findExpiry([qtr:dt.qtr, year:dt.year, date:dt.date])
+		
+		//check discount, interest overrides
+		def expirydate = null;
+		def expirytype = null;
+
+		if( ! qtr_deadline ) {
+			qtr_deadline = [
+				expirydate : dtSvc.getQtrEndDate(dt.qtr, dt.year),
+				expirytype : 'QTRDUEDATE',
+			]
+		}
+
+		qtr_deadline.expirydate = dtSvc.add(qtr_deadline.expirydate, '1d');
+		expirytype = qtr_deadline.expirytype;
+
+		//check discount first
+		if(expirytype?.equalsIgnoreCase("DISCOUNT")) {
+			return qtr_deadline.expirydate;
+		}
+		
+		//if there are arrears, expiry is first day of next month
+		if (bill.rptledger.lastyearpaid < dt.year){
+			return dtSvc.add(dtSvc.getMonthEndDate(dt.date), '1d')
+		}
+
+		//check for interest overrides
+		if( expirytype?.equalsIgnoreCase("INTEREST")) {
+			return qtr_deadline.expirydate;
+		}
+		
+		if( qtr_deadline ) {
+			return qtr_deadline.expirydate;
+		}	
+		else {
+			return dtSvc.add(dtSvc.getMonthEndDate(dt.date), '1d')
+		} 
+	}
+
+
+}

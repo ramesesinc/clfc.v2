@@ -1,0 +1,7 @@
+package rptrequirement;
+
+declare RPTTxnInfoFact
+    txntype                 : String
+    txntypemode             : String
+    planRequired            : Boolean
+end

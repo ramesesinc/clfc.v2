@@ -1,0 +1,6 @@
+<schema>
+	<element name="waterworks_account_route" tablename="waterworks_account_route">
+		<field name="routeid" required="true"/>
+		<field name="acctid" required="true"/>
+	</element>
+</schema>

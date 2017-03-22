@@ -1,0 +1,92 @@
+import com.rameses.annotations.*;
+import com.rameses.util.*;
+import java.rmi.server.*;
+
+class CashReceiptInterceptor {
+
+	@Service("AFControlService")
+	def afControlSvc;
+
+	@Service("SequenceService")
+	def seqSvc;
+
+	@Env
+	def env;
+
+	@ActiveDB('af_control') 
+	def afc; 
+
+
+	/**********************************************************************
+	* SERIAL RECEIPTS
+	**********************************************************************/
+	@After(pattern="CashReceiptService.init", index=-1)
+	public def loadNextAFSeries(def evt) {
+		def result = evt.result;
+		def params = [afid:result.formno, userid: result.user.objid, txnmode:result.txnmode, filter:''];
+		
+		if( result.collectiontype?.fund?.objid ) { 
+			params.filter =  ''' and ac.fund_objid = $P{fundid} ''' 
+			params.fundid = result.collectiontype.fund.objid;  
+		} 
+		def m = afControlSvc.findActiveControlForCashReceipt( params );
+		if(!m) {
+			throw new Warning("select-afcontrol");
+		}
+		result.collector = m.owner;
+		if( m.owner?.objid != m.assignee?.objid  ) {
+			result.subcollector = m.assignee;
+		}
+		result.stub = m.stubno;
+		if(m.serieslength) {
+			def s = m.currentseries.toString().padLeft(m.serieslength, '0');
+			result.receiptno = ((m.prefix)?m.prefix:'') + s + ((m.suffix)?m.suffix:'');
+		}
+		if(m.denomination) {
+			result.denomination = m.denomination;
+			result.receiptno = 'dynamic';
+		}
+		result.controlid = m.objid;
+		result.series = m.currentseries;
+		result.endseries = m.endseries; 
+		result.prefix = m.prefix
+		result.suffix = m.suffix
+		result.serieslength = m.serieslength 
+	}
+
+	@Before(pattern="CashReceiptService.post")
+	public def checkAFControl( evt ) { 
+		def o = evt.args[0];
+		if( o.receiptno == 'dynamic' ) {
+			o.receiptno = o.formno + seqSvc.getNextFormattedSeries(o.formno);
+			o.totalcash = o.amount;
+		}
+	}
+
+	@After(pattern="CashReceiptService.post")
+	public def postAFControl( evt ) { 
+		def result = evt.result;
+		def m = [objid: result.controlid];
+		if ( result.qtyissued ) m.qtyissued = result.qtyissued;
+
+		afControlSvc.updateNextSeries( m );
+
+		def info = afc.read([ objid: result.controlid ]); 
+		result.control = [
+			objid  : result.controlid, 
+			prefix : (info?.prefix ? info.prefix : ''),
+			suffix : (info?.suffix ? info.suffix : '')
+		]; 
+	}
+
+	@After(pattern="CashReceiptService.open")
+	public def afterOpenCashReceipt( evt ) { 
+		def result = evt.result;
+		def info = afc.read([ objid: result.controlid ]); 
+		result.control = [
+			objid  : result.controlid, 
+			prefix : (info?.prefix ? info.prefix : ''),
+			suffix : (info?.suffix ? info.suffix : '')
+		]; 
+	} 
+} 

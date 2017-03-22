@@ -1,0 +1,41 @@
+import com.rameses.annotations.*;
+import com.rameses.util.*;
+import java.rmi.server.*;
+import com.rameses.common.*;
+import com.rameses.services.extended.*;
+
+class WaterworksRouteService extends ActiveListService {
+
+	@ActiveDB(value='waterworks_route', em="waterworks")
+	def em;
+
+	@ProxyMethod
+	def getColumns(params){
+		return [
+			[name : 'name', caption: 'Name', width: 150],
+			[name : 'description', caption: 'Description', width: 250],
+			[name : 'path', caption: 'Path', width: 250]
+		];
+	}
+
+	void beforeList(params){
+		params.searchtext = params.searchtext ? params.searchtext : '%';
+	}
+
+	@ProxyMethod
+	def create(params){
+		params.objid = new UID().toString();
+		return em.create(params);
+	}
+
+	@ProxyMethod
+	def update(params){
+		return em.update(params);
+	}
+
+	@ProxyMethod
+	void delete(params){
+		em.delete(params);
+	}
+
+}
