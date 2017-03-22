@@ -1,0 +1,15 @@
+<workunit>   
+    <invokers>
+       <invoker folderid="/menu/test" caption="Test FileService" action="init" undecorated="true" target="popup"/> 
+       
+       <invoker type="formActions" caption="Close" action="_close"/>        
+       <invoker type="formActions" caption="Upload" action="upload"/> 
+       <invoker type="formActions" caption="Fetch" action="fetch"/> 
+    </invokers>
+    
+    <code class="test.file.TestFileController"/>
+    
+    <pages>
+        <page name="test.file.TestFilePage"/> 
+    </pages>
+</workunit>

@@ -1,0 +1,89 @@
+<workunit>
+    <invokers>
+        <invoker folderid="/menu/test" caption="Test ImageGallery"/>
+        
+        <invoker type="formActions" caption="Dump info" action="dumpInfo"/>
+        <invoker type="formActions" caption="Move Next" action="moveNext"/>
+        <invoker type="formActions" caption="Move Previous" action="movePrevious"/>
+        <invoker type="formActions" caption="Enable" action="enable"/>
+        <invoker type="formActions" caption="Disable" action="disable"/>
+        <invoker type="formActions" caption="Refresh" action="refresh" name="refresh" visibleWhen="#{entity.state != 0}"/>
+    </invokers>
+    
+    <code>
+    <![CDATA[ 
+    import com.rameses.rcp.common.*;
+    import com.rameses.rcp.annotations.*;
+    import com.rameses.osiris2.client.*;
+    import com.rameses.osiris2.common.*;
+
+    class TestImageGalleryController 
+    {
+        def entity = [state: 1];
+        
+        def selectedItem;
+        def galleryModel = [
+            fetchList: {o-> 
+                println 'fetchList-> ' + o;
+                def images = [];
+                def dir = new java.io.File("C:\\Users\\Public\\Pictures\\Sample Pictures");
+                //def dir = new java.io.File("C:\\Users\\compaq\\Pictures\\Lightroom\\11thirstyfootballcup");
+                def files = dir.listFiles();
+                for (int i=0; i<25; i++) {
+                    if (i >= files.length) break;
+                    
+                    def file = files[i];
+                    if (file.isDirectory()) continue;
+                    
+                    def map = [
+                        image: com.rameses.io.IOStream.toByteArray(file), 
+                        caption: file.name
+                    ];
+                    images << map;
+                }  
+                return images;
+            },
+            
+            onselect: {
+                println 'onselect-> ' + it?.caption;
+            },
+            
+            onopen: {
+                println 'onopen-> ' + it?.caption;
+                return null; 
+            } 
+        ] as ImageGalleryModel;
+        
+        void dumpInfo() {
+            println selectedItem?.caption;
+        } 
+        
+        void moveNext() {
+            galleryModel.moveNext(); 
+        } 
+        
+        void movePrevious() {
+            galleryModel.movePrevious(); 
+        } 
+        
+        void enable() {
+            entity.state = 1;
+        } 
+        void disable() {
+            entity.state = 0;
+        } 
+        void refresh() {
+            def file = new java.io.File("C:\\Users\\Public\\Pictures\\Sample Pictures\\Desert.jpg");
+            selectedItem.image = com.rameses.io.IOStream.toByteArray(file); 
+            selectedItem.caption = 'Image has been updated to ' + file.name;
+            galleryModel.refresh();
+        } 
+    }
+    ]]>
+    </code>
+    
+    <pages>
+        <page template="test.image.TestImageGalleryPage"/> 
+    </pages>
+
+</workunit>

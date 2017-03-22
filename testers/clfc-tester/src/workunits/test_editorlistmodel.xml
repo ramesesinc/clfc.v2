@@ -1,0 +1,11 @@
+<workunit>   
+    <invokers>
+        <invoker folderid="/menu/test" caption="Test Editor List" action="init" target="popup"/> 
+    </invokers>
+    
+    <code class="test.list.TestEditorListController"/> 
+   
+    <pages>
+        <page name="test.list.TestEditorListPage"/> 
+    </pages>
+</workunit>

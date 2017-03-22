@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<Form version="1.3" type="org.netbeans.modules.form.forminfo.JPanelFormInfo">
+  <AuxValues>
+    <AuxValue name="FormSettings_generateMnemonicsCode" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_layoutCodeTarget" type="java.lang.Integer" value="1"/>
+    <AuxValue name="FormSettings_listenerGenerationStyle" type="java.lang.Integer" value="0"/>
+    <AuxValue name="FormSettings_variablesLocal" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_variablesModifier" type="java.lang.Integer" value="2"/>
+  </AuxValues>
+
+  <Layout>
+    <DimensionLayout dim="0">
+      <Group type="103" groupAlignment="0" attributes="0">
+          <Group type="102" alignment="0" attributes="0">
+              <EmptySpace max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Component id="xImageCanvas1" alignment="1" pref="467" max="32767" attributes="0"/>
+                  <Component id="xLabel1" alignment="1" pref="467" max="32767" attributes="0"/>
+                  <Component id="xImageGallery2" alignment="0" pref="467" max="32767" attributes="0"/>
+              </Group>
+              <EmptySpace max="-2" attributes="0"/>
+          </Group>
+      </Group>
+    </DimensionLayout>
+    <DimensionLayout dim="1">
+      <Group type="103" groupAlignment="0" attributes="0">
+          <Group type="102" alignment="1" attributes="0">
+              <EmptySpace max="-2" attributes="0"/>
+              <Component id="xImageCanvas1" min="-2" pref="293" max="-2" attributes="1"/>
+              <EmptySpace max="-2" attributes="0"/>
+              <Component id="xImageGallery2" min="-2" max="-2" attributes="0"/>
+              <EmptySpace max="-2" attributes="0"/>
+              <Component id="xLabel1" min="-2" max="-2" attributes="0"/>
+              <EmptySpace max="-2" attributes="0"/>
+          </Group>
+      </Group>
+    </DimensionLayout>
+  </Layout>
+  <SubComponents>
+    <Component class="com.rameses.rcp.control.XLabel" name="xLabel1">
+      <Properties>
+        <Property name="depends" type="[Ljava.lang.String;" editor="org.netbeans.beaninfo.editors.StringArrayEditor">
+          <StringArray count="1">
+            <StringItem index="0" value="selectedItem"/>
+          </StringArray>
+        </Property>
+        <Property name="expression" type="java.lang.String" value="#{selectedItem.caption}"/>
+      </Properties>
+    </Component>
+    <Component class="com.rameses.rcp.control.XImageCanvas" name="xImageCanvas1">
+      <Properties>
+        <Property name="depends" type="[Ljava.lang.String;" editor="org.netbeans.beaninfo.editors.StringArrayEditor">
+          <StringArray count="1">
+            <StringItem index="0" value="selectedItem"/>
+          </StringArray>
+        </Property>
+        <Property name="name" type="java.lang.String" value="selectedItem.image"/>
+      </Properties>
+    </Component>
+    <Component class="com.rameses.rcp.control.XImageGallery" name="xImageGallery2">
+      <Properties>
+        <Property name="cellSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+          <Dimension value="[68, 58]"/>
+        </Property>
+        <Property name="cols" type="int" value="-1"/>
+        <Property name="handler" type="java.lang.String" value="galleryModel"/>
+        <Property name="name" type="java.lang.String" value="selectedItem"/>
+      </Properties>
+    </Component>
+  </SubComponents>
+</Form>

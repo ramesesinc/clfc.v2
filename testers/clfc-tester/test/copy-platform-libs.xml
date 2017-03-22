@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="copy-platform-libs" default="start" basedir=".">
+    
+    <target name="init">
+        <property file="conf.properties"/>
+        
+        <taskdef resource="net/sf/antcontrib/antcontrib.properties">
+            <classpath>
+                <pathelement location="../../lib/ant-contrib-0.6.jar"/>
+            </classpath>
+        </taskdef> 
+        <taskdef name="groovy" classname="org.codehaus.groovy.ant.Groovy">
+            <classpath>
+                <pathelement location="../../lib/groovy-all-1.5.5.jar"/>
+            </classpath>            
+        </taskdef>        
+    </target>
+        
+    <target name="start" depends="init">
+        <groovy>
+        <![CDATA[
+            def source_dir = properties['rameses.dir'] + '/incubation';
+            def target_dir = properties['target.server.dir']; 
+            
+            [
+                'anubis-cms2', 'db-dialect', 'rameses-common2', 'rameses-custom-impl',
+                'rameses-main-bootloader','rameses-osiris3-core2','rameses-osiris3-mail',
+                'rameses-osiris3-rules','rameses-osiris3-server','rameses-services-extended',
+                'rameses-tomcat-cp','rameses-websocket2' 
+            ].each{projname-> 
+                def path = source_dir + '/' + projname + '/dist/' + projname + '.jar';
+                ant.echo(' Copying ' + projname + '... ');
+                ant.copy(file:path, todir:target_dir + '/lib', overwrite:true, failonerror:false);
+            }
+        ]]> 
+        </groovy>
+    </target>
+    
+    <target name="build-zip">
+        <groovy>
+        <![CDATA[
+            //def workspacedir = properties['workspace.dir'];
+            //def platformsdir = properties['platforms.dir'];
+            //ant.zip(destfile: workspacedir + '/etracs25_platform.zip', basedir:"${platformsdir}/etracs25_platform") 
+
+        ]]> 
+        </groovy>
+    </target>
+    
+</project>

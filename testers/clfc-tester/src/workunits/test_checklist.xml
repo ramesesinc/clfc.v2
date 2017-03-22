@@ -1,0 +1,16 @@
+<workunit>   
+    <invokers>
+       <invoker folderid="/menu/test" caption="Test CheckList" action="init" target="popup"/> 
+       
+       <invoker type="formActions" caption="Close" action="_close" immediate="true"/>        
+       <invoker type="formActions" caption="Submit" action="submit"/>        
+       <invoker type="formActions" caption="Enable" action="enable" immediate="true"/> 
+       <invoker type="formActions" caption="Disable" action="disable" immediate="true"/> 
+    </invokers>
+    
+    <code class="test.TestCheckListController"/>
+    
+    <pages>
+        <page name="test.TestCheckListPage"/> 
+    </pages>
+</workunit>

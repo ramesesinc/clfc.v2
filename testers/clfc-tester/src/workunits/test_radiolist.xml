@@ -1,0 +1,15 @@
+<workunit>   
+    <invokers>
+       <invoker folderid="/menu/test" caption="Test RadioList" action="init" target="popup"/> 
+       
+       <invoker type="formActions" caption="Close" action="_close"/>        
+       <invoker type="formActions" caption="Enable" action="enable"/> 
+       <invoker type="formActions" caption="Disable" action="disable"/> 
+    </invokers>
+    
+    <code class="test.TestRadioListController"/>
+    
+    <pages>
+        <page name="test.TestRadioListPage"/> 
+    </pages>
+</workunit>

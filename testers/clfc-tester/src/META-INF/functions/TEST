@@ -1,0 +1,8 @@
+{
+  caption: 'TEST',
+  description: 'this is a test function',
+  code: 'util.TestFunc.test',
+  title: '@TEST( value )', 
+  signature: '@TEST( | )', 
+  group: 'logical' 
+}

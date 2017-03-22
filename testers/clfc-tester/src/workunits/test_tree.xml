@@ -1,0 +1,11 @@
+<workunit>
+    <invokers>
+        <invoker folderid="/menu/test" caption="Test Tree " target="popup"/>
+    </invokers>
+    
+    <code class='test.explorerview.SampleTreeController' />
+    
+    <pages>
+        <page template='test.explorerview.SampleTreePage' />
+    </pages>
+</workunit>
