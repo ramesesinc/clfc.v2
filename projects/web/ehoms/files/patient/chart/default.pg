@@ -1,7 +1,0 @@
-{ 
-	secured		: true, 
-	fragment	: true,
-	href		: '/patient/option/facesheet',
-
-	icon		: '/images/main/tools.png' 
-} 

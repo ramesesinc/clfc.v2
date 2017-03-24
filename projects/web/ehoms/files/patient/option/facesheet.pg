@@ -1,8 +1,0 @@
-{ 
-	title		: 'Facesheet', 
-	context		: 'facesheet', 
-	action		: 'showFacesheet',
-	index		: 0,
-	secured		: true, 
-	fragment	: true
-} 

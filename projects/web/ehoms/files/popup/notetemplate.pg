@@ -1,6 +1,0 @@
-{
-	title: 		'Note Template',
-	context: 	'notetemplate',
-	secured:	true,
-	fragment: 	true,
-}

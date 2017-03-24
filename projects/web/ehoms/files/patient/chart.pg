@@ -1,5 +1,0 @@
-{
-   title		: "Patient Chart",
-   context		: "patientchart",
-   secured		: true
-}

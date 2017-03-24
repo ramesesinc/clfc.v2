@@ -1,8 +1,0 @@
-{ 
-	href		: '/list/radiology',
-	title		: 'Radiology', 
-	secured		: true,  
-	sortorder	: -91, 
-
-	icon		: '/images/main/tools.png' 
-} 

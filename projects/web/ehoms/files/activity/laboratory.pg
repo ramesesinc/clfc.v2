@@ -1,5 +1,0 @@
-{  
-	context		: 'laboratory', 
-	secured 	: true,
-	fragment 	: true
-} 

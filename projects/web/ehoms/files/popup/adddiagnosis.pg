@@ -1,6 +1,0 @@
-{
-	title: 		'Add Diagnosis',
-	context: 	'add_diagnosis',
-	secured:	true,
-	fragment: 	true,
-}

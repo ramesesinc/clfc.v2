@@ -1,7 +1,0 @@
-{ 
-	secured		: true, 
-	fragment	: true,
-	href		: '/popup/adddiagnosis',
-
-	icon		: '/images/main/tools.png' 
-} 
