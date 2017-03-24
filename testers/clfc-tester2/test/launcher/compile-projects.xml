@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="launcher" default="compile" basedir=".">
+    
+    <target name="-init">
+        <property file="conf.properties"/>
+        <property name="incubation.dir" value="${rameses.dir}/incubation"/>
+        
+        <taskdef resource="net/sf/antcontrib/antcontrib.properties">
+            <classpath>
+                <pathelement location="../../lib/ant-contrib-0.6.jar"/>
+            </classpath>
+        </taskdef> 
+        <taskdef name="groovy" classname="org.codehaus.groovy.ant.Groovy">
+            <classpath>
+                <pathelement location="../../lib/groovy-all-1.5.5.jar"/>
+            </classpath> 
+        </taskdef>
+    </target> 
+    
+    <target name="compile" depends="-init">
+        <groovy>
+        <![CDATA[     
+            def ANT_HOME = properties['ant.home']; 
+            def CLASSPATH = properties['java.class.path']; 
+
+            ['download.shared.modules', 'download.app.modules'].each{key-> 
+                def sjars = properties[key];
+                if (sjars == null) sjars = '';
+
+                def ant = new AntBuilder();
+                sjars.split(':').each{ 
+                    def arr = it.split(','); 
+                    def projname = arr[0];
+                    if (!projname) return; 
+                    
+                    ant.echo('compiling ' + projname);
+                    ant.exec(executable:ANT_HOME+'/bin/ant.bat', outputproperty:'cmdOutput', errorproperty:'cmdError', failonerror:false){ 
+                        arg(value: '-f')  
+                        arg(path: 'C:/RAMESES/clfcv2/projects/client/'+ projname +'/build.xml') 
+                        arg(line: 'clean jar')
+                        env(key: 'ANT_HOME', path: ANT_HOME)
+                        env(key: 'CLASSPATH', path: CLASSPATH)
+                    } 
+                } 
+            } 
+        ]]> 
+        </groovy>        
+    </target>    
+    
+</project>

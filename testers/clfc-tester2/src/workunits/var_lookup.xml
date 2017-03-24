@@ -1,0 +1,5 @@
+<workunit extends="wtemplates/ServiceLookupController.xml" serviceName="VarService">   
+    <invokers>
+        <invoker type="var:lookup" caption="Variables" target="popup"/> 
+    </invokers>
+</workunit>
