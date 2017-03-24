@@ -1,0 +1,65 @@
+<workunit>
+    <invokers>
+        <invoker folderid="/menu/test" caption="Test Explorer View" action='init' target="popup"/>
+    </invokers>
+    
+    <code class='test.explorerview.SampleExplorerViewController' />
+    
+    <!--
+    <code>
+        import com.rameses.rcp.common.*;
+        import com.rameses.rcp.annotations.*;
+        import com.rameses.osiris2.client.*;
+        import com.rameses.osiris2.common.*;
+        
+        class LedgerListController 
+        {
+            @Invoker
+            def invoker;
+        
+            @Binding
+            def binding;
+        
+            def getTitle() {
+                println 'get title'
+                println 'invoker ' + this.invoker;
+                if (!this.invoker) return null;
+                return this.invoker.getCaption();
+            }
+        
+            void setSelectedNode( selectedNode ) {
+                this.selectedNode = selectedNode;
+                println 'selected node ' + selectedNode;
+                binding?.refresh('listHandler.*');
+                
+            }
+        
+            def selectedNode;
+            def nodeModel = [
+                getNodeList: { node->
+                    def list = [];
+                    if (!node.leaf) {
+                        list = [
+                            [caption: 'CURRENT', type: 'root', leaf: true],
+                            [caption: 'PAST DUE', type: 'root', leaf: true]
+                        ];
+                    }
+                    return list;
+                }
+            ] as TreeNodeModel
+        
+            def listHandler = [
+                fetchList: { o->
+                    println 'selected node ' + selectedNode?.caption;
+                }
+            ] as BasicListModel;
+        }
+    </code>
+    -->
+    
+    <pages>
+        <page template='com.rameses.osiris2.themes.ExplorerViewPage' />
+        <page template="com.rameses.osiris2.themes.DefaultQueryFormPanel" name="queryform"/>
+        <!-- <page template='com.rameses.osiris2.themes.ExplorerViewListPage' /> -->
+    </pages>
+</workunit>

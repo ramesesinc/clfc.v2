@@ -1,0 +1,39 @@
+<workunit> 
+    <invokers>
+        <invoker folderid="/menu/test" caption="Test Image Canvas"/>
+        
+        <invoker type="formActions" caption="Browse..." action="browse"/>
+    </invokers>
+    
+    <code>
+    import com.rameses.rcp.common.*;
+    import com.rameses.rcp.annotations.*;
+    import com.rameses.osiris2.client.*;
+    import com.rameses.osiris2.common.*;
+    import com.rameses.io.StreamUtil;
+    import java.io.FileInputStream;
+    import javax.swing.JFileChooser;
+    
+    class TestImageCanvasController 
+    {        
+        @Binding
+        def binding;
+        
+        def image;
+        
+        void browse() {
+            def jfc = new JFileChooser();
+            int retval = jfc.showOpenDialog(null); 
+            if (retval == JFileChooser.APPROVE_OPTION) {
+                def file = jfc.getSelectedFile();
+                image = StreamUtil.toByteArray(new FileInputStream(file));
+                binding.refresh('image'); 
+            } 
+        } 
+    }
+    </code>
+    
+    <pages>
+        <page template="test.image.TestImageCanvasPage"/> 
+    </pages>
+</workunit>

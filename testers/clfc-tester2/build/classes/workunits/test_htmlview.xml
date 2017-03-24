@@ -1,0 +1,34 @@
+<workunit> 
+    <invokers>
+        <invoker folderid="/menu/test" caption="Test HtmlView"/>
+    </invokers>
+    
+    <code>
+    <![CDATA[ 
+    import com.rameses.rcp.common.*;
+    import com.rameses.rcp.annotations.*;
+    import com.rameses.osiris2.client.*;
+    import com.rameses.osiris2.common.*;
+    
+    class TestHtmlViewController 
+    {        
+        @Binding
+        def binding;
+
+        def html = """ 
+            <html>
+                Click <input type="button" value="Here" onclick="doClick" id="id" name="name" key="key" onkeypress="onkeypress"/> 
+            </html>  
+        """; 
+
+        void doClick( params ) {
+            println 'invoking doClick... ' + params;
+        } 
+    }
+    ]]>
+    </code>
+    
+    <pages>
+        <page template="test.text.TestHtmlViewPage"/> 
+    </pages>
+</workunit>

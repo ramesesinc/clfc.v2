@@ -1,0 +1,11 @@
+<workunit>   
+    <invokers>
+        <invoker folderid="/menu/test" caption="Expression" target="popup"/> 
+    </invokers>
+    
+    <code class="test.expression.TestExpressionController"/> 
+    
+    <pages>
+        <page name="test.expression.TestExpressionPage"/> 
+    </pages>
+</workunit>

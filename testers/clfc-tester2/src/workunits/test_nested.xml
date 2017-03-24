@@ -1,0 +1,15 @@
+<workunit>   
+    <invokers>
+       <invoker folderid="/menu/test" caption="Test Nested Invocation" action="init" target="popup"/> 
+       
+       <invoker type="formActions" caption="Close" action="_close"/>        
+       <invoker type="formActions" caption="Edit" action="myclass.edit"/> 
+       <invoker type="formActions" caption="Save" action="myclass.save"/> 
+    </invokers>
+    
+    <code class="test.TestNestedController"/>
+    
+    <pages>
+        <page name="test.TestNestedPage"/> 
+    </pages>
+</workunit>

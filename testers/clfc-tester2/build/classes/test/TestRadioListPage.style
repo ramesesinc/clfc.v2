@@ -1,0 +1,6 @@
+"selectedItem" [enabled==true] {
+    enabled: true; 
+} 
+"selectedItem" [enabled==false] {
+    enabled: false; 
+} 

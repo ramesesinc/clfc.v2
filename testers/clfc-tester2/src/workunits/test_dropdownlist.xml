@@ -1,0 +1,13 @@
+<workunit>   
+    <invokers>
+       <invoker folderid="/menu/test" caption="Test DropDownList" action="init" target="popup"/> 
+       
+       <invoker type="formActions" caption="Close" action="_close"/>        
+    </invokers>
+    
+    <code class="test.TestDropDownListController"/>
+    
+    <pages>
+        <page name="test.TestDropDownListPage"/> 
+    </pages>
+</workunit>

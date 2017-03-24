@@ -1,0 +1,11 @@
+<workunit>   
+    <invokers>
+        <!--
+       <invoker folderid="/home/business" caption="New Application" target="popup"/> 
+       <invoker folderid="/home/business" caption="Generate Billing" target="popup"/> 
+       
+       <invoker folderid="/home/business/billing" caption="New Billing" target="popup"/> 
+       <invoker folderid="/home/business/billing" caption="Reports" target="popup"/> 
+       -->
+    </invokers>
+</workunit>

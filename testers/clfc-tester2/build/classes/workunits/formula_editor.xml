@@ -1,0 +1,11 @@
+<workunit>   
+    <invokers>
+        <invoker type="formula:editor" caption="Formula Editor" target="popup"/> 
+    </invokers>
+    
+    <code class="test.expression.FormulaEditorController"/> 
+    
+    <pages>
+        <page name="test.expression.FormulaEditorPage"/> 
+    </pages>
+</workunit>

@@ -1,0 +1,11 @@
+<workunit>   
+    <invokers>
+        <invoker type="xxx:open" caption="Notification" action="open" target="popup"/> 
+    </invokers>
+    
+    <code class="test.expression.TestNotificationController"/>
+    
+    <pages>
+        <page name="test.expression.TestNotificationPage"/> 
+    </pages>
+</workunit>

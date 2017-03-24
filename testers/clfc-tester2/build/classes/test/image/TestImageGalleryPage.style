@@ -1,0 +1,6 @@
+"selectedItem" [entity.state==1] {
+    enabled: true; 
+} 
+"selectedItem" [entity.state==0] {
+    enabled: false; 
+} 

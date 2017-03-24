@@ -1,0 +1,12 @@
+<workunit> 
+    <invokers> 
+        <invoker type="notification-group" caption="Branch Managers" group="BRANCH_MANAGER" 
+            domain="LOAN" role="BRANCH_MANAGER"/>
+            
+        <invoker type="notification-group" caption="Accounting Assistant" group="ACCT_ASSISTANT" 
+            domain="LOAN" role="ACCT_ASSISTANT"/>            
+            
+        <invoker type="notification-group" caption="Approver" group="APPROVER" 
+            domain="LOAN" role="APPROVER"/>                        
+    </invokers>  
+</workunit>
