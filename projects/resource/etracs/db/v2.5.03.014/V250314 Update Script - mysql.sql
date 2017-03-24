@@ -1,1 +1,0 @@
-alter table landadjustmenttype add column idx int;

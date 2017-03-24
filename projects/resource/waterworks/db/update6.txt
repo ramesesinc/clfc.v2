@@ -1,4 +1,0 @@
-DROP TABLE waterworks_schedule; 
-
-ALTER TABLE waterworks_account ADD COLUMN nextduedate DATE NULL AFTER entity_address; 
-

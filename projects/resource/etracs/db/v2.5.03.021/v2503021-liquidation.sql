@@ -1,1 +1,0 @@
-ALTER TABLE liquidation ADD COLUMN posted int DEFAULT 0;
