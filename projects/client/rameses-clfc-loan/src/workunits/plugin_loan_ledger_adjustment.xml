@@ -15,11 +15,15 @@
         
         class LoanLedgerAdjustmentsListController extends ListController
         {
-            @Service("LoanLedgerAdjustmentService")
+            //@Service("LoanLedgerAdjustmentService")
+            //def svc;
+            @Service("NewLedgerAdjustmentService")
             def svc;
             
-            String serviceName = "LoanLedgerAdjustmentService";
-            String entityName = "ledgeradjustment";
+            //String serviceName = "LoanLedgerAdjustmentService";
+            //String entityName = "ledgeradjustment";
+            String serviceName = "NewLedgerAdjustmentService";
+            String entityName = "ledger:adjustment";
         
             boolean allowClose = false;
         
