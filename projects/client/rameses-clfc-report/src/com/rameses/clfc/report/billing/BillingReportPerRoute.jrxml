@@ -30,6 +30,7 @@
 	<field name="billitems" class="java.lang.Object"/>
 	<field name="collector.name" class="java.lang.String"/>
 	<field name="state" class="java.lang.String"/>
+	<field name="date" class="java.util.Date"/>
 
 		<background>
 			<band height="0"  isSplitAllowed="true" >
@@ -56,7 +57,9 @@
 						width="40"
 						height="16"
 						key="staticText-1"
-						positionType="Float"/>
+						positionType="Float"
+						isRemoveLineWhenBlank="true"
+						isPrintWhenDetailOverflows="true"/>
 					<box>					<topPen lineWidth="0.0"/>
 					<leftPen lineWidth="0.0"/>
 					<bottomPen lineWidth="0.0"/>
@@ -77,7 +80,8 @@
 						positionType="Float"
 						isRemoveLineWhenBlank="true"
 						isPrintWhenDetailOverflows="true"/>
-					<box></box>
+					<box leftPadding="2">					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
 					<textElement verticalAlignment="Middle">
 						<font/>
 					</textElement>
@@ -104,7 +108,9 @@
 						width="60"
 						height="16"
 						key="staticText-2"
-						positionType="Float"/>
+						positionType="Float"
+						isRemoveLineWhenBlank="true"
+						isPrintWhenDetailOverflows="true"/>
 					<box>					<topPen lineWidth="0.0"/>
 					<leftPen lineWidth="0.0"/>
 					<bottomPen lineWidth="0.0"/>
@@ -125,7 +131,8 @@
 						positionType="Float"
 						isRemoveLineWhenBlank="true"
 						isPrintWhenDetailOverflows="true"/>
-					<box></box>
+					<box leftPadding="2">					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
 					<textElement verticalAlignment="Middle">
 						<font/>
 					</textElement>
@@ -138,7 +145,9 @@
 						width="40"
 						height="16"
 						key="staticText-3"
-						positionType="Float"/>
+						positionType="Float"
+						isRemoveLineWhenBlank="true"
+						isPrintWhenDetailOverflows="true"/>
 					<box>					<topPen lineWidth="0.0"/>
 					<leftPen lineWidth="0.0"/>
 					<bottomPen lineWidth="0.0"/>
@@ -153,13 +162,14 @@
 					<reportElement
 						x="40"
 						y="18"
-						width="100"
+						width="200"
 						height="16"
 						key="textField-3"
 						positionType="Float"
 						isRemoveLineWhenBlank="true"
 						isPrintWhenDetailOverflows="true"/>
-					<box></box>
+					<box leftPadding="2">					<bottomPen lineWidth="0.5" lineStyle="Solid"/>
+</box>
 					<textElement verticalAlignment="Middle">
 						<font/>
 					</textElement>
