@@ -28,3 +28,12 @@ android/*/Thumbs.db
 
 /**/.gradle
 /**/.nb-gradle
+/testers/clfc-tester/build/
+/testers/clfc-tester2/nbproject/private/
+/testers/clfc-tester2/dist/
+/testers/clfc-tester2/build/
+/projects/client/client-ui-extended/build/
+/projects/client/rameses-enterprise-accounts/dist/
+/projects/client/rameses-enterprise-accounts/build/
+/projects/client/rameses-enterprise-inventory/build/
+/projects/client/rameses-enterprise-inventory/dist/
