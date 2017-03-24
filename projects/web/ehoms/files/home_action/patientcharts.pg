@@ -1,8 +1,0 @@
-{ 
-	href		: '/patientchart/list',
-	title		: 'Patient Charts', 
-	secured		: true,  
-	sortorder	: -91, 
-
-	icon		: '/images/main/tools.png' 
-} 

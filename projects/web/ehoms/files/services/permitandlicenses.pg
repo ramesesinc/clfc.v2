@@ -1,6 +1,0 @@
-{
-   title 		: 'Permits and Licenses',
-   description 	: 'Application for other permits and licenses',
-   icon			: '/images/main/licenses.png', 
-   sortorder 	: 4
-}

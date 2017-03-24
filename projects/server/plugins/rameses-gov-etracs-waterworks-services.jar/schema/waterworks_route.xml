@@ -1,8 +1,0 @@
-<schema>
-	<element name="waterworks_route" tablename="waterworks_route">
-		<field name="objid" primary="true"/>
-		<field name="name" required="true"/>
-		<field name="description" required="true"/>
-		<field name="path" required="true"/>
-	</element>
-</schema>

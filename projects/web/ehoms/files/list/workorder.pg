@@ -1,5 +1,0 @@
-{
-   title		: "Work Order",
-   context		: "workorder",
-   secured		: true
-}

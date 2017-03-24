@@ -1,1 +1,0 @@
-alter table faas add preveffectivity varchar(10);

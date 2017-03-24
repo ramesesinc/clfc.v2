@@ -1,7 +1,0 @@
-{
-	title		: 'Change Password',
-	context 	: 'changepassword', 
-	secured		: true,
-	hidden		: true,
- 	fragment	: true 
-} 

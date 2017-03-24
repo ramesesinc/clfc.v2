@@ -1,6 +1,0 @@
-{
-	href		: '/logout',
-	title		: 'Logout', 
-	context		: 'logout', 
-	sortorder	: 100
-} 

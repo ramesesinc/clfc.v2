@@ -1,4 +1,0 @@
-[getList]
-select * from payprovider
-
-

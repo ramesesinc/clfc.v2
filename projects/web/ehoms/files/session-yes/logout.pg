@@ -1,5 +1,0 @@
-{
-	href : '/logout',
-	title: 'Logout',
-	sortorder: 10000
-}

@@ -1,8 +1,0 @@
-{ 
-	href		: '/list/vitalsign',
-	title		: 'Vital Sign', 
-	secured		: true,  
-	sortorder	: -91, 
-
-	icon		: '/images/main/tools.png' 
-} 

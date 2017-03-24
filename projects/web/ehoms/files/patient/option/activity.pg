@@ -1,8 +1,0 @@
-{ 
-	title		: 'Activity', 
-	context		: 'activity', 
-	action		: 'showActivity',
-	index		: 1,
-	secured		: true, 
-	fragment	: true
-} 

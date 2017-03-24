@@ -1,2 +1,0 @@
-
-DROP TABLE bankdeposit_entry_creditmemo;
