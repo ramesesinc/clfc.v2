@@ -35,7 +35,7 @@ public class DateTermHandlerPage extends javax.swing.JPanel {
 
         xIntegerField1.setCaption("Year(s)");
         xIntegerField1.setDisabledTextColor(new java.awt.Color(0, 0, 0));
-        xIntegerField1.setName("entity.year"); // NOI18N
+        xIntegerField1.setName("action.year"); // NOI18N
         xIntegerField1.setPreferredSize(new java.awt.Dimension(100, 23));
         xFormPanel1.add(xIntegerField1);
 
