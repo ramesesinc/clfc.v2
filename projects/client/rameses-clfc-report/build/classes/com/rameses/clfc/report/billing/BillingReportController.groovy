@@ -8,16 +8,18 @@ import com.rameses.osiris2.reports.*;
 
 class BillingReportController extends ReportModel {
 
-    @Service("TestBillingReportService")
+    @Service("BillingReportService")
     def service;
     
+    @Service("DateService")
+    def dateSvc;
     
-    def startdate, enddate, reportdata;
-    def page = "init";
-    
+    String title = "Billing Report";
+    def date, mode = "init";
+
     void init() {
-        startdate = java.sql.Date.valueOf("2016-09-20");
-        enddate = startdate;
+        date = dateSvc.getServerDateAsString();
+        mode = "init";
     }
     
     def close() {
@@ -29,11 +31,12 @@ class BillingReportController extends ReportModel {
         return "default";
     }
     
+    def rptdata;
     def preview() {
-        reportdata = service.getReportData();
-        page = "preview";
+        rptdata = service.getReportData([date: date]);
+        mode = "preview";
         viewReport();
-        return page;
+        return "preview";
     }
     
     public Map getParameters() {
@@ -41,19 +44,16 @@ class BillingReportController extends ReportModel {
     }
 
     public Object getReportData() {
-        return reportdata;
+        return rptdata;
 //        return service.getReportData([startdate: startdate, enddate: enddate]);
     }
     
     public String getReportName() {
         return "com/rameses/clfc/report/billing/BillingReport.jasper";
-//        return "com/rameses/clfc/report/amnesty/expired/ExpiredAmnestySummaryReport.jasper";
     }
 
     public SubReport[] getSubReports() {
         return [
-//            new SubReport('DETAIL', 'com/rameses/clfc/report/amnesty/expired/ExpiredAmnestySummaryReportDetail.jasper')
-            new SubReport("DATE_DETAIL", "com/rameses/clfc/report/billing/BillingReportPerDate.jasper"),
             new SubReport("ROUTE_DETAIL", "com/rameses/clfc/report/billing/BillingReportPerRoute.jasper"),
             new SubReport("ITEM_DETAIL", "com/rameses/clfc/report/billing/BillingReportPerItem.jasper")
         ];

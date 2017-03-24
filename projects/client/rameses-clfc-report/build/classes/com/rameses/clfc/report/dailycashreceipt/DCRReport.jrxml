@@ -480,7 +480,7 @@
 			<band height="45"  isSplitAllowed="true" >
 				<staticText>
 					<reportElement
-						x="10"
+						x="0"
 						y="7"
 						width="64"
 						height="14"
@@ -493,7 +493,7 @@
 				</staticText>
 				<staticText>
 					<reportElement
-						x="10"
+						x="0"
 						y="20"
 						width="64"
 						height="14"
@@ -506,7 +506,7 @@
 				</staticText>
 				<staticText>
 					<reportElement
-						x="73"
+						x="63"
 						y="7"
 						width="12"
 						height="14"
@@ -519,7 +519,7 @@
 				</staticText>
 				<staticText>
 					<reportElement
-						x="73"
+						x="63"
 						y="20"
 						width="12"
 						height="14"
@@ -532,7 +532,7 @@
 				</staticText>
 				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="85"
+						x="75"
 						y="7"
 						width="180"
 						height="14"
@@ -545,7 +545,7 @@
 				</textField>
 				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="85"
+						x="75"
 						y="20"
 						width="180"
 						height="14"
