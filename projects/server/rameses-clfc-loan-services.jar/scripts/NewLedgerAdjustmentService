@@ -1,0 +1,57 @@
+import com.rameses.annotations.*;
+
+class NewLedgerAdjustmentService extends ActiveCrudListService {
+
+	@ActiveDB("loan_ledger_adjustment")
+	def em;
+	
+	@ProxyMethod
+	public def getColumns( params ) {
+		def cols = [];
+
+		if (!params.state) {
+			cols << [name: 'txnstate', caption: 'Status'];
+		}
+
+		if (!params.ledgerid) {
+			cols << [name: 'borrower.name', caption: 'Borrower'];
+		}
+
+		cols << [name: 'txndate', caption: 'Adjustment Date', type: 'date', outputFormat: 'MMM-dd-yyyy'];
+		cols << [name: 'amount', caption: 'Amount', type: 'decimal', format: '#,##0.00'];
+		
+		if (params.state!='DELETED') {
+			cols << [name: 'modifiedby.name', caption: 'Modified By'];
+		}
+
+		if (params.state=='APPROVED') {
+			cols << [name: 'poster.name', caption: 'Approved By'];
+		}
+		if (params.state=='DISAPPROVED') {
+			cols << [name: 'poster.name', caption: 'Disapproved By'];
+		}
+
+		return cols;
+	}
+
+	@ProxyMethod
+	public def getStates() {
+		return [
+			[caption: 'All'],
+			[caption: 'FOR APPROVAL', state: 'FOR_APPROVAL'],
+			[caption: 'APPROVED', state: 'APPROVED'],
+			[caption: 'DISAPPROVED', state: 'DISAPPROVED'],
+			[caption: 'DELETED', state: 'DELETED']
+		]
+	}
+
+
+	@ProxyMethod
+	public def getBorrower( data ) {
+		def b = borrower.read(data);
+		if (!b) throw new Exception("Borrower record does not exist or has already been deleted.");
+
+		if (!b.name) b.name = b.lastname + ', ' + b.firstname + (b.middlename? ' ' + b.middlename : '');
+		return b;
+	}
+}

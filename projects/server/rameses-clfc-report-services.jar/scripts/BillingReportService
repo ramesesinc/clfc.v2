@@ -2,13 +2,13 @@ import com.rameses.annotations.*;
 import java.text.SimpleDateFormat;
 import java.text.DecimalFormat;
 
-class TestBillingReportService
-{
+class BillingReportService {
+	
 
 	@Env
 	def env;
 
-	@ActiveDB('test_billing_report')
+	@ActiveDB("billing_report")
 	def em;
 
 	@ActiveDB("fieldcollection")
@@ -41,12 +41,15 @@ class TestBillingReportService
 
 	@ProxyMethod
 	public def getReportData() {
+		def params = [date: "2016-11-18"];
+		return getReportData(params);
+	}
 
-		//def sd = java.sql.Date.valueOf('2016-11-18');
-		//def ed = java.sql.Date.valueOf('2016-11-18');
-		def txndate = java.sql.Date.valueOf("2016-11-18");
+	@ProxyMethod
+	public def getReportData( params ) {
 
-		//def list = em.getBillingByStartDateAndEndDate([startdate: sd, enddate: ed]);
+		def txndate = parseDate(params.date);
+
 		def list = em.getBillingByDate([date: txndate]);
 		if (!list) {
 			throw new RuntimeException("No Billing for " + txndate + ".");
@@ -100,69 +103,6 @@ class TestBillingReportService
 				}
 			}
 		}
-
-		/*
-		def clone = [];
-		list?.each{ o->
-			def m = [:];
-			m.putAll(o);
-			clone << m;
-		}
-
-
-		list = list.unique{ it.billdate }.collect{ [date: it.billdate ] }
-		list?.each{ o->
-			o.items = clone.findAll{ o.date == it.billdate }
-			o.items?.each{ i->
-				i.billitems = em.getBillingDetail([objid: i.itemid]);
-				i.billitems?.each{ b->
-					def fl = fieldcollection.read([objid: b.objid], "fc-loan");
-					if (fl) {
-						b.remarks = fl.remarks;
-						def pyts = em.getFieldPayments([objid: fl.objid]);
-						if (pyts) {
-							def amt = pyts?.amount?.sum();
-							if (!amt) amt = 0;
-							b.amount = amt;
-						}
-					}
-
-					def itm, itm2;
-					def joints = loanapp_borrower.getJointBorrowers([parentid: b.appid]); 
-					joints.each{ j->
-						itm = customer.read([objid: j.objid]);
-						if (itm) {
-							if (itm.type == 'INDIVIDUAL') {
-								itm2 = customerindividual.read([objid: itm.objid]);
-								b.acctname += " AND " + itm2.lastname + ', ' + itm2.firstname;
-							}
-						}
-						//data.acctname += " AND " + o.name;
-					}
-
-					def ac = ledgeramnesty.findActiveByDateAndLedgerid([date: b.txndate, ledgerid: b.ledgerid]);
-					if (ac) {
-						def str = "\n(" + ac.type + ": ";
-						switch (ac.type) {
-							case 'FIX': 
-								def af = ledgeramnesty_fix.read([objid: ac.refid]);
-								//println 'amount ' + af.amount + ' dtstarted ' + af.dtstarted + ' dtended ' + af.dtended;
-								str += DEC_FORMAT.format(af.amount) + " SD: " + DATE_FORMAT1.format(parseDate(af.dtstarted));
-								if (af.dtended) {
-									str += " ED: " + DATE_FORMAT1.format(parseDate(af.dtended));
-								}
-								break;
-							default :
-								str += ac.description + " SD: " + DATE_FORMAT1.format(parseDate(ac.dtstarted));
-								break;
-						}
-						str += ")";
-						b.acctname += str;
-					}
-				}
-			}
-		}
-		*/
 
 		def serverdate = dateSvc.serverDate;
 		def branch = branchSvc.open([:]);

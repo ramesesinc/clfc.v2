@@ -36,6 +36,9 @@ class CaptureLoanAppService extends ActiveListService
 	@ActiveDB("datatxnlog")
 	def txnlog;
 
+	@ActiveDB("var")
+	def var;
+
 	@Service('DateService') 
 	def dateSvc;
 
@@ -344,7 +347,12 @@ class CaptureLoanAppService extends ActiveListService
 	public def submitForVerification( params ) {
 		def data  = changeState(params, 'FOR_VERIFICATION');
 
-		if (!data.assessmentinfo || !data.assessmentinfo.charges) throw new RuntimeException("Please assess document before proceeding.");
+		def sysvar = var.read([name: 'validate_application_charges']);
+		if (sysvar?.value == "true") {
+			if (!data.assessmentinfo || !data.assessmentinfo.charges) {
+				throw new RuntimeException("Please assess document before proceeding.");
+			}
+		}
 
 		inboxSvc.removeMessageByRefid([refid: data.objid]); 
 
