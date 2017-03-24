@@ -1,7 +1,0 @@
-"entity.handler" [ entity.datatype != 'info' ] {
-    visible: false;
-}
-
-"entity.handler" [ entity.datatype == 'info'  ] {
-    visible: true;
-}

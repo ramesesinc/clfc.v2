@@ -1,17 +1,13 @@
-"selectedForm|selectedHandler" [mode == 'read'] {
-    enabled:false;
-}
-
-"selectedForm|selectedHandler" [mode != 'read'] {
-    enabled:true;
-}
-
 "entity.*" [ mode == 'read' ] {
-    readonly: true;
-    editable: false;
+    enabled: false;
+}
+"entity.*" [ mode != 'read' ] {
+    enabled: true;
 }
 
-"entity.*" [ mode != 'read' ] {
-    readonly: false;
-    editable: true;
-}
+"add.*|edit.*|remove.*" [mode=='create' || mode=='edit'] { 
+    visible: true; 
+} 
+"add.*|edit.*|remove.*" [!(mode=='create' || mode=='edit')] { 
+    visible: false; 
+} 

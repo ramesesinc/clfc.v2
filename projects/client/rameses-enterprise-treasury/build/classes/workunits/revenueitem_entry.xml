@@ -14,15 +14,31 @@
         
             def entity;
             def handler
-            def mode
+            def mode;
+            def collectiontype;
+            def tag;
             
             void init() {
-                entity = [:]
+                entity = [:];
                 mode = 'create'
             }
             
             void open() {
                 mode = 'open'
+            }
+            
+            def getLookupAccount() {
+                def p = [:];
+                p.onselect = { o->
+                    entity.revenueitem = o;
+                }
+                if(collectiontype) {
+                    p['query.collectiontypecode'] = collectiontype;
+                }
+                if(tag) {
+                    p['query.tag'] = tag;
+                }
+                return Inv.lookupOpener( "revenueitem:lookup", p );
             }
             
             def doOk() {

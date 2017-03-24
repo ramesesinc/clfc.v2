@@ -1,5 +1,0 @@
-<workunit extends="wtemplates/ListController.xml" serviceName="RouteService" entityName="route" allowApprove="false">
-    <invokers>
-         <invoker folderid="/explorer/master/mtop" caption="Routes" index="3" />
-    </invokers>
-</workunit>

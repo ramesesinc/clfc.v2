@@ -2,9 +2,13 @@
     <invokers>
         <invoker type="cashreceipt-initial:formActions" caption="Barcode"
             shortcut="ctrl B" mnemonic="b" target="process" action="init" index="50"/>
+        
+        <invoker type="cashreceipt:online" caption="Barcode" target="process" index="50" 
+            icon="images/toolbars/barcode_global.png"/>
+                
     </invokers>    
     <code>
-        <![CDATA[
+    <![CDATA[
         import com.rameses.osiris2.common.*;
         import com.rameses.rcp.common.*;
         import com.rameses.rcp.annotations.*;

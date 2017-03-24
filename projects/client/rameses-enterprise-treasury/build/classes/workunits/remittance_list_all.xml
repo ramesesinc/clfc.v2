@@ -1,5 +1,0 @@
-<workunit extends="wtemplates/ListController.xml" serviceName="RemittanceListService" entityName="remittance" tag="all" allowCreate="false">
-    <invokers>
-        <invoker folderid="/explorer/txn/treasury" caption="Remittances (All)" index="30" role="SHARED" permission="remittance.view" />
-    </invokers>
-</workunit>

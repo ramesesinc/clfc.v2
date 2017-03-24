@@ -1,7 +1,7 @@
 <workunit>
     <invokers>
-        <invoker type="individualentity_general:formActions1" caption="Edit Address"  index="5"
-            action="init" role="MASTER" permission="individualentity.editaddress" target="self"/>
+        <invoker type="individualentity_general:formActions" caption="Edit Address"  index="5"
+            action="edit" role="MASTER" permission="individualentity.editaddress" target="process"/>
         <invoker type="formActions" caption="Close" action="_close" immediate="true"/>    
     </invokers>
     
@@ -18,44 +18,31 @@
             
             @Service("EntityAddressService")
             def service;
-        
+            
+            @Caller
+            def caller;
+            
             def entity;
-            def selectedItem;
             
-            def addressOpeners = [:];
-            
-            void init() {
-                addressOpeners = Inv.lookupOpeners( "address:component:type", [:] );  
-            }
-        
-            def listModel = [
-                fetchList: { o->
-                    def list =  service.getList( [objid: entity.objid] );
-                    list.each { x->
-                        println x;
-                        def op = addressOpeners.find{ it.properties.key == x.type };
-                        x.text =  TemplateProvider.instance.getResult("templates/address/" + x.type + ".htm", [entity: x] );
-                    }
-                    return list;
-                }
-            ] as BasicListModel;
-            
-            def addAddress() {
+            def edit() {
+                if( !entity.address?.objid ) 
+                    throw new Exception('There is no existing address yet. Click edit instead');
                 def h = { o->
-                    MsgBox.alert( 'added ' + o );
+                    service.update( o ); 
+                    try {
+                        caller.entity.address = o;
+                        caller.refresh();
+                    }
+                    catch(e){;}
                 }
-                return Inv.lookupOpener( "address:editor", [handler: h] );
-            }
-            
-            def makeDefault() {
-                if(!selectedItem) return;
-                service.makeDefault( [addressid: selectedItem.objid, parentid: entity.objid] );
+                def addr = [:];
+                addr.putAll( entity.address );
+                addr.asdefault = 1;
+                return Inv.lookupOpener( "address:editor", [handler:h, entity:addr] );
             }
             
         }        
    ]]>
    </code>
-   <pages>
-       <page template="com.rameses.entity.ui.EntityChangeAddress"/>
-   </pages>   
+   
 </workunit>

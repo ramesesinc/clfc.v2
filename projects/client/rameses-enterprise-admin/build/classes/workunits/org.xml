@@ -29,6 +29,12 @@
                  return [orgclass:entityName];
             }
             
+            public void beforeSave(o) {
+                if(mode == 'create') {
+                    o.objid = o.code;
+                }
+            }
+            
         }
         
         ]]>

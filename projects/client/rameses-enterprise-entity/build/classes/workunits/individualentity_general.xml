@@ -33,6 +33,10 @@
                 def opener = Inv.lookupOpener( "individualentity:edit", [entity:entity, saveHandler: sh] );
                 caller.binding.fireNavigation( opener );
             }
+            
+            void refresh() {
+                binding.refresh();
+            }
         }        
    ]]>
    </code>

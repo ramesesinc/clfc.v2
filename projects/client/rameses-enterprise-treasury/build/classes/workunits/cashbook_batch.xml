@@ -1,10 +1,11 @@
 <workunit>
     
    <invokers>
-         <invoker folderid="explorer/master/treasury/util" caption="New Cashbook (Batch)" action="init" role="MASTER" target="popup" permission="cashbook.create"/>
+         <invoker folderid="/explorer/txn/treasury/tools" caption="New Cashbook (Batch)" action="init" role="MASTER" target="popup" permission="cashbook.create"/>
+         <invoker type="cashbook:create" caption="New Cashbook (Batch)" action="init" role="MASTER" target="popup" permission="cashbook.create" index="-1"/>
          
-         <invoker type="formActions" caption="Cancel" action="doCancel" visibleWhen="#{mode == 'init'}"/> 
-         <invoker type="formActions" caption="Close" action="_close" visibleWhen="#{mode != 'init'}"/> 
+         <invoker type="formActions" caption="Cancel" action="doCancel" visibleWhen="#{mode == 'init'}" immediate="true"/> 
+         <invoker type="formActions" caption="Close" action="_close" visibleWhen="#{mode != 'init'}" immediate="true"/> 
          <invoker type="formActions" caption="Save" action="doSave" visibleWhen="#{mode == 'init'}"/> 
    </invokers>
    
@@ -96,7 +97,7 @@
    </code>
    
    <pages>
-       <page template="com.rameses.enterprise.treasury.cashbook.CashBookPage2" />
+       <page template="com.rameses.enterprise.treasury.cashbook.CashBookBatchPage" />
     </pages>
    
 </workunit>

@@ -45,7 +45,6 @@
                 }
             ] as SuggestModel; 
                         
-            
             void init() {
                 addressComponent = Inv.lookupOpener('address:component', [
                     entity: entity.address
@@ -55,6 +54,7 @@
                     photo: entity.photo
                 ] );                
             }
+
             
             def save() {
                 entity = service.update( entity );

@@ -1,7 +1,0 @@
-"revisionyear" [ mode == 'init' ] {
-    enabled:true;
-}
-
-"revisionyear" [ mode != 'init' ] {
-    enabled:false;
-}

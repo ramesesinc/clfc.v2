@@ -3,7 +3,8 @@
         <invoker type="individualentity:open" caption="Individual" action="open"  target="popup"  role="MASTER" permission="individualentity.open"/>
         <invoker type="formActions" caption="Close" action="_exit" visibleWhen="#{initiator == 'create'}"/>
         <invoker type="formActions" caption="Close" action="_close" visibleWhen="#{initiator != 'create'}"/>
-        <invoker type="formActions" caption="Remove" action="remove" role="MASTER" permission="individualentity.delete" />
+        <invoker type="formActions" caption="Remove" action="remove" role="ADMIN" permission="individualentity.delete" />
+        <invoker type="formActions" caption="Refresh" action="refresh" />
     </invokers>
     
     <code>
@@ -31,7 +32,9 @@
             def initiator = 'edit';
             
             void initList() {
-                optionList = Inv.lookupOpeners( "individualentity:option", [entity: entity] );
+                optionList = [];
+                optionList.addAll( Inv.lookupOpeners( "individualentity:option", [entity: entity] ));
+                optionList.addAll( Inv.lookupOpeners( "entity:option", [entity: entity] ));                
                 if(optionList.size() > 0 ) {
                     selectedOption = optionList[0];
                 }
@@ -39,6 +42,12 @@
             
             void refresh() {
                 title = entity.name;
+                optionList.each {
+                    try {
+                        it.handle.refresh();
+                    }
+                    catch(e){;}
+                }
             }
             
             void open() {

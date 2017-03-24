@@ -56,7 +56,7 @@
                         breakdown = o
                         total = breakdown+entity.totalnoncash;
                         remaining = entity.totalcash - breakdown 
-                        binding.refresh("breakdown|total"); 
+                        binding.refresh("breakdown|total|remaining"); 
                     }
                    ]
                 );

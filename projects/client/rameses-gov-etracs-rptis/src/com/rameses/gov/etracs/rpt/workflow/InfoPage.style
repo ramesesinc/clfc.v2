@@ -1,7 +1,0 @@
-"entity.taskmsg" [ entity.taskmsg == null]{
-    visible:false;
-}
-
-"entity.taskmsg" [ entity.taskmsg != null]{
-    visible:true;
-}

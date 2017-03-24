@@ -14,18 +14,33 @@ public abstract class AbstractCashReceipt {
     
     @Service("CashReceiptService")
     def service;
+    
+    
 
     def entity;
    
     String title;
     boolean completed = false;
 
+    //handlers pass by the caller
+    def createHandler; 
     
     void init() {
         title = entity.collectiontype.title;
         completed = false;
     }
-
+    
+    def createAnother() { 
+        if (createHandler) { 
+            createHandler(); 
+        } 
+        return '_close'; 
+    } 
+    
+    def getTotalAmount() {
+        return entity.amount; 
+    }
+    
     void clearAllPayments() {
         entity.totalcash = 0;
         entity.totalnoncash = 0;
@@ -33,12 +48,25 @@ public abstract class AbstractCashReceipt {
         entity.cashchange = 0;
         entity.totalcredit = 0;
         entity.paymentitems = [];
+        
+        entity.amount = getTotalAmount(); 
         paymentListModel.reload();
     }
-
+    
+    //this is overridable bec. some might not follow this convention.
+    public void validateBeforePost() {
+        if(entity.totalcredit > 0)
+            throw new Exception("Credit is not allowed for this transaction");
+    }
+    
+    public void beforeUpdateBalance() {
+    }
+    
     public void updateBalances() {
+        beforeUpdateBalance();
+        
         entity.cashchange = 0; entity.balancedue = 0; entity.totalcredit = 0;
-        def amt = entity.amount;
+        def amt = getTotalAmount();
         
         entity.totalnoncash = 0;
         if( entity.paymentitems ) {
@@ -47,6 +75,7 @@ public abstract class AbstractCashReceipt {
 
         if( entity.totalnoncash > 0 && entity.totalnoncash > amt ) {
             entity.totalcredit = entity.totalnoncash - amt;
+            entity.amount = amt + entity.totalcredit; 
         }
         else {
             amt = amt - entity.totalnoncash;
@@ -54,9 +83,10 @@ public abstract class AbstractCashReceipt {
                 entity.cashchange = entity.totalcash - amt;
             }
             else {
-                entity.balancedue = amt - entity.totalcash;
+                entity.balancedue = NumberUtil.round( amt - entity.totalcash );
             }
         }
+
         if(binding) binding.refresh('entity.(amount|totalcash|totalnoncash|totalcredit|balancedue|cashchange)');
     }
 
@@ -73,46 +103,72 @@ public abstract class AbstractCashReceipt {
         }
     ] as EditorListModel;
 
+    
+    public void afterCashPayment() {}
+    public void afterCheckPayment() {}
+    
+    
     def doCashPayment() {
         def handler = { o->
             entity.totalcash = o.cash;
             entity.cashchange = o.change;
-            updateBalances();
+            afterCashPayment(); 
+            updateBalances(); 
         }
         return InvokerUtil.lookupOpener( "cashreceipt:payment-cash",
             [entity: entity, saveHandler: handler ] );
     }
-
+    
     def doCheckPayment() {
+        def handler = { o->
+            entity.paymentitems << o;
+            afterCheckPayment(); 
+            updateBalances();
+        }
+        return InvokerUtil.lookupOpener( "cashreceipt:payment-check",
+            [entity: entity, saveHandler: handler ] );
+    }
+    
+    def doCreditMemo() {
         def handler = { o->
             entity.paymentitems << o;
             updateBalances();
         }
-        return InvokerUtil.lookupOpener( "cashreceipt:payment-check",
+        return InvokerUtil.lookupOpener( "cashreceipt:payment-creditmemo",
             [entity: entity, saveHandler: handler ] );
     }
 
     public def payerChanged( o ) {
         //for overrides
     }
-
-    def getLookupEntity() {
-        return InvokerUtil.lookupOpener( "entity:lookup", [
-            onselect: { o->
-                entity.payer = o;
-                entity.paidby = o.name;
-                entity.paidbyaddress = o.address.text;
-                binding.refresh("entity.(payer.*|paidby.*)");
-                def opener = payerChanged( o );
-                if( opener != null ) 
-                    return opener;
-                else        
-                    return "_close";
-            }
-        ]);
+    
+    protected String getLookupEntityName() {
+        return "entity:lookup"; 
     }
 
+    protected void beforeLookupEntity( Object params ) {
+        //to be implemented 
+    }
+    
+    def getLookupEntity() {
+        def params = [:]; 
+        beforeLookupEntity( params ); 
+        params.onselect = { o-> 
+            entity.payer = o;
+            entity.paidby = o.name;
+            entity.paidbyaddress = o.address.text;
+            binding.refresh("entity.(payer.*|paidby.*)");
+            def opener = payerChanged( o );
+            if( opener != null ) 
+                return opener;
+            else        
+                return "_close";
+        }
+        
+        return InvokerUtil.lookupOpener( getLookupEntityName(), params );
+    }
 
+    /*
     def cancelSeries(){
         def oldentity = entity.clone()
         return InvokerUtil.lookupOpener( "cashreceipt:cancelseries", [entity:oldentity,
@@ -127,23 +183,32 @@ public abstract class AbstractCashReceipt {
             }
         ]); 
     }
+    */
 
-    //this is overridable bec. some might not follow this convention.
-    public void validateBeforePost() {
-    }
 
+    void beforePost() {}
+    void postError() {}
+    
     def post() {
         if( entity.amount <= 0 ) 
             throw new Exception("Please select at least an item to pay");
         if( entity.totalcash + entity.totalnoncash == 0 )
             throw new Exception("Please make a payment either cash or check");
+            
         if(entity.balancedue > 0)
             throw new Exception("Please ensure that there is no balance unpaid");
 
         validateBeforePost();
-    
+
         if(MsgBox.confirm("You are about to post this payment. Please ensure entries are correct")) {
-            entity = service.post( entity );
+            try { 
+                beforePost();
+                entity = service.post( entity );
+            } catch(e) { 
+                postError(); 
+                throw e; 
+            }
+            
             try {
                 if(entity.txnmode.equalsIgnoreCase("ONLINE")) {
                     print();
@@ -155,7 +220,7 @@ public abstract class AbstractCashReceipt {
             }
             completed = true;
             return "completed";
-        }
+        } 
     }
 
     def findReportOpener(def reportData) {
@@ -173,9 +238,13 @@ public abstract class AbstractCashReceipt {
     }
     
     void reprint() {
-        if( MsgBox.prompt("Please enter security code")=="etracs"){
+        if( verifyReprint() ){
             print();
         }
+    }
+    
+    boolean verifyReprint() {
+        return (MsgBox.prompt("Please enter security code") == "etracs"); 
     }
 
     def getInfoHtml() {
@@ -190,4 +259,6 @@ public abstract class AbstractCashReceipt {
             }
         ]); 
     }
+
+    
 }

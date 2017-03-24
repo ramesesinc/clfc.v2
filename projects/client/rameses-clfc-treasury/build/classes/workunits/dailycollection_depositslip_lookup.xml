@@ -11,7 +11,7 @@
         
         class DailyCollectionDepositSlipLookupController extends LookupController {
             
-            String serviceName="DailyCollectionDepositSlipLookupService";
+            String serviceName = "DailyCollectionDepositSlipLookupService";
             
             def dailycollectionid;
         

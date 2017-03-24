@@ -1,7 +1,0 @@
-"entity.suffixname" [entity.suffixtype != 'OTHER'] {
-    enabled:false;
-}
-
-"entity.suffixname" [entity.suffixtype == 'OTHER'] {
-    enabled:true;
-}

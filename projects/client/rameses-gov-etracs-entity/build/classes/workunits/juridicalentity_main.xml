@@ -6,7 +6,7 @@
         <invoker type="formActions" caption="Close" action="_exit" visibleWhen="#{initiator == 'create'}" mnemonic="c" />
         <invoker type="formActions" caption="Close" action="_close" visibleWhen="#{initiator != 'create'}" mnemonic="c" />
         <invoker type="formActions" caption="New" action="doCreate" role="MASTER" permission="juridicalentity.create" mnemonic="n" shortcut="ctrl N"/>
-        <invoker type="formActions" caption="Remove" action="remove" role="MASTER" permission="juridicalentity.delete"/>
+        <invoker type="formActions" caption="Remove" action="remove" role="ADMIN" permission="juridicalentity.delete"/>
     </invokers>
     
     <code>
@@ -34,7 +34,9 @@
             def initiator = 'edit';
             
             void initList() {
-                optionList = Inv.lookupOpeners( "juridicalentity:option", [entity: entity] );
+                optionList = [];
+                optionList.addAll( Inv.lookupOpeners( "juridicalentity:option", [entity: entity] ));
+                optionList.addAll( Inv.lookupOpeners( "entity:option", [entity: entity] ));
                 if(optionList.size() > 0 ) {
                     selectedOption = optionList[0];
                 }
