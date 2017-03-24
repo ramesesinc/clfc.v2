@@ -1,3 +1,0 @@
-provider=websocket
-ws.host=www.etracs.org:8160
-ws.protocol=03812

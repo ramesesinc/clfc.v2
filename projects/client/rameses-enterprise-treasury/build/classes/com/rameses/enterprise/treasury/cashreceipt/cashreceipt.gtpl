@@ -108,7 +108,7 @@
                     </tr>
                     <%entity.paymentitems.each{ %>
                         <tr>
-                            <td>CHECK</td>
+                            <td>${it.reftype}</td>
                             <td>${it?.particulars}</td>
                             <td>${df.format(it?.amount)}</td>
                         </tr>

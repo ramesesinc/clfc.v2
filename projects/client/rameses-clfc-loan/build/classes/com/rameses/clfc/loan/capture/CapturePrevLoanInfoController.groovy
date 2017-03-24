@@ -21,7 +21,7 @@ class CapturePrevLoanInfoController {
     
     def previousLoansHandler = [
         fetchList: { o->
-            if (!entity.previousloans) entity.previousloans = [];
+               if (!entity.previousloans) entity.previousloans = [];
             return entity.previousloans;
         }
     ] as BasicListModel

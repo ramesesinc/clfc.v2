@@ -5,10 +5,11 @@
         <invoker type="rulemgmt:open" caption="Rule" action="open" target="popup"/>
         
         <invoker type="extActions" caption="View Rule" action="viewRule" visibleWhen="#{mode=='read'}" />
+        <invoker type="extActions" caption="Copy" action="copyRule" visibleWhen="#{mode=='read'}" />
     </invokers>
+    
     <code>
-         <![CDATA[
-        
+    <![CDATA[
         import com.rameses.rcp.common.*;
         import com.rameses.rcp.annotations.*;
         import com.rameses.osiris2.client.*;
@@ -30,7 +31,7 @@
             
             @Caller
             def caller;
-        
+                        
             def entity;
             def rulegroups;
             def mode;
@@ -47,14 +48,28 @@
             }
             
             def open() {
-                mode = "read";
-                entity = service.open( entity );
-                rulegroups = caller.rulegroups;
-                if( entity.state == 'DEPLOYED' )
-                    return super.start("open-deployed")
-                else
-                    return super.start("open")
+                mode = "read"; 
+                entity = service.open( entity ); 
+                rulegroups = caller.rulegroups; 
+                if( entity.state == 'DEPLOYED' ) { 
+                    return super.start("open-deployed"); 
+                } else { 
+                    return super.start("open"); 
+                } 
             }
+            
+            /**********************************
+            * override methods
+            **********************************/
+            def openRecord( params ) { 
+                entity = service.open( params ); 
+                return signal('route');
+            } 
+            boolean isNavActionVisible() {
+                return (mode == 'read'); 
+            } 
+            
+            
             
             /**********************************
             * condition
@@ -186,8 +201,13 @@
                 entity = service.open( entity );
                 binding.refresh();
             }
+            
+            def copyRule() { 
+                def params = [rulegroups: rulegroups, ruleinfo: entity]; 
+                return Inv.lookupOpener('sysrule:copy', params);
+            } 
         }
-        ]]>
+    ]]>
     </code>
     <pageflow>
         <start>
@@ -204,7 +224,12 @@
             <transition to="editing" caption="Edit" action="edit"/>
             <transition to="deployed" caption="Deploy" action="deploy"/>
             <transition to="end" name="delete" caption="Delete" action="removeRule" confirm="You are about to remove this rule. Continue?"/>
+            <transition to="route" visibleWhen="#{1==0}"/>
         </page>    
+        <process name="route">
+            <transition to="deployed" cond="#{entity.state=='DEPLOYED'}" />    
+            <transition to="editinfo" cond="#{entity.state!='DEPLOYED'}" />    
+        </process>            
         <page name="editing" title="Rule Info (Edit)">
             <transition to="editinfo" caption="Cancel" action="cancelEdit"/>
             <transition to="saveInfo" caption="Save" action="saveUpdate"/>
@@ -215,6 +240,7 @@
         <page name="deployed" title="Deployed Rule">
             <transition to="end" caption="Cancel" />
             <transition to="editinfo" caption="Undeploy" action="undeploy"/>
+            <transition to="route" visibleWhen="#{1==0}"/>
         </page>    
         <end/>
     </pageflow>

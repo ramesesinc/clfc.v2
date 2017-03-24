@@ -61,7 +61,7 @@ class FixAmnestyController
         def av = data?.availed;
         if (!av?.dtstarted) msg += 'Start Date is required.\n';
         if (!av?.amount) msg += 'Fix Amount is required.\n';
-        println 'withmd ' + av?.withmd;
+        //println 'withmd ' + av?.withmd;
         if (av?.withmd == 1) {
             if (av?.usedate == 0 || !av?.usedate) {
                 if (!av?.day == null) msg += 'Day is required.\n';

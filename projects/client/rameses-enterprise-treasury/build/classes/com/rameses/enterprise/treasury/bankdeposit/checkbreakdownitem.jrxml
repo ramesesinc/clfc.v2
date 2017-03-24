@@ -25,7 +25,7 @@
 
 
 	<field name="bank" class="java.lang.String"/>
-	<field name="checkno" class="java.lang.String"/>
+	<field name="refno" class="java.lang.String"/>
 	<field name="amount" class="java.math.BigDecimal"/>
 
 	<variable name="TOTALAMT" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
@@ -73,7 +73,7 @@
 					<textElement textAlignment="Center" verticalAlignment="Middle">
 						<font fontName="SansSerif" size="10"/>
 					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA[$F{checkno}]]></textFieldExpression>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{refno}]]></textFieldExpression>
 				</textField>
 				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement

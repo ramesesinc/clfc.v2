@@ -1,7 +1,0 @@
-"entity.*" [editing==true] {
-    enabled: true;
-}
-
-"entity.*" [editing==false] {
-    enabled: false;
-}

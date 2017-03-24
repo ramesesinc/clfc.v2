@@ -1,7 +1,0 @@
-"doApprove" [processing == true]{
-    visible:false;
-}
-
-"doApprove" [processing == false]{
-    visible:true;
-}

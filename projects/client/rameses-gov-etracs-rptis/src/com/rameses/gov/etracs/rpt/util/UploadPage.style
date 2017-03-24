@@ -1,7 +1,0 @@
-"header.title|header" [showheader == true]{
-    visible:true;
-}
-
-"header.title|header" [showheader == false]{
-    visible:false;
-}

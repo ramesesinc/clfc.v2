@@ -86,6 +86,7 @@
                         reportdata.noncashpayments.addAll( list )
                     }
                     
+                    reportdata.noncashpayments.each{ it.checkno = it.refno } 
                     reportdata.noncash = reportdata.noncashpayments.amount.sum()     
                     MsgBox.alert("Insert check deposit slip.\n Printing page $i of ${reportdata.pagecount}. " )
                     reportdata.pagenumber = i;

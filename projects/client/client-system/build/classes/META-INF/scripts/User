@@ -63,6 +63,10 @@ public class User
         return OsirisContext.env.USER;
     }
 
+    public String getUserid() {
+        return OsirisContext.env.USERID;
+    }
+
     public def getOrg() {
         return OsirisContext.env.ORG;
     }

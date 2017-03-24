@@ -16,50 +16,91 @@
         
             @Service("CollectionTypeService")
             def service;
-            
+
             String entityName = "collectiontype";
             String prefixId = "COLLTYPE";
-            def selectedForm;
-            def selectedHandler;
-            def handlers;
             boolean showConfirmOnSave = false;
             
-            @PropertyChangeListener
-            def listener = [
-                "selectedForm" : { o->
-                    entity.formno = o.objid;
-                    buildHandlers();
-                },
-                "selectedHandler" : { o->
-                    entity.handler = o.properties.name;
-                }
-            ]
+            def selectedAccount;
+            def selectedFund;
             
-            void afterOpen( def o ) {
-                selectedForm = formTypes.find{ it.objid == o.formno };
-                buildHandlers();
-                selectedHandler = handlers.find{ it.properties.name == entity.handler };
-            }
-            
-            void afterEdit(def o) {
-                buildHandlers();
-                selectedHandler = handlers.find{ it.properties.name == o.handler };
-            }
+            Map createEntity() { 
+                def m = super.createEntity(); 
+                m.sortorder = 0; 
+                m.allowonline = true;
+                m.defaultvalue = 0;
+                m.valuetype = 'ANY';
+                m.accounts = []; 
+                m.funds = []; 
+                return m; 
+            } 
             
             def getFormTypes() {
-                return service.getFormTypes();
+                return service.getFormTypes()*.objid;
             }
             
-            void buildHandlers() {
-                handlers = InvokerUtil.lookupOpeners( "collectiontype:handler" ).findAll {
-                    if( it.properties.formno ) {
-                        return (it.properties.formno == selectedForm.objid);
-                    }
-                    return true;
-                };
+            def getHandlers() {
+                return InvokerUtil.lookupOpeners( "collectiontype:handler" )*.properties.name;
             }
             
-        }      
+            def getBatchHandlers() {
+                return InvokerUtil.lookupOpeners( "collectiontype:batchhandler" )*.properties.name;
+            }
+            
+            def addAccount() {
+                def h = { o->
+                    o.collectiontypeid = entity.objid; 
+                    entity.accounts << o; 
+                    accountModel.reload();
+                }
+                return Inv.lookupOpener( "collectiontypeaccount:create", [handler:h] );
+            }
+            def editAccount() {
+                if(!selectedAccount) throw new Exception("Please select an account"); 
+                
+                def h = { o->
+                    accountModel.reload(); 
+                } 
+                return Inv.lookupOpener( "collectiontypeaccount:edit", [handler:h, entity: selectedAccount] ); 
+            }
+            def removeAccount() {
+                if(!selectedAccount) throw new Exception("Please select an account");
+                
+                entity.accounts.remove(selectedAccount); 
+                accountModel.reload();
+            }
+            
+            
+            def accountModel = [
+                fetchList: { o-> 
+                    return entity.accounts; 
+                },
+                sync: {
+                    entity.accounts = service.getAccounts( [objid: entity.objid] ); 
+                    accountModel.reload(); 
+                } 
+            ] as BasicListModel;
+
+            
+            void afterCreate( o ) {
+                accountModel.reload();
+            } 
+            void afterOpen( o ) {
+                accountModel.reload();
+            }             
+            void afterSave( o ) {
+                accountModel.sync();
+            } 
+            
+            def categoryModel = [
+                fetchList: { o->
+                    return service.getCategories();
+                },
+                onselect: { o->
+                    entity.category = o.category;
+                }
+            ] as SuggestModel;
+       }
        ]]>
    </code>
    

@@ -1,7 +1,0 @@
-"entity.*|selectedFund|selectAll|deselectAll" [mode == 'init'] {
-    enabled: true;
-}
-
-"entity.*|selectedFund|selectAll|deselectAll" [mode != 'init'] {
-    enabled: false;
-}

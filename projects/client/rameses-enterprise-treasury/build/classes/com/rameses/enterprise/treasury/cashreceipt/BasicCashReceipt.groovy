@@ -1,12 +1,13 @@
 package com.rameses.enterprise.treasury.cashreceipt; 
 
-import com.rameses.rcp.annotations.*
-import com.rameses.rcp.common.*
-import com.rameses.osiris2.client.*
-import com.rameses.osiris2.common.*
+import com.rameses.rcp.annotations.*;
+import com.rameses.rcp.common.*;
+import com.rameses.osiris2.client.*;
+import com.rameses.osiris2.common.*;
+import com.rameses.util.*;
         
 public class BasicCashReceipt extends AbstractCashReceipt {
-   
+
     void init() {
         super.init();
     }
@@ -42,12 +43,13 @@ public class BasicCashReceipt extends AbstractCashReceipt {
         }
     ] as EditorListModel;
             
-
     def selectedItem;
     def getLookupItems() {
         return InvokerUtil.lookupOpener("cashreceiptitem:lookup",[
             "query.txntype" : "cashreceipt",
             "query.collectorid" : entity.collector.objid,
+            "query.fund" : entity.collectiontype.fund,
+            "query.collectiontype": entity.collectiontype,    
             onselect:{ o->
                 selectedItem.item = o;
                 selectedItem.amount = o.defaultvalue;
@@ -61,12 +63,18 @@ public class BasicCashReceipt extends AbstractCashReceipt {
             }
         ]); 
     }
-
-     
-    //this is overridable bec. some might not follow this convention.
-    public void validateBeforePost() {
-        if(entity.totalcredit > 0)
-            throw new Exception("Credit is not allowed for this transaction");
+    
+    def getCollectionGroupHandler() {
+        return InvokerUtil.lookupOpener("collectiongroup:lookup", [ 
+            selectHandler: { o-> 
+                    entity.items.addAll(o);
+                    itemListModel.reload();
+                    entity.amount = entity.items.sum{it.amount}
+                    super.updateBalances(); 
+            }]  );
     }
-       
+            
+    def getTotalAmount() {
+        return NumberUtil.round( entity.items.sum{ it.amount } );  
+    }   
 }

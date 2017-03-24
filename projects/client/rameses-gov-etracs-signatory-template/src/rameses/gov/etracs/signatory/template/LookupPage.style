@@ -1,7 +1,0 @@
-"ok" [selected == null] {
-    enabled:false;
-}
-
-"ok" [selected != null ] {
-    enabled:true;
-}

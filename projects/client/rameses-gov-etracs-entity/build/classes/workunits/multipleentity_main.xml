@@ -6,7 +6,7 @@
         <invoker type="formActions" caption="Close" action="_exit" visibleWhen="#{initiator == 'create'}"/>
         <invoker type="formActions" caption="Close" action="_close" visibleWhen="#{initiator != 'create'}"/>
         <invoker type="formActions" caption="New" action="doCreate" role="MASTER" permission="multipleentity.create" mnemonic="n" shortcut="ctrl N"/>
-        <invoker type="formActions" caption="Remove" action="remove" role="MASTER" permission="multipleentity.delete" mnemonic="r"/>
+        <invoker type="formActions" caption="Remove" action="remove" role="ADMIN" permission="multipleentity.delete" mnemonic="r"/>
     </invokers>
     
     <code>

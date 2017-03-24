@@ -1,5 +1,0 @@
-<workunit extends="wtemplates/ServiceLookupController.xml" serviceName="CollectionGroupService" tag="lookup">
-   <invokers>
-         <invoker type="collectiongroup:lookup" caption="Lookup Collection Group" />
-   </invokers>
-</workunit>

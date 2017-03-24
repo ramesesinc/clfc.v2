@@ -1,5 +1,0 @@
-<workunit extends="wtemplates/ListController.xml" serviceName="UnitTypeService" entityName="unittype" >
-    <invokers>
-         <invoker folderid="/explorer/master/mtop" caption="Unit Types" index="1" />
-    </invokers>
-</workunit>

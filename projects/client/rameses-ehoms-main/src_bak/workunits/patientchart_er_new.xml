@@ -1,5 +1,0 @@
-<workunit extends="wtemplates/ListController.xml" serviceName="PatientChartService" entityName="patientchart" allowSearch="true"> 
-    <invokers>
-        <invoker type="home.action" index="0" caption="New ER Entry"/>
-    </invokers>    
-</workunit>

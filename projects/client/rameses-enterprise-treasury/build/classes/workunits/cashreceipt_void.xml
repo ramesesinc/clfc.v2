@@ -2,8 +2,13 @@
     
    <invokers>
          <!-- hooks to cash receipt -->
-         <invoker type="cashreceiptinfo:formActions" caption="Void" action="open" target="popup" visibleWhen="#{!entity.remitted &amp;&amp; !entity.voided}" role="COLLECTOR"/>
-         <invoker type="cashreceipt:void" caption="Void" action="create" target="popup"/>
+         <invoker type="cashreceiptinfo:formActions" caption="Void" action="open" target="popup" 
+            role="ADMIN,COLLECTOR,SUBCOLLECTOR" permission="receipt.void"
+            visibleWhen="#{!entity.remitted &amp;&amp; !entity.voided}"/>
+            
+         <invoker type="cashreceipt:void" caption="Void" action="create" target="popup" 
+            role="ADMIN,COLLECTOR,SUBCOLLECTOR" permission="receipt.void"/>
+         
          <invoker type="formActions" caption="Post" action="save"  mnemonic="p" shortcut="ctrl P"/>
    </invokers>
    
@@ -16,6 +21,7 @@
         import com.rameses.util.*;
         
         class CashReceiptVoidController {
+        
             @Binding
             def binding;
         

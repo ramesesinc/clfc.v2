@@ -1,5 +1,0 @@
-<workunit extends="wtemplates/ServiceLookupController.xml" serviceName="WaterworksAccountLookupService">
-    <invokers>
-        <invoker type="waterworksaccount:lookup" caption="Account Lookup" target="popup"/>
-    </invokers>
-</workunit>

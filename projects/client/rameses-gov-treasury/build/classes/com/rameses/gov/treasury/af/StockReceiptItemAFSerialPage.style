@@ -1,4 +1,0 @@
-"itemModel:item.*"[caller.mode=='read'] {
-    editable: false;
-} 
-

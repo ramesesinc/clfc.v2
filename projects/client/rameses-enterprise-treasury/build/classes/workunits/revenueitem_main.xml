@@ -1,6 +1,6 @@
 <workunit>
     <invokers>
-        <invoker type="revenueitem:open" caption="Revenue Item Account" action="open"  role="MASTER" permission="revenueitem.open"/>
+        <invoker type="revenueitem:open" caption="Item Account" action="open"  role="MASTER" permission="revenueitem.open"/>
         <invoker type="formActions" caption="Close" action="_exit" visibleWhen="#{initiator == 'create'}"/>
         <invoker type="formActions" caption="Close" action="_close" visibleWhen="#{initiator != 'create'}"/>
         <invoker type="formActions" caption="New" action="create" role="MASTER" permission="revenueitem.create" />

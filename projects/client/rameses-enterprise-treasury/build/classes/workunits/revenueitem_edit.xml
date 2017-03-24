@@ -1,7 +1,7 @@
 <workunit>
     <invokers>
-        <invoker type="revenueitem:create" caption="Revenue Item (New)" action="create"/>
-        <invoker type="revenueitem:edit" caption="Revenue Item (Edit)" action="edit"/>
+        <invoker type="revenueitem:create" caption="Item Account (New)" action="create"/>
+        <invoker type="revenueitem:edit" caption="Item Account (Edit)" action="edit"/>
         <invoker type="formActions" caption="Cancel" action="_close" immediate="true"/>
         <invoker type="formActions" caption="Save" action="save"/>
     </invokers>
@@ -25,10 +25,13 @@
         def entity;
         
         def valueTypes = [ "ANY", "FIXED", "FIXEDUNIT" ];
+        def itemTypes = LOV.ITEM_ACCOUNT_TYPES*.key; 
         
         void create() {
             this.mode = 'create'
-            this.entity = [objid: 'REVITEM' + new UID(), defaultvalue:0.0, state:'APPROVED'];
+            this.entity = [objid: 'ITEMACCT' + new UID(), defaultvalue:0.0, state:'APPROVED'];
+            this.entity.type = 'REVENUE';
+            this.entity.tags = [];
         }
         
         void edit() {
@@ -56,6 +59,20 @@
                 }    
                 return "_close";
             }
+        }
+        
+        
+        def selectedTag;
+        
+        void addTag() {
+            def t = MsgBox.prompt('Enter Tag');
+            if(!t) return;
+            entity.tags << t.toUpperCase();
+        }
+
+        void removeTag() {
+            if(!selectedTag) return;
+            entity.tags.remove( selectedTag );
         }
     }    
     ]]>

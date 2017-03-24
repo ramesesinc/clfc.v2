@@ -1,7 +1,0 @@
-"lookup" [addoption == 'bytd']{
-    enabled:true;
-}
-
-"lookup" [addoption != 'bytd']{
-    enabled:false;
-}

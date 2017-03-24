@@ -4,6 +4,7 @@
          <invoker type="cashreceiptinfo:open" caption="Cash Receipt Info" action="open" />
          
          <invoker type="formActions" caption="Reprint" action="reprint" shortcut="ctrl P" mnemonic="p" role="COLLECTOR" />
+         <invoker type="formActions" caption="Edit" action="edit" />
    </invokers>
    
    <code>
@@ -36,13 +37,16 @@
 
                 //check fist if form handler exists.
                 def o = InvokerUtil.lookupOpener( "cashreceipt-form:"+entity.formno, [reportData:entity] );
-                if(!o)
-                    throw new Exception("Handler not found");
+                if ( !o ) throw new Exception("Handler not found");
+                
                 def handle = o.handle;
                 handle.viewReport();
                 ReportUtil.print(handle.report,true);
             }
 
+            def edit() {
+                return Inv.lookupOpener("cashreceipt:edit", [entity: entity] );
+            }
                 
         }      
        ]]>

@@ -28,8 +28,11 @@
             
             @PropertyChangeListener
             def listener = [
-                "query.(rulegroup|state|title)": {o->
+                "query.(state|title)": { 
                     reload();
+                },
+                "query.rulegroup": { 
+                    load();
                 }
             ]
             

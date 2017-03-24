@@ -2,7 +2,7 @@
     
    <invokers>
          <invoker type="bankdeposit:create" caption="Bank Deposit" action="init" target="window"/>
-         <invoker type="home.action" caption="Bank Deposit" action="init" target="window" role="CASHIER" index="51"/>
+         <invoker folderid="home/deposit" caption="Bank Deposit" action="init" target="window" role="CASHIER" index="51"/>
          <invoker folderid="/menu/txn/treasury" caption="Bank Deposit" action="init" target="window" role="CASHIER" />
          <invoker type="quick_launcher" code="BNKD" caption="Bank Deposits" action="init" target="window" role="CASHIER"/>
          <invoker type="bankdeposit:open" caption="Bank Deposit (Open)" action="open" target="window"/>
@@ -11,6 +11,7 @@
          <invoker type="formActions" caption="Next" name="start" visibleWhen="#{state == 'initial'}" mnemonic="n" shortcut="ctrl N" icon="images/toolbars/arrow_right.png"/>
          <invoker type="formActions" caption="Submit" name="submit" visibleWhen="#{state == 'processing'}" icon="images/toolbars/save.png" mnemonic="s" shortcut="ctrl S"/>
          
+         <invoker type="formActions" caption="Validate" name="validateDeposit" visibleWhen="#{state == 'OPEN'}" />
          
          <invoker type="formActions" caption="Reports" name="popupReports"   
             visibleWhen="#{mode == 'read' }" category="bankdeposit:reports" mnemonic="r"/>
@@ -38,6 +39,8 @@
         
             @Service("NumberService")
             def numSvc; 
+            
+            def YMD = new java.text.SimpleDateFormat("yyyy-MM-dd");
             
             String title = "New Bank Deposit (Initial)";
             def entity;
@@ -69,7 +72,7 @@
                 return "initial";
             }
             
-             def selectAll() {
+            def selectAll() {
                 if( entity.liquidations ){
                     entity.liquidations.each{it.selected = true} 
                     liquidationListModel.load();
@@ -137,6 +140,10 @@
                 }
             ] as EditorListModel;
             
+            
+            def validateDeposit() {
+                MsgBox.alert('validate deposit');
+            }
             
             def addDeposit() {
                 if(!selectedFund || selectedFund.balance <= 0 ) 
@@ -243,6 +250,12 @@
                     accttype : selectedDeposit.accttype,
                     amountinwords: numSvc.doubleToWords( selectedDeposit.totalcash ).toUpperCase()
                 ]
+                
+                if ( reportdata.txndate instanceof String) { 
+                    def txndate = YMD.parse( reportdata.txndate );
+                    reportdata.txndate = txndate; 
+                } 
+                
                 selectedDeposit.cashbreakdown.each {
                     def dqty = 'dqty' + it.caption.toString().replace('.00','')
                     def damt = 'damt' + it.caption.toString().replace('.00','')

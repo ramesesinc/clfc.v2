@@ -22,8 +22,8 @@
                 fetchList  : { return svc.getNonCashPayments(remittanceid) },
                 getColumns : { return [
                     [name:"bank", caption:"Bank", width:120],
-                    [name:"checkno", caption:"Check No.", width:150],
-                    [name:"checkdate", caption:"Check Date", width:150],
+                    [name:"refno", caption:"Ref No.", width:150],
+                    [name:"refdate", caption:"ref Date", width:150],
                     [name:"amount", caption:"Amount", type:'decimal' ]
                 ]}
             ] as BasicListModel

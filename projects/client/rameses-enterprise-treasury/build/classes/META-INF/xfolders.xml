@@ -20,4 +20,12 @@
             <folder id="treasury" caption="Treasury"/>
         </folder>
     </folder>
+    <folder id="home">
+        <folder id="af" caption="Accountable Forms" index="10"/>
+        <folder id="collection" caption="Collection" index="11"/>
+        <folder id="remittance" caption="Remittance" index="12"/>
+        <folder id="liquidation" caption="Liquidation" index="13"/>
+        <folder id="deposit" caption="Deposit" index="14"/>
+        <folder id="cashmgmt" caption="Cash Management" index="14"/>
+    </folder>   
 </folders>
