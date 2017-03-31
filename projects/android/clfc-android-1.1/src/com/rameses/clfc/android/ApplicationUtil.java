@@ -1,5 +1,8 @@
 package com.rameses.clfc.android;
 
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -19,11 +22,13 @@ import com.rameses.clfc.android.db.DBPaymentService;
 import com.rameses.clfc.android.db.DBRemarksService;
 import com.rameses.clfc.android.db.DBSystemService;
 import com.rameses.clfc.android.db.DBVoidService;
+import com.rameses.client.android.AppSettings;
 import com.rameses.client.android.Platform;
 import com.rameses.client.android.SessionContext;
 import com.rameses.client.android.UIApplication;
 import com.rameses.client.interfaces.UserProfile;
 import com.rameses.db.android.DBContext;
+import com.rameses.db.android.SQLTransaction;
 
 
 public final class ApplicationUtil 
@@ -365,7 +370,8 @@ public final class ApplicationUtil
 		boolean flag = true;
 		
 		try {
-			flag = dbcp.hasPendingPayments(collectorid);
+//			flag = dbcp.hasPendingPayments(collectorid);
+			flag = dbcp.hasForUploadPayment(collectorid);
 		} catch (Exception e) {
 			throw e;
 		} finally {
@@ -525,6 +531,139 @@ public final class ApplicationUtil
 		}
 		
 		return flag;
+	}
+	
+	public static void resolvePaymentTimedifference(long timedifference) {
+
+//		Calendar cal = Calendar.getInstance();
+//		Calendar xcal = Calendar.getInstance();
+//		
+//		AppSettings settings = Platform.getApplication().getAppSettings();
+//		Map map = settings.getAll();
+//		if (map.containsKey("phonedate")) {
+////			println("server date " + settings.getString("serverdate"));
+//			cal.setTime(java.sql.Timestamp.valueOf(settings.getString("phonedate")));
+//		}
+//		 
+//		long timemillis = cal.getTimeInMillis();
+//        long xtimemillis = xcal.getTimeInMillis();
+//        
+//        long diff = timemillis - xtimemillis;
+//        long timediff = diff;
+//        
+//        if (map.containsKey("timedifference")) {
+//        	timediff = settings.getLong("timedifference");
+//        }
+//        
+//        long newtimediff = timediff - diff;
+//
+//    	SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+//        settings.put("phonedate", DATE_FORMAT.format(cal.getTime()));
+//        settings.put("timedifference", newtimediff);
+//        settings.put("timedifference", diff);
+//        settings.put("phonedate", xcal.getTime().toString());
+//		
+		println("resolve timedifference");
+		
+        synchronized (PaymentDB.LOCK) {
+        	SQLTransaction paymentdb = new SQLTransaction("clfcpayment.db");
+        	try {
+        		paymentdb.beginTransaction();
+        		resolvePaymentTimedifference(paymentdb, timedifference);
+        		paymentdb.commit();
+        	} catch (Exception e) {
+        		e.printStackTrace();
+        	} finally {
+        		paymentdb.endTransaction();
+        	}
+        }
+        
+        synchronized (CaptureDB.LOCK) {
+        	SQLTransaction capturedb = new SQLTransaction("clfccapture.db");
+        	try {
+        		capturedb.beginTransaction();
+        		resolveCapturePaymentTimedifference(capturedb, timedifference);
+        		capturedb.commit();
+        	} catch (Exception e) {
+        		e.printStackTrace();
+        	} finally {
+        		capturedb.endTransaction();
+        	}
+        	
+        }
+	}
+	
+
+	private static void resolvePaymentTimedifference(SQLTransaction paymentdb, long timedifference) throws Exception {
+		DBPaymentService paymentSvc = new DBPaymentService();
+		paymentSvc.setDBContext(paymentdb.getContext());
+		paymentSvc.setCloseable(false);
+		
+		Calendar cal = Calendar.getInstance();
+		
+		Map params = new HashMap();
+		params.put("forupload", 0);
+		List<Map> list = paymentSvc.getPaymentsByForupload(params);
+		for (Map m : list) {
+			long xtimedifference = 0L;
+			if (m.containsKey("timedifference")) {
+				xtimedifference = Long.parseLong(m.get("timedifference").toString());
+			}
+			
+			long timemillis = cal.getTimeInMillis();
+			if (m.containsKey("dtsaved")) {
+				cal.setTime(java.sql.Timestamp.valueOf(m.get("dtsaved").toString()));
+				timemillis = cal.getTimeInMillis();
+			}
+			
+			long newtimemillis = timemillis + xtimedifference;
+			newtimemillis -= timedifference;
+			
+			Timestamp timestamp = new Timestamp(newtimemillis);
+			String sql = "UPDATE payment SET dtsaved='" + timestamp.toString() + "', timedifference=" + timedifference + " WHERE objid='" + m.get("objid").toString() + "'";
+			paymentdb.execute(sql);
+//			m.put("timedifference", timedifference);
+			
+//			m = paymentdb.find("SELECT * FROM payment WHERE objid='" + m.get("objid").toString() + "'");
+//			println("pyt data2 " + m);
+		}
+	}
+	
+	private static void resolveCapturePaymentTimedifference(SQLTransaction capturedb, long timedifference) throws Exception {
+		DBCapturePayment captureSvc = new DBCapturePayment();
+		captureSvc.setDBContext(capturedb.getContext());
+		captureSvc.setCloseable(false);
+
+		Calendar cal = Calendar.getInstance();
+		
+		Map params = new HashMap();
+		params.put("forupload", 0);
+		List<Map> list = captureSvc.getPaymentsByForupload(params);
+		for (Map m : list) {
+			long xtimedifference = 0L;
+			if (m.containsKey("timedifference")) {
+				xtimedifference = Long.parseLong(m.get("timedifference").toString());
+			}
+			
+			long timemillis = cal.getTimeInMillis();
+			if (m.containsKey("dtsaved")) {
+				cal.setTime(java.sql.Timestamp.valueOf(m.get("dtsaved").toString()));
+				timemillis = cal.getTimeInMillis();
+			}
+			
+			long newtimemillis = timemillis + xtimedifference;
+			newtimemillis -= timedifference;
+			
+			Timestamp timestamp = new Timestamp(newtimemillis);
+			String sql = "UPDATE capture_payment SET dtsaved='" + timestamp.toString() + "', timedifference=" + timedifference + " WHERE objid='" + m.get("objid").toString() + "'";
+			capturedb.execute(sql);
+			
+			
+//			println("cp data " + m);
+//			m = capturedb.find("SELECT * FROM capture_payment WHERE objid='" + m.get("objid").toString() + "'");
+//			println("cp data2 " + m);
+			//m.put("timedifference", timedifference);
+		}
 	}
 	
 	private ApplicationUtil() {

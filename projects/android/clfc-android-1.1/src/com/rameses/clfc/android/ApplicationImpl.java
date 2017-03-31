@@ -31,6 +31,7 @@ import com.rameses.util.Base64Cipher;
 
 public class ApplicationImpl extends UIApplication 
 {
+	public final static Object LOCK = new Object();
 	private MainDB maindb;
 	private TrackerDB trackerdb;
 	private PaymentDB paymentdb;
@@ -44,11 +45,13 @@ public class ApplicationImpl extends UIApplication
 
 	public VoidRequestService voidRequestSvc;
 	public PaymentService paymentSvc;
+	public PaymentDateResolverService paymentDateResolverSvc;
 	public RemarksService remarksSvc;
 	public RemarksRemovedService remarksRemovedSvc;
 	public BroadcastLocationService broadcastLocationSvc;
 	public LocationTrackerService locationTrackerSvc;
 	public CaptureService captureSvc;
+	public CaptureDateResolverService captureDateResolverSvc;
 	public SpecialCollectionService specialColSvc;
 	private NetworkCheckerService networkCheckerSvc;
 	
@@ -58,7 +61,7 @@ public class ApplicationImpl extends UIApplication
 	private DBCapturePayment capture = new DBCapturePayment(); 
 	private DBVoidService voidsvc = new DBVoidService();
 	private DBSpecialCollectionPendingService scPendingSvc = new DBSpecialCollectionPendingService();
-		
+
 	public File getLogFile() {
 		// TODO Auto-generated method stub
 		File dir = Environment.getExternalStorageDirectory();
@@ -124,10 +127,12 @@ public class ApplicationImpl extends UIApplication
 //		
 		voidRequestSvc = new VoidRequestService(this);
 		paymentSvc = new PaymentService(this);
+		paymentDateResolverSvc = new PaymentDateResolverService(this);
 		remarksSvc = new RemarksService(this);
 		remarksRemovedSvc = new RemarksRemovedService(this);
 		broadcastLocationSvc = new BroadcastLocationService(this);
 		captureSvc = new CaptureService(this);
+		captureDateResolverSvc = new CaptureDateResolverService(this);
 		specialColSvc = new SpecialCollectionService (this);
 		
 		DBContext ctx = new DBContext("clfctracker.db");
@@ -143,21 +148,38 @@ public class ApplicationImpl extends UIApplication
 			}
 		} catch (Throwable t) {
 			t.printStackTrace();
-		}
+		} 
 		
 		ctx = new DBContext("clfcpayment.db");
 		payment.setDBContext(ctx);
+		payment.setCloseable(false);
 		try {
-			boolean flag = payment.hasUnpostedPayments();
+			boolean flag = false;
+			synchronized (LOCK) {
+				if (getIsDateSync() == true) {
+					flag = payment.hasPaymentForDateResolving();
+					if (flag) {
+						new Handler().postDelayed(new Runnable() {
+							public void run() {
+								paymentDateResolverSvc.start();
+							}
+						}, 1);  
+					}
+				}
+			}
+			
+			flag = payment.hasUnpostedPayments();
 			if (flag) {
 				new Handler().postDelayed(new Runnable() {
 					public void run() {
 						paymentSvc.start();
-					}
+					} 
 				}, 1);
 			}
 		} catch (Throwable t) {
 			t.printStackTrace();
+		} finally {
+			ctx.close();
 		}
 		
 		ctx = new DBContext("clfcremarks.db");
@@ -198,8 +220,24 @@ public class ApplicationImpl extends UIApplication
 		
 		ctx = new DBContext("clfccapture.db");
 		capture.setDBContext(ctx);
+		capture.setCloseable(false);
 		try {
-			boolean flag = capture.hasUnpostedPayments();
+			boolean flag = false;
+			
+			synchronized (LOCK) {
+				if (getIsDateSync() == true) {
+					flag = capture.hasPaymentForDateResolving();
+					if (flag) {
+						new Handler().postDelayed(new Runnable() {
+							public void run() {
+								captureDateResolverSvc.start();
+							}
+						}, 1);
+					}	
+				}
+			}
+			
+			flag = capture.hasUnpostedPayments();
 			if (flag) {
 				new Handler().postDelayed(new Runnable() {
 					public void run() {
@@ -209,8 +247,10 @@ public class ApplicationImpl extends UIApplication
 			}
 		} catch (Throwable t) {
 			t.printStackTrace();
+		} finally {
+			ctx.close();
 		}
-		
+		 
 		ctx = new DBContext("clfcspecialcollection.db");
 		scPendingSvc.setDBContext(ctx);
 		try {
@@ -249,15 +289,61 @@ public class ApplicationImpl extends UIApplication
 		if (networkStatus == 3) isConnected = false;
 		return isConnected;
 	}
+	 
+	protected void afterSetIsDateSync(boolean isDateSync) {
+		if (isDateSync == true) { 
+			AppSettings settings = getAppSettings();
+			Map map = settings.getAll();
+			
+			long timedifference = 0L;
+			if (map.containsKey("timedifference")) {
+				timedifference = settings.getLong("timedifference");
+			}
+			ApplicationUtil.resolvePaymentTimedifference(timedifference);
+			synchronized (LOCK) {
+
+				AbstractActionBarActivity aa = Platform.getCurrentActionBarActivity();
+				if (aa == null) aa = Platform.getActionBarMainActivity();
+				
+				aa.getHandler().postDelayed(new Runnable() {
+					public void run() {
+						boolean flag = paymentDateResolverSvc.getServiceStarted();
+						if (flag == true) {
+							paymentDateResolverSvc.restart();
+						} else {
+							paymentDateResolverSvc.start();
+						}
+
+						flag = captureDateResolverSvc.getServiceStarted();
+						if (flag == true) {
+							captureDateResolverSvc.restart();
+						} else {
+							captureDateResolverSvc.start();
+						}
+					}
+				},1);
+				
+				AppRunningTimeUtil instance = AppRunningTimeUtil.getInstance();
+				if (instance.getIsStarted() == true) {
+					instance.stop();
+				}
+				if (map.containsKey("phonedate")) {
+					Date date = java.sql.Timestamp.valueOf(settings.getString("phonedate"));
+					instance.setTime(date);
+				}
+				instance.start();
+			}
+		}
+	}
 	
 	protected void dateChanged(Date date) {
 //		println("date changed: " + date);
 		if (date == null) return;
 		
-		println("is date synced " + getIsDateSync());
 		
 		boolean flag = true;
 		AppSettingsImpl settings = (AppSettingsImpl) Platform.getApplication().getAppSettings();
+//		println("is date synced " + getIsDateSync() + " current timedifference-> " + settings.getLong("timedifference") + " phonetime-> " + settings.getString("phonedate") + " servertime-> " + settings.getString("serverdate"));
 		Map map = settings.getAll();
 		if (map != null && map.containsKey("serverdate")) {
 			long timemillis = java.sql.Timestamp.valueOf(map.get("serverdate").toString()).getTime();
@@ -265,11 +351,17 @@ public class ApplicationImpl extends UIApplication
 			if (date.compareTo(xdate) < 0) {
 				flag = false;
 			}
-		}
+		} 
 		
 //		println("date " + date);
 		if (flag == true) {
 			settings.put("serverdate", date.toString());
+			
+//			Calendar cal = Calendar.getInstance();
+//			Calendar xcal = cal;
+//			settings.put("phonedate", cal.getTime().toString());
+			
+//			cal.setTime()
 		}
 	}
 	
@@ -288,7 +380,7 @@ public class ApplicationImpl extends UIApplication
 				xcal.setTimeInMillis(timemillis);
 			}
 		}
-		println("time: " + cal.getTime() + " server time: " + xcal.getTime());
+//		println("time: " + cal.getTime() + " server time: " + xcal.getTime());
 		if (timemillis <= 0) timemillis = cal.getTimeInMillis();
 //		println("get server time " + getServerTime());
 		return timemillis;
@@ -376,7 +468,7 @@ public class ApplicationImpl extends UIApplication
 			}
 		}
 		
-	} 
+	}  
 	
 	private void println(String str) {
 //		System.out.println("[ApplicationImpl] " + str);
@@ -391,15 +483,15 @@ public class ApplicationImpl extends UIApplication
 		if (date != null) {
 			settings.put("serverdate", date);
 		}
-	} 	  
+	}
 	 
 	public int getNetworkStatus() { return networkStatus; }
 	void setNetworkStatus(int networkStatus) { 
 		this.networkStatus = networkStatus; 
 		
-		println("network status " + networkStatus);
+//		println("network status " + networkStatus);
 		getAppEnv().put("app.host", ApplicationUtil.getAppHost(networkStatus)); 
-	}
+	}   
 
 	public void suspend() {
 		if (SuspendDialog.isVisible()) return;

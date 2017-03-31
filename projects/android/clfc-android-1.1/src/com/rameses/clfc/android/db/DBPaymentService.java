@@ -1,5 +1,6 @@
 package com.rameses.clfc.android.db;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -156,11 +157,64 @@ public class DBPaymentService extends AbstractDBMapper
 		}
 	}
 	
+	public List<Map> getPaymentsByForupload(Map params) throws Exception {
+		DBContext ctx = createDBContext();
+		try {
+			String sql = "SELECT * FROM " + getTableName() + " WHERE forupload=$P{forupload}";
+			return ctx.getList(sql, params);
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			if (isCloseable()) ctx.close();
+		}
+	}
+	
 	public boolean hasPaymentsByRoutecode(String routecode) throws Exception {
 		DBContext ctx = createDBContext();
 		try {
 			String sql = "SELECT objid FROM "+getTableName()+" WHERE routecode=? LIMIT 1";
 			return (ctx.getCount(sql, new Object[]{routecode}) > 0);
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			if (isCloseable()) ctx.close();
+		}
+	}
+	
+	public List<Map> getForUploadPayments(int limit) throws Exception {
+		DBContext ctx = createDBContext();
+		try {
+			String sql = "SELECT * FROM " + getTableName() + " WHERE forupload=1";
+			if (limit > 0) sql += " LIMIT " + limit;
+			return ctx.getList(sql, new Object[]{});
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			if (isCloseable()) ctx.close();
+		}
+	}
+	
+	public List<Map> getForUploadPayments() throws Exception {
+		return getForUploadPayments(0);
+	}
+	
+	public List<Map> getPaymentsForDateResolving() throws Exception {
+		DBContext ctx = createDBContext();
+		try {
+			String sql = "SELECT * FROM " + getTableName() + " WHERE dtposted IS NULL";
+			return ctx.getList(sql, new HashMap());
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			if (isCloseable()) ctx.close();
+		}
+	}
+	
+	public boolean hasPaymentForDateResolving() throws Exception {
+		DBContext ctx= createDBContext();
+		try {
+			String sql = "SELECT objid FROM " + getTableName() + " WHERE dtposted IS NULL LIMIT 1";
+			return (ctx.getCount(sql, new HashMap()) > 0);
 		} catch (Exception e) {
 			throw e;
 		} finally {

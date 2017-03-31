@@ -83,7 +83,7 @@ public class CaptureService
 					capturePayment.setCloseable(false);
 					try {
 //						capturedb.beginTransaction();
-						list = capturePayment.getPendingPayments(SIZE);
+						list = capturePayment.getForUploadPayments(SIZE);
 //						capturedb.commit();
 					} catch (Throwable t) {
 						t.printStackTrace();
@@ -102,7 +102,8 @@ public class CaptureService
 					 capturePayment.setDBContext(ctx);
 					 capturePayment.setCloseable(false);
 					try {
-						hasPayments = capturePayment.hasPendingPayments();
+//						hasPayments = capturePayment.hasPendingPayments();
+						hasPayments = capturePayment.hasForUploadPayments();
 					} catch (Throwable t) {
 						t.printStackTrace();
 						hasPayments = true;

@@ -88,7 +88,8 @@ public class PaymentService
 					paymentSvc.setCloseable(false);
 					try {
 //						paymentdb.beginTransaction();
-						list = paymentSvc.getPendingPayments(SIZE);
+//						list = paymentSvc.getPendingPayments(SIZE);
+						list = paymentSvc.getForUploadPayments(SIZE);
 //						paymentdb.commit();
 					} catch (Throwable t) {
 						t.printStackTrace();
@@ -110,7 +111,7 @@ public class PaymentService
 					paymentSvc.setDBContext(ctx);
 					paymentSvc.setCloseable(false);
 					try {
-						list = paymentSvc.getPendingPayments(SIZE);
+						list = paymentSvc.getForUploadPayments(SIZE);
 						if (list.isEmpty() || list.size() == 0) {
 							hasUnpostedPayments = false;
 						}
@@ -209,13 +210,13 @@ public class PaymentService
 						String enc = new Base64Cipher().encode(params);
 						param.put("encrypted", enc);
 						
-						println("app.host " + ApplicationUtil.getAppHost());
+//						println("app.host " + ApplicationUtil.getAppHost());
 						
 						if (response == null) response = new HashMap();
 						response.clear();
 						for (int j=0; j<10; j++) {
 							try {
-								println("app.host " + ApplicationUtil.getAppHost());
+//								println("app.host " + ApplicationUtil.getAppHost());
 								LoanPostingService svc = new LoanPostingService();
 								response = svc.postPaymentEncrypt(param);
 								closePayment(response, proxy.getString("objid"));

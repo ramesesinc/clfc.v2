@@ -1,5 +1,7 @@
 package com.rameses.clfc.android.main;
 
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -32,6 +34,7 @@ import com.rameses.clfc.android.MainDB;
 import com.rameses.clfc.android.R;
 import com.rameses.clfc.android.db.DBBankService;
 import com.rameses.clfc.android.db.DBSystemService;
+import com.rameses.client.android.AppSettings;
 import com.rameses.client.android.NetworkLocationProvider;
 import com.rameses.client.android.Platform;
 import com.rameses.client.android.SessionContext;
@@ -74,6 +77,8 @@ public class CapturePaymentActivity extends ControlActivity
 	private String amount;
 	private String paidby;
 	private String objid;
+	
+	private SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
 	
 	@Override
 	protected void onCreateProcess(Bundle savedInstanceState) {
@@ -436,6 +441,26 @@ public class CapturePaymentActivity extends ControlActivity
 					params.put("check_date", java.sql.Date.valueOf(checkdate));
 				}		
 //				System.out.println("params-> "+params);
+				
+				
+				params.put("forupload", 0);
+				
+				Calendar cal = Calendar.getInstance();
+//				Date phonedate = java.sql.Timestamp.valueOf(DATE_FORMAT.format(cal.getTime()));
+				Date phonedate = new Timestamp(cal.getTimeInMillis());
+				params.put("dtsaved", phonedate.toString());
+				
+				AppSettings settings = Platform.getApplication().getAppSettings();
+				Map map = settings.getAll();
+				
+				long timedifference = 0L;
+				if (map.containsKey("timedifference")) {
+					timedifference = settings.getLong("timedifference");
+				}
+				
+				params.put("timedifference", timedifference);
+				
+				
 				txn.insert("capture_payment", params);
 //				System.out.println("done insert");
 			}
