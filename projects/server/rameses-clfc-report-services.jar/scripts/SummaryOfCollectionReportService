@@ -33,8 +33,75 @@ class SummaryOfCollectionReportService {
 
 	@ProxyMethod
 	public def getReportData() {
-		def params = [startdate: "2016-11-04", enddate: "2016-11-04"];
-		return getReportData(params);
+		//def params = [startdate: "2016-11-04", enddate: "2016-11-04"];
+		//return getReportData(params);
+
+
+		def xxlist = [
+			[objid: "LEDGER-163a5493:14c8e311120:-7726", date: "2014-12-10", refno: "215607"],
+			[objid: "LEDGER-163a5493:14c8e311120:-7726", date: "2014-12-10", refno: "216267"]
+		]
+
+		xxlist.each{ o->
+
+			def xlist = [];
+			def details = em.getLedgerDetailByDateAndRefno([objid: o.objid, date: o.date, refno: o.refno]);
+			details?.each{ d->
+				def itm = [
+					interest: (d.interestpaid != 0)? d.interestpaid : 0.00,
+					penalty : d.penaltypaid
+				];
+
+				if (d.state == "RECEIVED") {
+				} else if (d.state == 'PROCEED' || d.state == 'ADJUSTMENT') {
+				} else if (d.state == 'PREPAIDINTEREST') {
+					itm.penalty = 0.00;
+				} else {	
+				}
+
+				println 'item ' + itm;
+
+				xlist << itm;
+			}
+			def rev = em.getRevenueByDateAndTag([objid: o.objid, date: o.date, tag: "interest"]);
+
+			def interest = 0.00;
+			if (rev) {
+				interest = rev.amount.sum();
+				if (!interest) interest = 0.00;
+			}
+
+			rev = em.getRevenueByDateAndTag([objid: o.objid, date: o.date, tag: "penalty"]);
+
+			def penalty = 0.00;;
+			if (rev) {
+				penalty = rev.amount.sum();
+				if (!penalty) penalty = 0.00;
+			}
+			xlist << [interest: interest, penalty: penalty];
+
+			interest = xlist?.interest.sum();
+			if (!interest) interest = 0.00;
+
+			penalty = xlist?.penalty.sum();
+			if (!penalty) penalty = 0.00;
+
+
+			println 'list';
+			xlist?.each{ println it }
+
+			println 'interest-> ' + interest + ' penalty-> ' + penalty; 
+			println '';
+		}
+
+
+		//def principal = i.amount - interest - penalty;
+		//if (!principal || principal < 0) principal = 0.00;
+
+		//i.interest = interest;
+		//i.penalty = penalty;
+		//i.principal = principal;
+
 	}
 
 	@ProxyMethod
@@ -58,7 +125,8 @@ class SummaryOfCollectionReportService {
 			def items = em.getLedgersWithPaymentsByDate([date: o.date]);
 			items?.each{ i->
 				def xlist = [];
-				def details = em.getLedgerDetailByDate([objid: i.objid, date: o.date]);
+				//def details = em.getLedgerDetailByDate([objid: i.objid, date: o.date]);
+				def details = em.getLedgerDetailByDateAndRefno([objid: i.objid, date: o.date, refno: i.refno]);
 				details?.each{ d->
 					def itm = [
 						interest: (d.interestpaid != 0)? d.interestpaid : 0.00,
@@ -69,12 +137,23 @@ class SummaryOfCollectionReportService {
 					} else if (d.state == 'PROCEED' || d.state == 'ADJUSTMENT') {
 					} else if (d.state == 'PREPAIDINTEREST') {
 						itm.penalty = 0.00;
+					} else if (d.state == 'OFFSET') {
+						itm.interest = 0;
+						itm.penalty = 0;
 					} else {	
 					}
 
 					xlist << itm;
 				}
+				if (i.objid == 'LEDGER-163a5493:14c8e311120:-7726') {
+					println 'list1';
+					xlist.each{ println it }
+				}
 				def rev = em.getRevenueByDateAndTag([objid: i.objid, date: o.date, tag: "interest"]);
+
+				if (i.objid == 'LEDGER-163a5493:14c8e311120:-7726') {
+					println 'interest ' + rev;
+				}
 
 				def interest = 0.00;
 				if (rev) {
@@ -83,6 +162,10 @@ class SummaryOfCollectionReportService {
 				}
 
 				rev = em.getRevenueByDateAndTag([objid: i.objid, date: o.date, tag: "penalty"]);
+
+				if (i.objid == 'LEDGER-163a5493:14c8e311120:-7726') {
+					println 'penalty ' + rev;
+				}
 
 				def penalty = 0.00;;
 				if (rev) {
@@ -104,6 +187,13 @@ class SummaryOfCollectionReportService {
 				i.interest = interest;
 				i.penalty = penalty;
 				i.principal = principal;
+
+				if (i.objid == 'LEDGER-163a5493:14c8e311120:-7726') {
+					println 'list2';
+					xlist.each{ println it }
+					println 'item ' + i;
+					println '';
+				}
 				//println 'total interest ' + interest + ' total penalty ' + penalty + ' payment ' + i;
 			}
 			list.addAll(items);

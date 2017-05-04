@@ -90,7 +90,13 @@ public class PaymentService
 //						paymentdb.beginTransaction();
 //						list = paymentSvc.getPendingPayments(SIZE);
 						list = paymentSvc.getForUploadPayments(SIZE);
-//						paymentdb.commit();
+						
+//						for (Map m : list) {
+//							println("for upload " + m);
+//						} 
+						
+						println("for upload " + list.size());
+//						paymentdb.commit(); 
 					} catch (Throwable t) {
 						t.printStackTrace();
 					} finally {
@@ -103,6 +109,7 @@ public class PaymentService
 					execPayment(list);
 				} catch (Throwable t) {
 					t.printStackTrace();
+					println(t.getMessage());
 				}
 
 				hasUnpostedPayments = true;
@@ -115,6 +122,7 @@ public class PaymentService
 						if (list.isEmpty() || list.size() == 0) {
 							hasUnpostedPayments = false;
 						}
+						println("has unposted " + hasUnpostedPayments);
 					} catch (Throwable t) {
 						t.printStackTrace();
 					} finally {
@@ -217,12 +225,18 @@ public class PaymentService
 						for (int j=0; j<10; j++) {
 							try {
 //								println("app.host " + ApplicationUtil.getAppHost());
+//								println("pass 1");
 								LoanPostingService svc = new LoanPostingService();
+//								println("pass 2");
 								response = svc.postPaymentEncrypt(param);
+//								println("pass 3");
+//								println("response " + response);
 								closePayment(response, proxy.getString("objid"));
+//								println("pass 4");
 								break;
 							} catch (Throwable e) {
 								e.printStackTrace();
+								println(e.getMessage());
 							} 
 						}
 					}
@@ -244,7 +258,10 @@ public class PaymentService
 						paymentSvc.setDBContext(paymentdb.getContext());
 						try {
 							paymentdb.beginTransaction();
+							println("objid " + objid);
 							paymentSvc.closePayment(objid);
+							Map m = paymentSvc.findPaymentById(objid);
+							println("payment " + m);
 							paymentdb.commit();
 						} catch (Throwable t) {
 							t.printStackTrace();

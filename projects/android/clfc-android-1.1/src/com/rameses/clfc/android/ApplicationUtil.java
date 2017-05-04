@@ -1,7 +1,6 @@
 package com.rameses.clfc.android;
 
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -10,6 +9,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.Context;
 import android.util.Log;
 import android.widget.Toast;
@@ -22,7 +22,6 @@ import com.rameses.clfc.android.db.DBPaymentService;
 import com.rameses.clfc.android.db.DBRemarksService;
 import com.rameses.clfc.android.db.DBSystemService;
 import com.rameses.clfc.android.db.DBVoidService;
-import com.rameses.client.android.AppSettings;
 import com.rameses.client.android.Platform;
 import com.rameses.client.android.SessionContext;
 import com.rameses.client.android.UIApplication;
@@ -665,6 +664,58 @@ public final class ApplicationUtil
 			//m.put("timedifference", timedifference);
 		}
 	}
+	
+
+	void showUserInfoDialog(Context context) {
+		
+		UserProfile prof = SessionContext.getProfile();
+		
+		String username = (prof != null? prof.getUserName() : "");
+		String name = (prof != null? prof.getFullName() : "");
+		
+		//println("username " + username + " name " + name); 
+		
+		final Dialog dialog = new Dialog(context);
+//		dialog.setContentView(R.layout.dialog_userinfo);
+//		dialog.setTitle("User Account");
+//		
+//		TextView tv_username = (TextView) dialog.findViewById(R.id.tv_username);
+//		SpannableString content = new SpannableString(username.toLowerCase());
+//		content.setSpan(new UnderlineSpan(), 0, content.length(), 0);
+//		tv_username.setText(content);
+//		
+//		TextView tv_name = (TextView) dialog.findViewById(R.id.tv_name);
+//		tv_name.setText(name);
+//		
+//		ImageView icon = (ImageView) dialog.findViewById(R.id.iv_icon);
+//		icon.setImageResource(R.drawable.profile);
+//		
+//		Button btn_logout = (Button) dialog.findViewById(R.id.btn_logout);
+//		btn_logout.setOnClickListener(new View.OnClickListener() {
+//			@Override
+//			public void onClick(View v) {
+//				// TODO Auto-generated method stub
+//				println("logout");
+//				ProgressDialog progressDialog = new ProgressDialog(context);
+//				try {
+//					dialog.dismiss();
+//					new LogoutController((UIActionBarActivity) context, progressDialog).logout();
+//				} catch (Throwable t) {
+//					UIDialog.showMessage(t, UserInfoMenuActivity.this);
+//				}
+//			}
+//		});
+		
+		dialog.show();
+	}
+	
+//	public static void showServerDateStatus(Context context) {
+//
+//		final Dialog dialog = new Dialog(context);
+////		dialog.setContentView(R.layout.dialog_userinfo);
+//		
+//		dialog.show();
+//	}
 	
 	private ApplicationUtil() {
 	}

@@ -1187,6 +1187,7 @@ containing a value of this type.
         public static final int capturepayment_add=0x7f060109;
         public static final int checkbox=0x7f060032;
         public static final int collapseActionView=0x7f06000d;
+        public static final int datestatus=0x7f06010b;
         public static final int default_activity_button=0x7f06002c;
         public static final int dialog=0x7f06000e;
         public static final int disableHome=0x7f060008;
@@ -1266,8 +1267,8 @@ containing a value of this type.
         public static final int notes_todate=0x7f060081;
         public static final int overlayid=0x7f06001d;
         public static final int pager=0x7f06006a;
-        public static final int payment_addpayment=0x7f06010b;
-        public static final int payment_addremarks=0x7f06010c;
+        public static final int payment_addpayment=0x7f06010c;
+        public static final int payment_addremarks=0x7f06010d;
         public static final int payment_option=0x7f060049;
         public static final int paymentid=0x7f06001c;
         public static final int progress_circular=0x7f060018;
@@ -1303,7 +1304,7 @@ containing a value of this type.
         public static final int showCustom=0x7f060007;
         public static final int showHome=0x7f060004;
         public static final int showTitle=0x7f060006;
-        public static final int specialcollection_new=0x7f06010d;
+        public static final int specialcollection_new=0x7f06010e;
         public static final int spinner_bank=0x7f06004d;
         public static final int spinner_debug_enabled=0x7f0600c3;
         public static final int split_action_bar=0x7f060022;

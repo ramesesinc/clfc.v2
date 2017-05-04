@@ -67,6 +67,14 @@ FROM ledgeramnesty_smc_posting_detail d
 WHERE d.parentid = $P{objid}
 ORDER BY d.sequenceno DESC, d.idx DESC
 
+[findLastDetailItemNotAdjustment]
+select d.*
+from ledgeramnesty_smc_posting_detail d
+left join loan_ledger_adjustment a on d.objid = a.objid
+where d.parentid =  $P{objid}
+	and a.objid is null
+order by d.sequenceno desc, d.idx desc
+
 [findCountPostingDetails]
 SELECT COUNT(d.objid) AS counter
 FROM ledgeramnesty_smc_posting_detail d

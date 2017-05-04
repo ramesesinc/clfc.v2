@@ -97,7 +97,7 @@ class CheckoutService extends ActiveCrudListService
 
 		def item;
 		data?.depositslips?.each{ o->
-			item = em.findDetailByRefid([refid: o.refid]);
+			item = em.findDetailByRefidAndState([refid: o.refid, state: 'DRAFT']);
 			if (item && item.parentid != data.objid) {
 				throw new Exception('Deposit Slip with Control No. ' + item?.depositslip?.controlno + ' already has check-out document created.');
 			}

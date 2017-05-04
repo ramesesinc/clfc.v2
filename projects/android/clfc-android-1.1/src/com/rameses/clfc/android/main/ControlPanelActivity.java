@@ -83,7 +83,7 @@ public class ControlPanelActivity extends ControlActivity
 //		System.out.println("roles-> "+SessionContext.getProfile().getRoles());
 		
 //		System.out.println("serverDate -> " + Platform.getApplication().getServerDate().toString());
-		println("server date " + Platform.getApplication().getServerDate());
+//		println("server date " + Platform.getApplication().getServerDate());
 		DBContext clfcdb = new DBContext("clfc.db");
 		colGroup.setDBContext(clfcdb);
 		colGroup.setCloseable(false);

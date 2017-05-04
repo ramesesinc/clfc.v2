@@ -24,14 +24,14 @@ class MigrationBorrowerMergeService extends ActiveCrudListService
 		def cols = [];
 		if (!params.state) cols << [name: 'state', caption: 'Status'];
 		cols << [name: 'borrower.name', caption: 'Borrower'];
-		cols << [name: 'dtcreated', caption: 'DateRequested'];
-		cols << [name: 'author.name', caption: 'RequestedBy'];
+		cols << [name: 'dtcreated', caption: 'Date Requested'];
+		cols << [name: 'author.name', caption: 'Requested By'];
 		switch (params.state) {
-			case 'APPROVED'		: 	cols << [name: 'dtposted', caption: 'DateApproved'];
-									cols << [name: 'poster.name', caption: 'ApprovedBy'];
+			case 'APPROVED'		: 	cols << [name: 'dtposted', caption: 'Date Approved'];
+									cols << [name: 'poster.name', caption: 'Approved By'];
 									break;
-			case 'DISAPPROVED' 	: 	cols << [name: 'dtposted', caption: 'DateDisapproved'];
-									cols << [name: 'poster.name', caption: 'DisapprovedBy'];
+			case 'DISAPPROVED' 	: 	cols << [name: 'dtposted', caption: 'Date Disapproved'];
+									cols << [name: 'poster.name', caption: 'Disapproved By'];
 									break;
 		}
 
@@ -43,8 +43,8 @@ class MigrationBorrowerMergeService extends ActiveCrudListService
 		return [
 			[caption: 'All'],
 			[caption: 'FOR APPROVAL', state: 'FOR_APPROVAL'],
-			[caption: 'APPROVE', state: 'APPROVED'],
-			[caption: 'DISAPPROVE', state: 'DISAPPROVED']
+			[caption: 'APPROVED', state: 'APPROVED'],
+			[caption: 'DISAPPROVED', state: 'DISAPPROVED']
 		];
 	}
 
@@ -62,11 +62,18 @@ class MigrationBorrowerMergeService extends ActiveCrudListService
 	@ProxyMethod
 	public def approveDocument( params ) {
 		if (!params.items) throw new Exception("Please specify items.");
+		if (!params.borrower.objid) throw new RuntimeException("Please specify borrower to retain.");
+
+		def b = params.borrower;
 
 		def data = approveImpl(params, 'APPROVED');
+		data.borrower = b;
+
+		em.update(data, "retain-borrower");
 
 		def list = params.items;
-		def objid = list[0].borrower.objid;
+		//def objid = list[0].borrower.objid;
+		def objid = data.borrower.objid;
 
 		def item = list.find{ it.borrower.objid == objid }
 		def xlist = list.findAll{ it.borrower.objid != objid }
@@ -77,7 +84,7 @@ class MigrationBorrowerMergeService extends ActiveCrudListService
 
 			itm = borrowerresolver.read([objid: o.borrower.objid], 'resolved');
 			if (itm) borrowerresolver.delete(itm, 'resolved');
-;
+			
 			loans = loanresolver.getListByBorrowerid([searchtext: '%', borrowerid: o.borrower.objid]);
 			loans.each{ l->
 				itm = loanresolver.read([objid: l.objid]);

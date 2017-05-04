@@ -38,7 +38,8 @@ class DailyCashReceiptReportService {
 		def txndate = parseDate(params.date);
 
 		def list = em.getPostedCollectionByDate([date: txndate]);
-		if (!list) {
+		def or = em.getPostedOtherReceiptByDate([date: txndate]);
+		if (!list && !or) {
 			throw new RuntimeException("No Daily Cash Receipt for " + txndate + ".");
 		}
 
@@ -53,7 +54,7 @@ class DailyCashReceiptReportService {
 			ec?.each{ i->
 				def cbs = encashment.read([objid: i.objid], "encashment-cbs");
 				i.cashremitted =  cbs?.breakdown?.amount.sum();
-				if (!i.cashremitted) i.cashremitted = 0;
+				if (!i.cashremitted) i.cashremitted = 0.00;
 			}
 		}
 
@@ -69,7 +70,6 @@ class DailyCashReceiptReportService {
 		def totalcollection = list?.amount.sum();
 		if (!totalcollection) totalcollection = 0.00;
 
-		def or = em.getPostedOtherReceiptByDate([date: txndate]);
 		def totalor = or?.amount.sum();
 		if (!totalor) totalor = 0.00;
 

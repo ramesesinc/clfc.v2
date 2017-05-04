@@ -197,7 +197,7 @@ class LoanAppCaptureRenewService
 	public def assess( params ) {
 		def data = em.read(params);
 
-		def info = appAssessmentSvc.getAssessmentInfo(data);
+		def info = appAssessmentSvc.getAssessmentInfo(data, [:]);
 		data.assessmentinfo  = info;
 		em.update(data);
 
@@ -218,7 +218,7 @@ class LoanAppCaptureRenewService
 			message 	: 'Assessment for Loan Application (' + data.appno + ')',
 			senderid 	: env.USERID,
 			sendername 	: env.NAME,
-			recipientid : 'CAO_OFFICER'
+			recipientid : 'ASSESSOR'
 		];
 		inboxSvc.addMessage( msginfo );
 
@@ -360,10 +360,12 @@ class LoanAppCaptureRenewService
 		loanapp.create(app, 'loanapp_capture_open'); 
 
 		def assessment = data.assessmentinfo;
+		if (!assessment) assessment = [:];
+
 		def extinfo = [
 			objid 			: data.objid,
-			netamount 		: assessment.netamount,
-			totalcharges 	: assessment.totalcharges,
+			netamount 		: assessment?.netamount? assessment.netamount : 0,
+			totalcharges 	: assessment?.totalcharges? assessment.totalcharges : 0,
 			dtmatured 		: data.dtmatured,
 			assessmentinfo 	: assessment
 		];

@@ -99,15 +99,25 @@ class LoanPaymentAmnestySMCService
 		
 
 		def ledger = loan_ledger.findByAppId([appid: params.appid]);
+		def app = loanapp.read([objid: ledger.appid]);
 
 		def cal = Calendar.getInstance();
 		cal.setTime(parseDate(data?.dtstarted));
 		if (pi?.dtstarted) {
-			cal.setTime(parseDate(data?.postinginfo?.dtstarted));
+			cal.setTime(parseDate(pi?.dtstarted));
+
+			switch (pi?.term) {
+				case 'ANNUAL' 		: cal.add(Calendar.YEAR, 1); break;
+				case 'SEMI-ANNUAL' 	: cal.add(Calendar.MONTH, 6); break;
+				case 'MONTHLY'		: cal.add(Calendar.MONTH, 1); break;
+				case 'SEMI-MONTHLY' : cal = getSemiMonthlyValue(cal); break;
+				case 'WEEKLY' 		: cal.add(Calendar.DATE, 7); break;
+				default 			: cal.add(Calendar.DATE, 1); break
+			}
 		}
 
 		def lastpayment;
-		def lastitem = em.findLastDetailItem([objid: data?.objid]);
+		def lastitem = em.findLastDetailItemNotAdjustment([objid: data?.objid]);
 		if (lastitem) {
 			def info = lastitem.remove('info');
 			info = em.serializer.read(info);
@@ -164,6 +174,9 @@ class LoanPaymentAmnestySMCService
 			DATE_PAID 			: pyt?.txndate,
 			REMARKS 			: ''
 		];
+
+		//println 'bindings';
+		//smcFact.bindings?.each{ println it }
 
 		def conds = courtconditions?.findAll{ it.expr != null && !it.conditionid?.matches("(AMOUNT|BALANCE)") }
 		def fn;
@@ -291,7 +304,7 @@ class LoanPaymentAmnestySMCService
 
 					def ip = fp.lastitem.interestpaid;
 					if (!ip) ip = 0;
-					loanFact?.bindings?.INTERESTPAID = ip;
+					smcFact?.bindings?.INTERESTPAID = ip;
 				}
 				smcFact?.bindings?.LACKINGPENALTY = 0;
 				if (fp?.lastitem?.LACKINGPENALTY) {
@@ -327,9 +340,10 @@ class LoanPaymentAmnestySMCService
 		//def expr = 'INTERESTPAID == INTEREST'
 		//req.addGlobal('expr', expr);
 
-
-		//println '*smc fact';
+		//println 'txndate ' + txndate;
+		//println 'smc fact';
 		//smcFact?.postingSequence?.each{ println it }
+		//smcFact?.each{ println it }
 
 		//throw new RuntimeException('stopping smc');
 		//println '*payment fact';
@@ -349,7 +363,7 @@ class LoanPaymentAmnestySMCService
 
 		if (items) {
 			def li = items[items.size() - 1];
-			if (li.balance > 0) {
+			if (li.balance >= 0) {
 				ledger.balance = li.balance;
 				loan_ledger.update([objid: ledger?.objid, balance: ledger?.balance], 'balance');
 
@@ -510,33 +524,41 @@ class LoanPaymentAmnestySMCService
 
 		params.bindings2 = bindings;
 
-		def expr = 'if (';
+		//println 'constraints ' + cons;
+		def expr = ''
 		list = cons?.findAll{ it.operator != null }
-		list?.eachWithIndex{ o, idx->
-			switch (o.field.datatype) {
-				case 'decimal':
-					if (idx > 0) expr += ' && ';
-					def val = params.bindings[o.field.name.toUpperCase()];
-					if (!val) val = 0;
+		//println 'constraints2 ' + list;
+		if (list) {
+			expr = 'if (';
+			list?.eachWithIndex{ o, idx->
+				switch (o.field.datatype) {
+					case 'decimal':
+						if (idx > 0) expr += ' && ';
+						def val = params.bindings[o.field.name.toUpperCase()];
+						if (!val) val = 0;
 
-					def val2 = params.item[o.field.name];
-					if (!val2) val2 = 0;
+						def val2 = params.item[o.field.name];
+						if (!val2) val2 = 0;
 
-					//println 'fn ' + o.field.name + ' val1 ' + val + ' val2 ' + val2;
+						//println 'fn ' + o.field.name + ' val1 ' + val + ' val2 ' + val2;
 
-					val += val2;
+						val += val2;
 
-					expr += '(' + val + ' ' + o.operator.symbol + ' ';
-					if (o.usevar == 0) {
-						expr += o.intvalue;
-					} else if (o.usevar == 1) {
-						expr += o.var.name;
-					}
-					expr += ')';
+						expr += '(' + val + ' ' + o.operator.symbol + ' ';
+						if (o.usevar == 0) {
+							expr += o.intvalue;
+						} else if (o.usevar == 1) {
+							expr += o.var.name;
+						}
+						expr += ')';
+				}
 			}
+			expr += ') { return true; };\n'
+			expr += 'else { return false; };';
+		} else {
+			//expr = 'return false;';
 		}
-		expr += ') { return true; };'
-		expr += '\nelse { return false; };';
+		//println 'expr ' + expr;
 
 		params.constraintexpr = expr;
 		//println 'constraint expr ' + expr;

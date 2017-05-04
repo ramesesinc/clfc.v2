@@ -155,20 +155,18 @@ public class ApplicationImpl extends UIApplication
 		payment.setCloseable(false);
 		try {
 			boolean flag = false;
-			synchronized (LOCK) {
-				if (getIsDateSync() == true) {
-					flag = payment.hasPaymentForDateResolving();
-					if (flag) {
-						new Handler().postDelayed(new Runnable() {
-							public void run() {
-								paymentDateResolverSvc.start();
-							}
-						}, 1);  
+			flag = payment.hasPaymentForDateResolving();
+			println("has payment for date resolving: " + flag);
+			if (flag) {
+				new Handler().postDelayed(new Runnable() {
+					public void run() {
+						paymentDateResolverSvc.start();
 					}
-				}
+				}, 1);  
 			}
-			
+			 
 			flag = payment.hasUnpostedPayments();
+			println("has unposted payments " + flag);
 			if (flag) {
 				new Handler().postDelayed(new Runnable() {
 					public void run() {
@@ -224,17 +222,13 @@ public class ApplicationImpl extends UIApplication
 		try {
 			boolean flag = false;
 			
-			synchronized (LOCK) {
-				if (getIsDateSync() == true) {
-					flag = capture.hasPaymentForDateResolving();
-					if (flag) {
-						new Handler().postDelayed(new Runnable() {
-							public void run() {
-								captureDateResolverSvc.start();
-							}
-						}, 1);
-					}	
-				}
+			flag = capture.hasPaymentForDateResolving();
+			if (flag) {
+				new Handler().postDelayed(new Runnable() {
+					public void run() {
+						captureDateResolverSvc.start();
+					}
+				}, 1);
 			}
 			
 			flag = capture.hasUnpostedPayments();
@@ -454,7 +448,7 @@ public class ApplicationImpl extends UIApplication
 		        SessionContext sess = AppContext.getSession();
 		        sess.setProvider(sessImpl); 
 		        sess.set("encpwd", encpwd); 
-		        
+		         
 		        Map authOpts = (Map) xresult.remove("AUTH_OPTIONS");
 		        //println("authopts " + authOpts);
 		        if (authOpts != null) {
@@ -468,7 +462,7 @@ public class ApplicationImpl extends UIApplication
 			}
 		}
 		
-	}  
+	}   
 	
 	private void println(String str) {
 //		System.out.println("[ApplicationImpl] " + str);

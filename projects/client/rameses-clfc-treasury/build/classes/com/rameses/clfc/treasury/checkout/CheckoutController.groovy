@@ -116,7 +116,8 @@ class CheckoutController extends CRUDController
     
     def addDepositSlip() {
         def handler = { o->
-            def item = entity.depositslips.find{ it.depositslip.controlno == o.controlno }
+            def item = entity.depositslips.find{ it.refid==o.objid }
+            //def item = entity.depositslips.find{ it.depositslip.controlno == o.controlno }
             if (item) throw new Exception("This deposit slip has already been selected.");
            
             item = [

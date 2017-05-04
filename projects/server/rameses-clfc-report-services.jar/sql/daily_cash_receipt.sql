@@ -46,13 +46,16 @@ where r.txndate = $P{date}
 	and r.state = "POSTED"
 
 [getCollectionItems]
-select c.objid, c.cbsno, (select sum(amount) from collection_cb_detail where parentid = c.objid) as cashremitted, "cbs" as type
+select c.objid, c.cbsno, (select sum(amount) from collection_cb_detail where parentid = c.objid) as cashremitted, "cbs" as type,
+	IFNULL((SELECT ABS(SUM(amount)) FROM collection_remittance_other WHERE parentid = r.objid AND txntype = 'SHORTAGE'), 0) AS shortage,
+	IFNULL((SELECT ABS(SUM(amount)) FROM collection_remittance_other WHERE parentid = r.objid AND txntype = 'OVERAGE'), 0) AS overage
 from collection_cb c
 inner join collection_remittance r on c.collection_objid = r.collection_objid and c.group_objid = r.group_objid
 where r.objid = $P{objid}
 	and c.state <> 'ENCASHED'
 union
-select ec.objid, concat(eck.checkno," Encashment") as cbsno, ec.amount as cashremitted, "encashment" as type
+select ec.objid, concat(eck.checkno," Encashment") as cbsno, ec.amount as cashremitted, "encashment" as type,
+	0 as shortage, 0 as overage
 from (
 	select c.objid
 	from collection_cb c
@@ -65,7 +68,8 @@ from (
 	inner join encashment_cbs ec on c.objid = ec.refid
 	inner join encashment_check eck on ec.parentid = eck.objid
 union 
-select d.objid, concat(d.check_no," ", d.borrower_name) as cbsno, d.amount as cashremitted, "branch" as type
+select d.objid, concat(d.check_no," ", d.borrower_name) as cbsno, d.amount as cashremitted, "branch" as type,
+	0 as shortage, 0 as overage
 from collection_remittance_detail d
 inner join loanapp a on d.loanapp_objid = a.objid
 where d.parentid = $P{objid}
@@ -117,7 +121,7 @@ where d.txndate = $P{date}
 	and ds.type = 'cash'
 	and d.state in ('for_verification','verified')
 union
-select dsc.checkno as description, dsc.amount
+select ds.controlno as description, dsc.amount
 from dailycollection d
 inner join dailycollection_depositslip dds on d.objid = dds.parentid
 inner join depositslip ds on dds.refid = ds.objid

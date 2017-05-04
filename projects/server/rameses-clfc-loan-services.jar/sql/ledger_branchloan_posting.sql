@@ -16,6 +16,14 @@ FROM ledger_branchloan_posting_detail d
 WHERE d.parentid = $P{objid}
 ORDER BY d.sequenceno DESC, d.idx DESC
 
+[findLastDetailItemNotAdjustment]
+select d.*
+from ledger_branchloan_posting_detail d
+left join loan_ledger_adjustment a on d.objid = a.objid
+where d.parentid = $P{objid}
+	and a.objid is null
+order by d.sequenceno desc, d.idx desc
+
 [findLastPageIndex]
 SELECT COUNT(d.objid) AS ledgercount
 FROM ledger_branchloan_posting_detail d

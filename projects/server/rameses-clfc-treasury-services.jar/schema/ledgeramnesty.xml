@@ -93,6 +93,7 @@
 		<field name='baseamount' required='true' />
 		<field name='groupbaseamount' required='true' />
 		<field name='remarks' />
+		<complex name='info' required='false' serializer='default' merge='true' />
 	</element>
 
 </schema>

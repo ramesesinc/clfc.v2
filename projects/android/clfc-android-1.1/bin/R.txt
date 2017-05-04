@@ -341,6 +341,7 @@ int id btn_save 0x7f0600c5
 int id capturepayment_add 0x7f060109
 int id checkbox 0x7f060032
 int id collapseActionView 0x7f06000d
+int id datestatus 0x7f06010b
 int id default_activity_button 0x7f06002c
 int id dialog 0x7f06000e
 int id disableHome 0x7f060008
@@ -420,8 +421,8 @@ int id notes_text 0x7f0600cf
 int id notes_todate 0x7f060081
 int id overlayid 0x7f06001d
 int id pager 0x7f06006a
-int id payment_addpayment 0x7f06010b
-int id payment_addremarks 0x7f06010c
+int id payment_addpayment 0x7f06010c
+int id payment_addremarks 0x7f06010d
 int id payment_option 0x7f060049
 int id paymentid 0x7f06001c
 int id progress_circular 0x7f060018
@@ -457,7 +458,7 @@ int id shortcut 0x7f060033
 int id showCustom 0x7f060007
 int id showHome 0x7f060004
 int id showTitle 0x7f060006
-int id specialcollection_new 0x7f06010d
+int id specialcollection_new 0x7f06010e
 int id spinner_bank 0x7f06004d
 int id spinner_debug_enabled 0x7f0600c3
 int id split_action_bar 0x7f060022

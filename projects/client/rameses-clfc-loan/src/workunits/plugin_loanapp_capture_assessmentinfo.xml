@@ -3,8 +3,9 @@
         <invoker type="loanapp:capture:plugin" reftype="assessmentinfo" caption="Assessment Info." index="2" />
         <invoker type="loanapp:capture:assessmentinfo" action="init" />
         
-        <invoker type="formActions" action="assess" caption="Assess" role="CAO_OFFICER" 
-            visibleWhen="#{mode=='read' &amp;&amp; entity.txnstate=='ASSESSMENT'}" />
+        <invoker type="formActions" action="assess" caption="Assess"  
+            visibleWhen="#{mode=='read' &amp;&amp; entity.txnstate=='ASSESSMENT'}" 
+            role="ASSESSOR" />
     </invokers>
     
     <code class="com.rameses.clfc.loan.capture.CaptureAssessmentInfoController" />

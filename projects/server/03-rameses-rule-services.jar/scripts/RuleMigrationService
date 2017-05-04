@@ -8,13 +8,62 @@ import com.rameses.services.extended.*;
 class RuleMigrationService {
 
 	@ActiveDB("rulemigration")
-	def em;
+	def em;	
+
+	@ActiveDB("rule_exporter")
+	def exporter;
 	
 	@ActiveDB("rule")
 	def target;
 
 	@ProxyMethod
 	public def downloadDef( def o ) {
+		if(!o.domain)
+			throw new Exception("Please specify a domain");
+
+		def pkg = [:];
+		pkg.rulesets = exporter.getRulesets( o ); 
+		pkg.rulegroups = exporter.getRulegroups( o ); 
+		pkg.rulesetactions = exporter.getRulesetActionDefs( o ); 
+		pkg.rulesetfacts = exporter.getRulesetFacts( o ); 
+		pkg.facts = exporter.getFacts( o ); 
+		pkg.factfields = exporter.getFactFields( o ); 
+		pkg.actions = exporter.getActionDefs( o ); 
+		pkg.actionparams = exporter.getActionDefParams( o ); 
+		return pkg;
+	}
+
+	
+	@ProxyMethod
+	public void uploadDef( def pkg ) { 
+		for( o in pkg.rulesets ) {
+			target.save( o, "ruleset" ); 
+		} 
+		for( o in pkg.rulegroups ) {
+			target.save( o, "rulegroup" ); 
+		} 
+		for( o in pkg.facts ) {
+			target.save( o, "fact" ); 
+		} 		
+		for( o in pkg.factfields ) {
+			target.save( o, "fact_field" ); 
+		}		
+		for( o in pkg.actions ) {
+			target.save( o, "actiondef" ); 
+		} 
+		for( o in pkg.actionparams ) {
+			target.save( o, "actiondef_param" ); 
+		} 
+		for( o in pkg.rulesetfacts ) {
+			target.save( o, "ruleset_fact" ); 
+		} 
+		for( o in pkg.rulesetactions ) {
+			target.save( o, "ruleset_actiondef" ); 
+		} 
+	}	
+
+	@ProxyMethod
+	public def xdownloadDef( def o ) {
 		if(!o.domain)
 			throw new Exception("Please specify a domain");
 
@@ -42,7 +91,7 @@ class RuleMigrationService {
 	}
 	
 	@ProxyMethod
-	public void uploadDef( def pkg ) {
+	public void xuploadDef( def pkg ) {
 		for( x in pkg.facts) {
 			target.save( x, "fact" );
 			for( f in x.fields )  {

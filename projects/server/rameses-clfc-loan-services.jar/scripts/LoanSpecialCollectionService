@@ -195,6 +195,13 @@ class LoanSpecialCollectionService extends ActiveListService
 		return open(data);
 	}
 
+
+	@ProxyMethod
+	public def cancelBilling2( params ) {
+		params.cancelremarks = "Cancelled created billing.";
+		return cancelBilling(params);
+	}
+
 	//@Async
 	@ProxyMethod
 	public def update( data ) {
@@ -1122,6 +1129,11 @@ class LoanSpecialCollectionService extends ActiveListService
 		def txndate = data.txndate.toString();
 		if (date.compareTo(txndate) >= 0 && (data.state=='FOR_DOWNLOAD' || data.state=='DOWNLOADED')) {
 			data.allowReset = true;
+		}
+
+		def regex = '(FOR_DOWNLOAD|DOWNLOADED)';
+		if (data.state?.matches(regex)) {
+			data.allowcancel = true;
 		}
 
 		return data;

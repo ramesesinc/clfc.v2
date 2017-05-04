@@ -5,14 +5,17 @@ import com.rameses.rcp.annotations.*;
 import com.rameses.osiris2.client.*;
 import com.rameses.osiris2.common.*;
 
-class BorrowerMergeController 
-{
+class BorrowerMergeController {
+    
+    @Binding
+    def binding;
+    
     @Service("MigrationBorrowerMergeService")
     def service;
     
     String title = "Merge Request";
     
-    def entity;
+    def entity, selectedBorrower;
     void open() {
         entity = service.open(entity);
         listHandler?.reload();
@@ -26,6 +29,13 @@ class BorrowerMergeController
             return entity.items;
         }
     ] as BasicListModel;
+    
+    void selectBorrowerToRetain() {
+        if (!selectedBorrower) return;
+        
+        entity.borrower = selectedBorrower.borrower;
+        binding?.refresh();
+    }
     
     void approveDocument() {
         if (!MsgBox.confirm("You are about to approve this request. Continue?")) return;

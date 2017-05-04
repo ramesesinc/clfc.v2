@@ -1,11 +1,13 @@
 [getList]
 SELECT a.* FROM loan_ledger_adjustment a
 WHERE a.borrower_name LIKE $P{searchtext}
+ORDER BY a.dtcreated DESC
 
 [getListByState]
 SELECT a.* FROM loan_ledger_adjustment a
 WHERE a.txnstate = $P{state}
 	AND a.borrower_name LIKE $P{searchtext}
+ORDER BY a.dtcreated DESC
 
 [getApprovedList]
 SELECT b.*
@@ -23,7 +25,7 @@ SELECT a.*
 FROM loan_ledger_adjustment a
 WHERE a.txnstate IN ('APPROVED', 'FOR_DELETE')
 	AND a.ledgerid = $P{ledgerid}
-ORDER BY a.dtcreated
+ORDER BY a.dtcreated DESC
 
 [getAdjustmentDeleteRequestList]
 SELECT b.*
@@ -38,11 +40,13 @@ FROM (
 [getListByLedgerid]
 SELECT a.* FROM loan_ledger_adjustment a
 WHERE a.ledgerid = $P{ledgerid}
+ORDER BY a.dtcreated DESC
 
 [getListByStateAndLedgerid]
 SELECT a.* FROM loan_ledger_adjustment a
 WHERE a.txnstate = $P{state}
 	AND a.ledgerid = $P{ledgerid}
+ORDER BY a.dtcreated DESC
 
 [getApprovedListByLedgerid]
 SELECT b.*

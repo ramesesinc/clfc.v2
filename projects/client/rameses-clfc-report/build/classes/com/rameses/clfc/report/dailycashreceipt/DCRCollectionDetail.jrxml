@@ -281,12 +281,6 @@ Pym't]]></text>
 					<subreportParameter  name="acctswithpymt">
 						<subreportParameterExpression><![CDATA[$F{acctswithpymt}]]></subreportParameterExpression>
 					</subreportParameter>
-					<subreportParameter  name="shortage">
-						<subreportParameterExpression><![CDATA[$F{shortage}]]></subreportParameterExpression>
-					</subreportParameter>
-					<subreportParameter  name="overage">
-						<subreportParameterExpression><![CDATA[$F{overage}]]></subreportParameterExpression>
-					</subreportParameter>
 					<dataSourceExpression><![CDATA[$F{items}]]></dataSourceExpression>
 					<subreportExpression  class="net.sf.jasperreports.engine.JasperReport"><![CDATA[$P{COLLECTION_ITEM_DETAIL}]]></subreportExpression>
 				</subreport>

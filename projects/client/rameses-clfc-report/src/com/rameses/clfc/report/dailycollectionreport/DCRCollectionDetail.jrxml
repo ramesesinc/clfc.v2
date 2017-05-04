@@ -316,7 +316,7 @@ Remitted]]></text>
 						key="textField-15"/>
 					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="2">					<bottomPen lineWidth="0.5" lineStyle="Double"/>
 </box>
-					<textElement textAlignment="Center" verticalAlignment="Bottom">
+					<textElement textAlignment="Right" verticalAlignment="Bottom">
 						<font size="8"/>
 					</textElement>
 				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{overage}]]></textFieldExpression>
@@ -330,7 +330,7 @@ Remitted]]></text>
 						key="textField-16"/>
 					<box leftPadding="1" rightPadding="1" topPadding="1" bottomPadding="2">					<bottomPen lineWidth="0.5" lineStyle="Double"/>
 </box>
-					<textElement textAlignment="Center" verticalAlignment="Bottom">
+					<textElement textAlignment="Right" verticalAlignment="Bottom">
 						<font size="8"/>
 					</textElement>
 				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{shortage}]]></textFieldExpression>

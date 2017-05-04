@@ -21,13 +21,16 @@ having amount > 0 or noncash > 0
 order by route
 
 [getCollectionItems]
-select c.objid, c.cbsno, "" as description, (select sum(amount) from collection_cb_detail where parentid = c.objid) as cashremitted, "cbs" as type
+select c.objid, c.cbsno, "" as description, (select sum(amount) from collection_cb_detail where parentid = c.objid) as cashremitted, "cbs" as type,
+	IFNULL((SELECT ABS(SUM(amount)) FROM collection_remittance_other WHERE parentid = r.objid AND txntype = 'SHORTAGE'), 0) AS shortage,
+	IFNULL((SELECT ABS(SUM(amount)) FROM collection_remittance_other WHERE parentid = r.objid AND txntype = 'OVERAGE'), 0) AS overage
 from collection_cb c
 inner join collection_remittance r on c.collection_objid = r.collection_objid and c.group_objid = r.group_objid
 where r.objid = $P{objid}
 	and c.state <> 'ENCASHED'
 union
-select ec.objid, ds.controlno as cbsno, "Encashment" as description, ec.amount as cashremitted, "encashment" as type
+select ec.objid, ds.controlno as cbsno, "Encashment" as description, ec.amount as cashremitted, "encashment" as type,
+	0 as shortage, 0 as overage
 from (
 	select c.objid
 	from collection_cb c
@@ -48,7 +51,7 @@ select rd.objid, ds.controlno as cbsno, rd.borrower_name as description,
 	case
 		when a.loantype = "branch" then "branch"
 		when a.loantype <> "branch" then "check"
-	end as type
+	end as type, 0 as shortage, 0 as overage
 from collection_remittance_detail rd
 inner join loanapp a on rd.loanapp_objid = a.objid
 inner join onlinecollection_detail ocd on rd.refid = ocd.objid
@@ -126,3 +129,34 @@ left join depositslip ds on dsc.parentid = ds.objid
 where r.txndate = $P{date}
 	and r.state = "posted"
 group by collector, type, slipno, r.objid
+
+[getOnlineDepositOtherReceipt]
+select d.check_no as slipno, d.description, d.amount 
+From otherreceipt o
+inner join otherreceipt_detail d on o.objid = d.parentid
+where o.txndate = $P{date}
+	and d.payoption = 'onlinedeposit'
+order by d.dtcollected
+
+[getUndepositedOtherReceipt]
+select ds.controlno as slipno, otrd.description, otrd.amount
+from dailycollection d
+inner join dailycollection_depositslip dds on d.objid=dds.parentid
+inner join depositslip ds on dds.refid=ds.objid
+inner join depositslip_cbs dcbs on ds.objid=dcbs.parentid
+inner join collection_cb cb on dcbs.cbsid=cb.objid
+inner join otherreceipt otr on cb.collection_objid=otr.objid
+inner join otherreceipt_detail otrd on otr.objid=otrd.parentid
+where d.txndate=$P{date}
+	and otrd.payoption='cash'
+	and otrd.onlinedeposit=0
+union
+select ds.controlno as slipno, otrd.description, otrd.amount
+from dailycollection d
+inner join dailycollection_depositslip dds on d.objid=dds.parentid
+inner join depositslip ds on dds.refid=ds.objid
+inner join depositslip_check dchk on ds.objid=dchk.parentid
+inner join checkaccount ca on dchk.refid=ca.objid
+inner join otherreceipt_detail otrd on ca.refid=otrd.objid
+where d.txndate=$P{date}
+	and otrd.onlinedeposit=0

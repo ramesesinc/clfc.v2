@@ -29,12 +29,15 @@ class LedgerAmnestyPreviewService
 	@ActiveDB('loan_ledger_payment')
 	def ledger_payment;
 
+	@ActiveDB("loan_ledger_adjustment")
+	def ledger_adjustment;
+
 	@Service('DateService')
 	def dateSvc;
 
 	//private def df = new SimpleDateFormat('MMM. dd, yyyy');
 	private def df = new SimpleDateFormat('yyyy-MM-dd');
-	private def decFormat = new DecimalFormat('#,##0.00');
+	private def decFormat = new DecimalFormat('#,##0.00;(#,##0.00)');
 
 	@ProxyMethod
 	public def openAmnestyByRefid( params ) {
@@ -150,14 +153,14 @@ class LedgerAmnestyPreviewService
 		if (params.type == 'WAIVER') {
 			cols << [name: 'paymentschedule', caption: 'Schedule of Payment', type: 'date', outputFormat: 'MMM. dd, yyyy'];
 		}
-		cols << [name: 'partialpayment', caption: 'Partial Payment', type: 'decimal', format: '#,##0.00;(#,##0.00)'];
-		cols << [name: 'balanceamount', caption: 'Balance', type: 'decimal', format: '#,##0.00;(#,##0.00)'];
+		cols << [name: 'partialpayment', caption: 'Partial Payment', alignment: 'right'];
+		cols << [name: 'balanceamount', caption: 'Balance', alignment: 'right'];
 
 		if (params.type == 'WAIVER') {
-			cols << [name: 'interestpaid', caption: 'Interest Paid', type: 'decimal', format: '#,##0.00;(#,##0.00)'];
-			cols << [name: 'penaltycharge', caption: 'Penalty Charges', type: 'decimal', format: '#,##0.00;(#,##0.00)'];	
+			cols << [name: 'interestpaid', caption: 'Interest Paid', alignment: 'right'];
+			cols << [name: 'penaltycharge', caption: 'Penalty Charges', alignment: 'right'];	
 		}
-		cols << [name: 'totalpayment', caption: 'Total Payment', type: 'decimal', format: '#,##0.00;(#,##0.00)'];
+		cols << [name: 'totalpayment', caption: 'Total Payment', alignment: 'right'];
 		cols << [name: 'receiptno', caption: 'OR No.'];
 		cols << [name: 'datepaid', caption: 'Date Paid', type: 'date', outputFormat: 'MMM. dd, yyyy'];
 		cols << [name: 'remarks', caption: 'Remarks'];
@@ -313,6 +316,68 @@ class LedgerAmnestyPreviewService
 					}
 				}
 				prevbal = o.balance;
+			} else if (state.matches('PROCEED|ADJUSTMENT')) {
+				itm.paymentschedule = null;
+				if (!itm.interestpaid || itm.interestpaid == 0) itm.interestpaid = null;
+				if (!itm.penaltycharge || itm.penaltycharge == 0) itm.penaltycharge = null;
+				if (state == 'ADJUSTMENT') {
+					itm.receiptno = null;
+					itm.datepaid = null;
+					itm.balanceamount = null;
+
+					def item = em.read(o, "posting-detail");
+
+					switch (item.debit?.type) {
+						case 'interest':
+							if (itm.interestpaid != null) {
+								itm.interestpaid = 'Dr: ' + decFormat.format(itm.interestpaid) ;
+							}
+							break;
+						case 'penalty':
+							if (itm.penaltycharge != null) {
+								itm.penaltycharge = 'Dr: ' + decFormat.format(itm.penaltycharge);
+							}
+							break;
+						case 'partialpayment':
+							if (itm.partialpayment != null) {
+								itm.partialpayment = 'Dr: ' + decFormat.format(itm.partialpayment);	
+							}
+							break;
+					}
+
+					switch (item.credit?.type) {
+						case 'interest':
+							if (itm.interestpaid != null) {
+								itm.interestpaid = 'Cr: ' + decFormat.format(itm.interestpaid);
+							} 
+							break;
+						case 'penaltycharge':
+							if (itm.penaltycharge != null) {
+								itm.penaltycharge = 'Cr ' + decFormat.format(itm.penaltycharge);
+							}
+							break;
+						case 'partialpayment':
+							if (itm.partialpayment != null) {
+								itm.partialpayment = 'Cr: ' + decFormat.format(itm.partialpayment);
+							}
+							break;
+					}
+
+				}
+				/*
+				if (state == 'PROCEED') {
+					if (o.interestbal > 0) {
+						if (!itm.remarks) itm.remarks = '';
+						else itm.remarks += ' \n';
+						itm.remarks += 'lacking interest: ' + it.interestbal;
+					}
+					if (penaltybal > 0) {
+						if(!itm.remarks) itm.remarks = '';
+						else itm.remarks += ' \n';
+						itm.remarks += 'lacking penalty: ' + it.penaltybal;
+					}
+				}
+				*/
 			}
 			
 			if (o.interestbal > 0) {
@@ -362,6 +427,30 @@ class LedgerAmnestyPreviewService
 					}
 				}
 			}
+
+			if (state != 'ADJUSTMENT') {
+				if (itm.partialpayment != null) {
+					itm.partialpayment = decFormat.format(itm.partialpayment);
+				}
+
+				if (itm.balanceamount != null) {
+					itm.balanceamount = decFormat.format(itm.balanceamount);
+				}
+
+				if (itm.interestpaid != null) {
+					itm.interestpaid = decFormat.format(itm.interestpaid);
+				}
+
+				if (itm.penaltycharge != null) {
+					itm.penaltycharge = decFormat.format(itm.penaltycharge);
+				}
+
+				if (itm.totalpayment != null) {
+					itm.totalpayment = decFormat.format(itm.totalpayment);
+				}
+
+			}
+
 			list.add(itm);
 		}
 

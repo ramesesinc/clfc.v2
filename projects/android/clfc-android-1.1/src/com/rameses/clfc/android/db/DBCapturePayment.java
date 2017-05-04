@@ -109,7 +109,7 @@ public class DBCapturePayment extends AbstractDBMapper
 	public boolean hasUnpostedPayments() throws Exception {
 		DBContext ctx = createDBContext();
 		try {
-			String sql = "SELECT objid FORM " + getTableName() + " WHERE forupload=1 AND state='PENDING' LIMIT 1";
+			String sql = "SELECT objid FROM " + getTableName() + " WHERE forupload=1 AND state='PENDING' LIMIT 1";
 			return (ctx.getCount(sql, new Object[]{}) > 0);
 		} catch (Exception e) {
 			throw e;

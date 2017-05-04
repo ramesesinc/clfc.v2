@@ -14,7 +14,7 @@ public class DBPaymentService extends AbstractDBMapper
 	public boolean hasUnpostedPayments() throws Exception {		
 		DBContext ctx = createDBContext();
 		try {
-			String sql = "SELECT objid FROM "+ getTableName() +" WHERE state='PENDING' LIMIT 1";
+			String sql = "SELECT objid FROM "+ getTableName() +" WHERE state='PENDING' AND forupload=1 LIMIT 1";
 			
 //			sql = "SELECT loanappid FROM remarks WHERE state='PENDING' LIMIT 1";
 //			if (ctx.getCount(sql, new Object[]{}) > 0) return true;
@@ -31,7 +31,7 @@ public class DBPaymentService extends AbstractDBMapper
 			throw e; 
 		} finally {
 			if (isCloseable()) ctx.close(); 
-		}		
+		}		 
 	}
 	
 	public boolean hasUnpostedPaymentsByCollector(String id) throws Exception {
@@ -184,7 +184,7 @@ public class DBPaymentService extends AbstractDBMapper
 	public List<Map> getForUploadPayments(int limit) throws Exception {
 		DBContext ctx = createDBContext();
 		try {
-			String sql = "SELECT * FROM " + getTableName() + " WHERE forupload=1";
+			String sql = "SELECT * FROM " + getTableName() + " WHERE forupload=1 AND state='PENDING'";
 			if (limit > 0) sql += " LIMIT " + limit;
 			return ctx.getList(sql, new Object[]{});
 		} catch (Exception e) {
@@ -254,7 +254,7 @@ public class DBPaymentService extends AbstractDBMapper
 	public Map findPaymentById(String id) throws Exception {
 		DBContext ctx = createDBContext();
 		try {
-			String sql = "SELECT objid FROM " + getTableName() + " WHERE objid=? LIMIT 1";
+			String sql = "SELECT * FROM " + getTableName() + " WHERE objid=? LIMIT 1";
 			return ctx.find(sql, new Object[]{id});
 		} catch (Exception e) {
 			throw e;

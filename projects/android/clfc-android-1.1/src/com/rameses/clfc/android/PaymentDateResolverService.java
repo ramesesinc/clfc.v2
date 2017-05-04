@@ -67,6 +67,7 @@ public class PaymentDateResolverService {
 			public void run() {				
 				synchronized (ApplicationImpl.LOCK) {
 					boolean isDateSync = Platform.getApplication().getIsDateSync();
+					println("is date sync " + isDateSync);
 					if (isDateSync == false) {
 						this.cancel();
 						serviceStarted = false;
@@ -115,9 +116,10 @@ public class PaymentDateResolverService {
 //				println("server time-> " + settings.getString("serverdate") + " phone time-> " + settings.getString("phonedate"));
 				
 				List<Map> list = paymentSvc.getPaymentsForDateResolving();
+//				println("payments for resolving " + list.size());
 				for (Map m : list) {
 
-					Calendar cal = Calendar.getInstance();
+				 	Calendar cal = Calendar.getInstance();
 					if (m.containsKey("dtsaved")) {
 						cal.setTime(java.sql.Timestamp.valueOf(m.get("dtsaved").toString()));
 					}
@@ -133,7 +135,7 @@ public class PaymentDateResolverService {
 					Timestamp timestamp = new Timestamp(timemillis);
 					String sql = "UPDATE payment SET dtposted='" + timestamp + "', txndate='" + timestamp + "', forupload=1 WHERE objid='" + m.get("objid").toString() + "'";
 //					println("dtsaved-> " + m.get("dtsaved").toString() + " timedifference-> " + m.get("timedifference").toString() + " dtposted-> " + timestamp);
-//					paymentdb.execute(sql); 
+					paymentdb.execute(sql); 
 					
 				} 
 				
