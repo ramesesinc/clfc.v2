@@ -25,7 +25,7 @@ class NewDailyCollectionReportService {
 
 	@ProxyMethod
 	public def getReportData() {
-		def params = [date: "2017-03-17"];
+		def params = [date: "2017-03-28"];
 		return getReportData(params);
 	}
 
@@ -35,7 +35,9 @@ class NewDailyCollectionReportService {
 		def txndate = parseDate(params.date);
 
 		def list = em.getPostedCollectionByDate([date: txndate]);
-		if (!list) {
+		def ordeposited = em.getOnlineDepositOtherReceipt([date: txndate]);
+		def orundeposited = em.getUndepositedOtherReceipt([date: txndate]);
+		if (!list && !ordeposited && !orundeposited) {
 			throw new RuntimeException("No Daily Collection Report for " + txndate + ".");
 		}
 
@@ -47,12 +49,17 @@ class NewDailyCollectionReportService {
 			ec?.each{ i->
 				def cbs = encashment.read([objid: i.objid], "encashment-cbs");
 				i.cashremitted =  cbs?.breakdown?.amount.sum();
-				if (!i.cashremitted) i.cashremitted = 0;
+				if (!i.cashremitted) i.cashremitted = 0.00;
 			}
 		}
 
-		def totalcollection = list?.amount.sum();
-		totalcollection += list?.noncash.sum();
+		def amt1 = list?.amount.sum();
+		if (!amt1) amt1 = 0.00;
+
+		def amt2 = list?.noncash.sum();
+		if (!amt2) amt2 = 0.00;
+
+		def totalcollection = amt1 + amt2;
 		if (!totalcollection) totalcollection = 0.00;
 
 		def overages = em.getOverageByDate([date: txndate]);
@@ -75,13 +82,24 @@ class NewDailyCollectionReportService {
 			if (!o.checkamount) o.checkamount = 0;
 		}
 
-		def amt1 = coh?.cashamount.sum();
-		if (!amt1) amt1 = 0;
+		amt1 = coh?.cashamount.sum();
+		if (!amt1) amt1 = 0.00;
 
-		def amt2 = coh?.checkamount.sum();
-		if (!amt2) amt2 = 0;
+		amt2 = coh?.checkamount.sum();
+		if (!amt2) amt2 = 0.00;
 
 		def totalcoh = amt1 + amt2;
+
+		if (!ordeposited) ordeposited << [:];
+
+		amt1 = ordeposited?.amount.sum();
+		if (!amt1) amt1 = 0.00;
+
+		if (!orundeposited) orundeposited << [:];
+		amt2 = orundeposited?.amount.sum();
+		if (!amt2) amt2 = 0.00;
+
+		def totalotherreceipt = amt1 + amt2;
 
 		def serverdate = dateSvc.serverDate;
 		def branch = branchSvc.open([:]);
@@ -92,11 +110,14 @@ class NewDailyCollectionReportService {
 			items						: list,
 			overages 					: overages,
 			cashonhand 					: coh,
+			ordeposited 				: ordeposited,
+			orundeposited				: orundeposited,
 			totalcollection 			: totalcollection,
 			totaloverage 				: totaloverage,
 			totalcollectionwithoverage	: totalcollectionwithoverage,
 			totalcollectionfortheday	: totalcollectionfortheday,
-			totalcashonhand 			: totalcoh
+			totalcashonhand 			: totalcoh,
+			totalotherreceipt 			: totalotherreceipt
 			//totalundeposited: totalundeposited,
 			//totalcashreceipt: totalcashreceipt,
 			//totalcashonhand : totalcashonhand,
