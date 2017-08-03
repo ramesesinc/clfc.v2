@@ -4,7 +4,7 @@ import com.rameses.util.*;
 
 class MobileLocationService
 {
-	@ActiveDB(value="mobile_tracker")
+	@ActiveDB(em="tracker", value="mobile_tracker")
 	def tracker;
 
 	@Service("MobileTrackerService")
@@ -12,6 +12,9 @@ class MobileLocationService
 
 	@Service("DateService")
 	def dateSvc;
+
+	@Service("BranchService")
+	def branchSvc;
 
 	@ProxyMethod
 	public def postLocationEncrypt( params ) {
@@ -24,20 +27,24 @@ class MobileLocationService
 		if (params.trackerid) {
 			def xitem = tracker.read([objid: params.trackerid]);
 			if (xitem) {
+				def map = [
+					objid	 	: params.objid,
+					trackerid	: params.trackerid,
+					txndate 	: params.txndate,
+					txntype		: 'NORMAL',
+					refid		: params.objid,
+					reftype		: 'TRACK',
+					lng 		: params.lng,
+					lat 		: params.lat,
+					state 		: 1
+				];
+				trackerSvc.log(map);
+				/*
 				def detail = tracker.findDetailByParentidAndRefid([parentid: params.trackerid, refid: params.objid]);
 				if (!detail) {
-					def map = [
-						trackerid	: params.trackerid,
-						txndate 	: params.txndate,
-						txntype		: 'NORMAL',
-						refid		: params.objid,
-						reftype		: 'TRACK',
-						lng 		: params.lng,
-						lat 		: params.lat,
-						state 		: 1
-					];
-					trackerSvc.log(map);
-				}	
+					
+				}
+				*/	
 				response = "success";
 			}
 		}

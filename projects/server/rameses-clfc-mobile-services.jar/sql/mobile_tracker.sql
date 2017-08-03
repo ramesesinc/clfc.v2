@@ -1,4 +1,45 @@
 [getList]
+SELECT t.*
+FROM mobile_tracker t 
+where t.branch_objid=$P{branchid}
+ORDER BY dtstart ${_ordermode}
+
+[getListByItemid]
+SELECT t.*
+FROM mobile_tracker t 
+inner join mobile_tracker_item i on t.objid=i.parentid
+where t.branch_objid=$P{branchid}
+	and i.item_objid=$P{itemid}
+ORDER BY dtstart ${_ordermode}
+
+[getLogs]
+select d.*
+from mobile_tracker_detail d
+where d.parentid=$P{objid}
+order by d.txndate
+
+[getItems]
+select *
+from mobile_tracker_item
+where parentid=$P{objid}
+
+[getRoutesByBranchid]
+select r.*
+from mobile_tracker_branch_route r
+where r.branchid=$P{branchid}
+order by r.route_description
+
+[findBeginDetailByPrimary]
+SELECT objid FROM mobile_tracker_detail
+WHERE parentid = $P{objid}
+	AND txndate = $P{date}
+
+[findLastTrackerDetail]
+SELECT * FROM mobile_tracker_detail
+WHERE parentid =  $P{objid}
+ORDER BY txndate DESC
+
+[xgetList]
 SELECT t.*, 
 	u.username AS user_name, u.lastname AS user_lastname, 
 	u.firstname AS user_firstname, u.middlename AS user_middlename 
@@ -6,7 +47,7 @@ FROM mobile_tracker t
 	LEFT JOIN sys_user u ON t.userid=u.objid 
 ORDER BY dtstart ${_ordermode}
 
-[getLogs]
+[xgetLogs]
 SELECT d.*, m.state AS trackerstate, NULL AS borrower_objid, NULL AS borrower_name
 FROM mobile_tracker_detail d 
 	INNER JOIN mobile_tracker m ON d.parentid=m.objid 
@@ -30,7 +71,7 @@ FROM mobile_tracker_detail d
 WHERE d.parentid = $P{parentid} AND d.state=1 
 ORDER BY txndate 
 
-[getDetails]
+[xgetDetails]
 SELECT d.* 
 FROM mobile_tracker_detail d 
 WHERE 
@@ -39,7 +80,7 @@ WHERE
 	d.state=1 
 ORDER BY d.txndate 
 
-[getDetailsWithBorrower]
+[xgetDetailsWithBorrower]
 SELECT b.*
 FROM (
 	SELECT d.*, f.borrower_objid, f.borrower_name, 0 AS amount
@@ -61,7 +102,7 @@ FROM (
 	) b
 ORDER BY b.txndate DESC
 
-[getRoutes]
+[xgetRoutes]
 SELECT t.*, 
 	r.code AS 'route_code', r.area AS 'route_area', 
 	r.description AS 'route_description', r.dayperiod AS 'route_dayperiod' 
@@ -70,7 +111,7 @@ FROM mobile_tracker_route t
 WHERE 
 	parentid=$P{parentid} 
 
-[findByPrimary]
+[xfindByPrimary]
 SELECT t.*, t.userid AS user_objid, 
 	u.username AS user_name, u.lastname AS user_lastname, 
 	u.firstname AS user_firstname, u.middlename AS user_middlename  
@@ -78,33 +119,28 @@ FROM mobile_tracker t
 	LEFT JOIN sys_user u ON t.userid=u.objid 
 WHERE t.objid=$P{objid} 
 
-[findLog]
+[xfindLog]
 SELECT * FROM mobile_tracker_detail WHERE objid=$P{objid} 
 
-[findBeginDetailByPrimary]
-SELECT objid FROM mobile_tracker_detail
-WHERE parentid = $P{objid}
-	AND txndate = $P{date}
-LIMIT 1
 
-[findIsStartedByPrimary]
+[xfindIsStartedByPrimary]
 SELECT objid FROM mobile_tracker
 WHERE objid=$P{objid}
 	AND dtstart IS NOT NULL
 
-[findDetailByParentidAndRefid]
+[xfindDetailByParentidAndRefid]
 SELECT objid FROM mobile_tracker_detail
 WHERE parentid=$P{parentid}
 	AND refid=$P{refid}
 LIMIT 1
 
-[findLastTrackerItemByParentid]
+[xfindLastTrackerItemByParentid]
 SELECT * FROM mobile_tracker_detail
 WHERE parentid =  $P{parentid}
 ORDER BY txndate DESC
 LIMIT 1
 
-[findRouteByParentidAndCode]
+[xfindRouteByParentidAndCode]
 SELECT objid FROM mobile_tracker_route
 WHERE parentid = $P{parentid}
 	AND routecode = $P{routecode}
