@@ -63,7 +63,7 @@ class MigrationBorrowerResolverService extends ActiveCrudListService
 	void beforeUpdate( data ) {
 		trimFields(data);
 
-		println 'data ' + data;
+		//println 'data ' + data;
 	}
 
 	void afterCreate( data ) {
@@ -177,9 +177,26 @@ class MigrationBorrowerResolverService extends ActiveCrudListService
 		}
 	}
 
+	private void validateForApprovalMergeList( params ) {
+		params.list.each{ o->
+			def objid = o.objid.trim();
+			def item = em.read([objid: objid]);
+			if (!item) throw new RuntimeException("Record for borrower " + o.borrowername + " does not exist or has already been deleted.");
+
+			item = borrower_merge.findByBorroweridAndState([borrowerid: objid, state: 'FOR_APPROVAL']);
+			if (item) throw new RuntimeException("Borrower " + o.borrowername + " already has a merge request for approval.");
+
+			//item = borrower_merge.findByBorroweridAndState([borrowerid: objid, state: 'APPROVED']);
+			//if (item) throw new RuntimeException("Borrower " + o.borrowername + " already has a merge request approved.");
+		}
+
+	}
+
 	@ProxyMethod
 	public def submitForApproval( params ) {
 		if (!params.list) throw new Exception("Please specify list.");
+
+		validateForApprovalMergeList(params);
 
 		def item = [
 			objid 		: 'BM' + new UID(),
@@ -194,7 +211,7 @@ class MigrationBorrowerResolverService extends ActiveCrudListService
 			xdetail = [
 				objid	: 'BMD' + new UID(),
 				parentid: item.objid,
-				borrower: [objid: o.objid, name: o.borrowername]
+				borrower: [objid: o.objid.trim(), name: o.borrowername.trim()]
 			];
 			borrower_merge.create(xdetail, 'detail');
 		}

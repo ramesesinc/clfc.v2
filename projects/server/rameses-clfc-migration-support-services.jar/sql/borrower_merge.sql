@@ -1,5 +1,6 @@
 [getList]
-SELECT b.*, d.borrower_name
+SELECT b.objid, b.state, b.dtcreated, b.author_objid, b.author_name, 
+	d.borrower_name
 FROM (
 	SELECT b.objid
 	FROM (
@@ -37,7 +38,8 @@ HAVING b.objid IS NOT NULL
 ORDER BY b.dtcreated DESC
 
 [getListByState]
-SELECT b.*, d.borrower_name
+SELECT b.objid, b.state, b.dtcreated, b.author_objid, b.author_name, 
+	d.borrower_name
 FROM (
 	SELECT b.objid
 	FROM (
@@ -82,6 +84,7 @@ ORDER BY b.dtcreated DESC
 SELECT d.*
 FROM borrower_merge_detail d
 WHERE d.parentid = $P{objid}
+ORDER BY d.borrower_objid
 
 [findByBorroweridAndState]
 SELECT b.*

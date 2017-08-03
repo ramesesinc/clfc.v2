@@ -6,9 +6,17 @@
 		<field name="dtcreated" required="true" />
 		<field name="author_objid" required="true" />
 		<field name="author_name" required="true" />
+		<field name="borrower_objid" />
+		<field name="borrower_name" />
 		<field name="dtposted" />
 		<field name="poster_objid" />
 		<field name="poster_name" />
+	</element>
+
+	<element name="retain-borrower" tablename="borrower_merge">
+		<field name="objid" primary="true" />
+		<field name="borrower_objid" required="true" />
+		<field name="borrower_name" required="true" />
 	</element>
 
 	<element name="post" tablename="borrower_merge">

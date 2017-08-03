@@ -262,6 +262,7 @@ SELECT l.*
 FROM loan l
 INNER JOIN loan_resolved r ON l.objid = r.objid
 WHERE l.borrowerid = $P{borrowerid}
+	and r.taskkey = $P{taskkey}
 ORDER BY l.objid
 
 [getRemainingLoansForMigration]
