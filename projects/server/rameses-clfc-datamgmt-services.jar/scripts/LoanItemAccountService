@@ -43,6 +43,16 @@ class LoanItemAccountService extends ActiveCrudListService {
 	}
 
 	@ProxyMethod
+	public def getStates() {
+		return [
+			[caption: "All"],
+			[caption: "DRAFT", state: "DRAFT"],
+			[caption: "ACTIVATED", state: "ACTIVATED"],
+			[caption: "DEACTIVATED", state: "DEACTIVATED"]
+		];
+	}
+
+	@ProxyMethod
 	public def getTypeList() {
 		return ["REVENUE"];
 	}
