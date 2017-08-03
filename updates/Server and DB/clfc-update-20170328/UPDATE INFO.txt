@@ -1,0 +1,5 @@
+1. Fix for Other Receipt Posting
+  - Bug info: cannot post other receipt if cash and check other receipt are collected together. Post button not displayed even when total cash and total breakdown are equal.
+
+2. Fix Verify for captured New Application
+  - Bug info: null pointer error when verifying captured New Application.

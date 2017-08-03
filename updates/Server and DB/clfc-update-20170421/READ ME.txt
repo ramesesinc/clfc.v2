@@ -1,0 +1,43 @@
+1. shut down app server
+2. update app server service
+
+  2.a. modules folder
+    2.b.1. open service modules
+    2.b.2. copy modules folder and paste to app-server-directory > workspace > services > apps > clfc
+
+3. update app server web
+
+  3.a. copy jar files
+    3.a.1. open web modules
+    3.a.2. open modules folder
+    3.a.3. copy all jar files and paste to app-server-directory > workspace > web > resources > downloads > modules
+
+  3.b. update updates.xml file
+    3.b.1. open web modules
+    3.b.2. open modules folder
+    3.b.3. open updates.xml file
+    3.b.4. copy modules tag under <!-- plugins -->
+    3.b.5. open updates.xml of app server located at app-server-directory > workspace > web > resources > downloads > modules
+    3.b.6. replace all modules tag under <!-- plugins -->
+
+4. execute clfc table patch 2017-04-21.sql
+  4.a. open navicat
+  4.b. connect to server
+  4.c. connect to main database e.g. [branchname]db
+  4.d. open new query
+  4.e. open clfc table patch 2017-04-21.sql to notepad
+  4.f. copy all except use sql syntax
+  4.g. paste to navicat new query
+  4.h. execute query
+
+5. execute migration table patch 2017-04-21.sql
+  5.a. open navicat
+  5.b. connect to server
+  5.c. connect to main database e.g. [branchname]db
+  5.d. open new query
+  5.e. open migration table patch 2017-04-21.sql to notepad
+  5.f. copy all except use sql syntax
+  5.g. paste to navicat new query
+  5.h. execute query
+
+6. start app server

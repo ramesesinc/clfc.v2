@@ -1,0 +1,11 @@
+1. Fix capture loan for branch loan
+
+2. Fix validation for deposit slip check out and deposit
+
+3. Cancel billing for special and follow up collection
+
+4. Fix for daily cash receipt and daily collection reports
+
+5. Fix validation in adding deposit slip to daily collection
+
+

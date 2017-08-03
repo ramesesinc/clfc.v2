@@ -1,0 +1,129 @@
+import com.rameses.annotations.*;
+import com.rameses.util.*;
+import java.rmi.server.*;
+import com.rameses.common.*
+import com.rameses.services.extended.*;
+
+
+class RuleMigrationService {
+
+	@ActiveDB("rulemigration")
+	def em;	
+
+	@ActiveDB("rule_exporter")
+	def exporter;
+	
+	@ActiveDB("rule")
+	def target;
+
+	@ProxyMethod
+	public def downloadDef( def o ) {
+		if(!o.domain)
+			throw new Exception("Please specify a domain");
+
+		def pkg = [:];
+		pkg.rulesets = exporter.getRulesets( o ); 
+		pkg.rulegroups = exporter.getRulegroups( o ); 
+		pkg.rulesetactions = exporter.getRulesetActionDefs( o ); 
+		pkg.rulesetfacts = exporter.getRulesetFacts( o ); 
+		pkg.facts = exporter.getFacts( o ); 
+		pkg.factfields = exporter.getFactFields( o ); 
+		pkg.actions = exporter.getActionDefs( o ); 
+		pkg.actionparams = exporter.getActionDefParams( o ); 
+		return pkg;
+	}
+
+	
+	@ProxyMethod
+	public void uploadDef( def pkg ) { 
+		for( o in pkg.rulesets ) {
+			target.save( o, "ruleset" ); 
+		} 
+		for( o in pkg.rulegroups ) {
+			target.save( o, "rulegroup" ); 
+		} 
+		for( o in pkg.facts ) {
+			target.save( o, "fact" ); 
+		} 		
+		for( o in pkg.factfields ) {
+			target.save( o, "fact_field" ); 
+		}		
+		for( o in pkg.actions ) {
+			target.save( o, "actiondef" ); 
+		} 
+		for( o in pkg.actionparams ) {
+			target.save( o, "actiondef_param" ); 
+		} 
+		for( o in pkg.rulesetfacts ) {
+			target.save( o, "ruleset_fact" ); 
+		} 
+		for( o in pkg.rulesetactions ) {
+			target.save( o, "ruleset_actiondef" ); 
+		} 
+	}	
+
+	@ProxyMethod
+	public def xdownloadDef( def o ) {
+		if(!o.domain)
+			throw new Exception("Please specify a domain");
+
+		def pkg = [:];
+		//load facts	
+		pkg.facts = em.getRuleFacts(o);	
+		pkg.facts.each {
+			it.fields = em.getRuleFactFields(it);
+		}		
+
+		//load action defs
+		pkg.actiondefs = em.getRuleActionDefs(o);
+		pkg.actiondefs.each {
+			it.params = em.getRuleActionDefParams(it);
+		}		
+
+		pkg.rulesets = em.getDomainRulesets(o);
+		for( rs in pkg.rulesets ) {
+			def p = [ruleset: rs.name]
+			rs.rulegroups = em.getRulegroups(p);
+			rs.facts = em.getFactRulesets(p);
+			rs.actiondefs = em.getActionDefRulesets(p);
+		}
+		return pkg;
+	}
+	
+	@ProxyMethod
+	public void xuploadDef( def pkg ) {
+		for( x in pkg.facts) {
+			target.save( x, "fact" );
+			for( f in x.fields )  {
+				target.save( f, "fact_field" );
+			}	
+		};	
+		for( y in pkg.actiondefs) {
+			target.save( y, "actiondef" );
+			for( x in y.params ){
+				target.save( x, "actiondef_param" );
+			}
+		};	
+		for( rs in pkg.rulesets ) {
+			//save rulesets, rulegroups, rulesetfacts, rulesetactiondefs
+			target.save( rs, "ruleset" );
+			//save rulegroups
+			for ( x in rs.rulegroups ) {
+				target.save( x, "rulegroup" );
+			}
+			for( x in rs.facts ) {
+				def test = target.read( [ruleset: rs.name, rulefact: x.rulefact ], "ruleset_fact" );
+				if(!test) {
+					target.create( [ruleset: rs.name, rulefact: x.rulefact ], "ruleset_fact" );
+				}
+			}
+			for(y in rs.actiondefs ) {
+				def test = target.read( [ruleset: rs.name, actiondef: y.actiondef ], "ruleset_actiondef" );
+				if(!test) {
+					target.create( [ruleset: rs.name, actiondef: y.actiondef ], "ruleset_actiondef" );	
+				}
+			}
+		}
+	}
+
+}

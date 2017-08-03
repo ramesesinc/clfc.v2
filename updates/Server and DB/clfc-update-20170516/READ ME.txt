@@ -1,0 +1,56 @@
+1. shut down app server
+2. update app server service
+
+  2.a. modules folder
+    2.b.1. open service modules
+    2.b.2. copy modules folder and paste to app-server-directory > workspace > services > apps > clfc
+
+3. update app server shared
+
+  3.a. shared modules folder
+    3.a.1. open service modules > shared
+    3.a.2. copy 03-rameses-rule-services.jar and paste to app-server-directory > workspace > services > shared > v25 > modules
+
+4. update app server web
+
+  4.a. copy jar files
+    4.a.1. open web modules
+    4.a.2. open modules folder
+    4.a.3. copy all jar files and paste to app-server-directory > workspace > web > resources > downloads > modules
+
+  4.b. update updates.xml file
+    4.b.1. open web modules
+    4.b.2. open modules folder
+    4.b.3. open updates.xml file
+    4.b.4. copy modules tag under <!-- plugins -->
+    4.b.5. open updates.xml of app server located at app-server-directory > workspace > web > resources > downloads > modules
+    4.b.6. replace all modules tag under <!-- plugins -->
+
+5. execute clfc table patch 2017-05-16.sql
+  5.a. open navicat
+  5.b. connect to server
+  5.c. connect to main database e.g. [branchname]db
+  5.d. open new query
+  5.e. open clfc table patch 2017-05-16.sql to notepad
+  5.f. copy all except use sql syntax
+  5.g. paste to navicat new query
+  5.h. execute query
+  
+6. start app server
+
+7. import rule facts and actions
+
+  7.1. open ILS client
+  7.2. login user account (make sure it has RULEMGMT role)
+  7.3. go to main menu > rule management > clfc > Loan Application Rules
+  7.4. click tools and select import def
+  7.5  select clfc facts and actions patch 2017-03-23
+
+8. import application charges rules
+
+  8.1. open ILS client
+  8.2. login user account (make sure it has RULEMGMT role)
+  8.3. go to main menu > rule management > clfc > Loan Application Rules
+  8.4. click tools and select import rules
+  8.5  select application charges rules
+  8.6. start import

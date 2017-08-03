@@ -1,0 +1,10 @@
+1. Fix online deposit collection for other receipt
+
+2. Fix cash left for cbs encashment
+
+3. Added validation for multiple merge request of the borrower
+
+4. Added selection of borrower to retain during merge request approval
+
+5. Fix SMC with interest posting
+

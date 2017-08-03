@@ -1,0 +1,166 @@
+import com.rameses.common.*;
+import com.rameses.annotations.*;
+
+class LoanLedgerBranchPostingPreviewService
+{
+	@ActiveDB('ledger_branchloan_posting')
+	def em;
+
+	@ActiveDB('posting_setting')
+	def posting_setting;
+
+	@ActiveDB('branch_loan_interest')
+	def branch_loan_interest;
+
+	@ActiveDB('loan_ledger')
+	def loan_ledger;
+
+	@ActiveDB('loanapp')
+	def loanapp;
+
+	@ActiveDB('loanapp_capture')
+	def loanapp_capture;
+
+	@ActiveDB('borrower')
+	def borrower;
+
+	@Service('DateService')
+	def dateSvc;
+
+	@ProxyMethod
+	public def getColumns( params ) {
+		def cols = [];
+
+		if (params?.objid) {
+			def headers = getPostingHeaders(params);
+			def item;
+			headers?.each{ o->
+				item = [name: o.name, caption: o.title, sequence: o.sequence];
+				if (o.datatype) {
+					item.type = o.datatype;
+					if (o.format) {
+						switch (item.type) {
+							case 'decimal'	: item.format = o.format; break;
+							case 'date' 	: item.outputFormat = o.format; break;
+						}
+					}
+				}
+				cols << item;
+			}
+			cols?.sort{ it.sequence }
+		}
+
+		return cols;
+	}
+
+	def getPostingHeaders( params ) {
+		def pos = posting_setting.findCurrentPostingSettingByType([type: 'BRANCH']);
+		if (pos) {
+			pos = posting_setting.read(pos);
+			pos?.postingheader?.each{ o->
+				def objid = o.code + '' + params.objid;
+				def i = em.read([objid: objid], 'posting-header');
+				if (!i) {
+					o.objid = objid
+					o.refid = params.objid;
+					em.create(o, 'posting-header');
+				} else {
+					i.putAll(o);
+					em.update(i, 'posting-header');
+				}
+			}
+		}
+
+		def list = em.getPostingHeaders(params);
+		list?.sort{ it.sequence }
+		def info;
+		list?.each{ o->
+			info = o.remove('info');
+			info = em.serializer.read(info);
+			o.putAll(info);
+		}
+		return list;
+	}
+
+	@ProxyMethod
+	public def getLastPageIndex( params ) {
+		if (!params.objid) return 1;
+
+		def idx;
+		def dtl = em.findLastPageIndex(params);
+		if (dtl) {
+			if (!params.rows) params.rows = 20;
+			def a = (dtl.ledgercount/params.rows);
+			idx = new BigDecimal(a+'').setScale(0, BigDecimal.ROUND_CEILING);
+		}
+
+		if (!idx || idx <= 0) idx = 1;
+
+
+		return idx;
+	}
+
+	@ProxyMethod
+	public def getList( params ) {
+		if (!params.objid) return [];
+
+		def list = em.getPostingDetails(params);
+		def info;
+		list?.each{ o->
+			info = o.remove('info');
+			info = em.serializer.read(info);
+			o.putAll(info);
+		}
+
+		return list;
+	}
+
+	def parseDate( date ) {
+		if (!date) return null;
+
+		if (date instanceof Date) {
+			return date;
+		} else {
+			return java.sql.Date.valueOf(date);
+		}
+	}
+
+	@ProxyMethod
+	public def getReportData( params ) {
+		def ledger = loan_ledger.read([objid: params?.objid]);
+		if (!ledger) throw new RuntimeException('Ledger record does not exist or has already been deleted.');
+
+		def app = loanapp.read([objid: ledger?.appid]);
+		if (!app) throw new RuntimeException('App record does not exist or has already been deleted.');
+
+		def appc = loanapp_capture.read(app);
+
+		def pb = borrower.read([objid: app?.borrower?.objid]);
+		if (!pb) throw new RuntimeException('Borrower record does not exist or has already been deleted.');
+
+		def year = dateSvc.getYear(appc?.dtreleased);
+		def settings = branch_loan_interest.findActiveSettingByYear([year: year]);
+		def intrate = settings?.intrate;
+		if (!intrate) intrate = 0;
+
+		def data = [
+			borrowername 	: pb?.name,
+			borroweraddress	: pb?.address,
+			borrowertelno 	: pb?.contactno,
+			pn 				: app?.appno,
+			originalamtloan	: app?.loanamount,
+			dategranted		: appc?.dtreleased,//dateSvc.add(ledger.dtstarted, "-1"),
+			datematurity	: ledger?.dtmatured,
+			interestrate	: intrate
+		];
+
+		def payments = getList([objid: ledger?.objid]);
+		if (payments) {
+			payments[0].originalamount = data?.originalamtloan;
+		}
+		data.payments = payments;
+
+		return data;
+	}
+
+}

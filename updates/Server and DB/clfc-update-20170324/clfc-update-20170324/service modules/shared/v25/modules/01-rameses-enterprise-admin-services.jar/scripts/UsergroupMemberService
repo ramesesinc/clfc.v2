@@ -1,0 +1,26 @@
+import com.rameses.annotations.*
+import com.rameses.common.*
+import java.rmi.server.UID;
+import com.rameses.util.*;
+import com.rameses.io.*;
+import com.rameses.services.extended.*;
+
+class UsergroupMemberService extends ActiveCrudService {
+
+	@ActiveDB(value='usergroup', em='admin')
+	def	em; 
+
+	@ActiveDB(value='securitygroup', em='admin')
+	def	secGrp; 
+
+	String subSchemaName = "member";
+	
+	
+	public void afterOpen( def o ) {
+		if(o.securitygroup?.objid) {
+			o.securitygroup = secGrp.read( [objid: o.securitygroup.objid] );
+		}
+	}
+}
+
+

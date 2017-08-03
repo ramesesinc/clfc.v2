@@ -1,0 +1,47 @@
+<app>
+    <env>
+		app.title=CLFC 2.0
+        app.host=10.10.3.119:8070
+		app.cluster=osiris3
+        app.context=clfc
+		app.help=http://10.10.3.119:8080/help
+		app.loader=com.rameses.osiris2.client.OsirisAppLoader
+		readTimeout=50000
+		connectionTimeout=5000
+    </env>    
+    <modules>
+		<!--  osiris3 core libraries -->
+		<module file="core/osiris2-client-themes.jar" version="1.8"/>
+		<module file="core/osiris2-client-ui.jar" version="1.8"/>
+		<module file="core/osiris2-framework.jar" version="1.8"/>
+		<module file="core/osiris2-report.jar" version="1.8"/>
+		<module file="core/rameses-client-ui.jar" version="2.1"/>
+		<module file="core/rameses-common2.jar" version="2.1"/>
+		<module file="core/rameses-custom-impl.jar" version="1.9"/>
+
+		<!-- client shared modules -->
+		<module file="shared/client-system.jar" version="1.4"/>
+		<module file="shared/client-ui-extended.jar" version="2.0"/>
+		<module file="shared/rameses-client-menu.jar" version="1.7"/>
+		<module file="shared/rameses-client-report.jar" version="1.4"/>
+		<module file="shared/rameses-enterprise-admin.jar" version="1.4"/>
+		<module file="shared/rameses-enterprise-entity.jar" version="1.4"/>
+		<module file="shared/rameses-rules-mgmt.jar" version="1.2"/>
+		<module file="shared/rameses-workflow-mgmt.jar" version="1.2"/>
+
+
+		<!-- main-app -->
+		<module file="rameses-clfc-main.jar" version="1.6"/>
+		
+		<!-- plugins -->
+		<module file="rameses-clfc-customer.jar" version="2.2"/>
+		<module file="rameses-clfc-datamgmt.jar" version="3.1"/>
+		<module file="rameses-clfc-loan.jar" version="7.5"/>
+		<module file="rameses-clfc-report.jar" version="5.4"/>
+		<module file="rameses-clfc-patch.jar" version="4.1"/>
+		<module file="rameses-clfc-treasury.jar" version="5.6"/>
+		<module file="rameses-clfc-migration-support.jar" version="1.6"/>
+		<module file="rameses-clfc-audit.jar" version="2.1"/>
+    </modules>
+</app>
+
