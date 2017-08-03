@@ -30,7 +30,11 @@
 	        	lng NUMERIC NOT NULL,
 	        	lat NUMERIC NOT NULL,
 	        	type TEXT NOT NULL, -- 'NORMAL,FOLLOWUP,SPECIAL'
-	        	overpaymentamount NUMERIC NOT NULL
+	        	overpaymentamount NUMERIC NOT NULL,
+	        	forupload NUMERIC NOT NULL, -- 1 or 0
+	        	timedifference NUMERIC NOT NULL,
+	        	dtsaved TEXT NOT NULL,
+	        	dtposted TEXT
 	        )
         ]]>
     </sql>

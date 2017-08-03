@@ -83,7 +83,7 @@ public class ControlPanelActivity extends ControlActivity
 //		System.out.println("roles-> "+SessionContext.getProfile().getRoles());
 		
 //		System.out.println("serverDate -> " + Platform.getApplication().getServerDate().toString());
-		println("server date " + Platform.getApplication().getServerDate());
+//		println("server date " + Platform.getApplication().getServerDate());
 		DBContext clfcdb = new DBContext("clfc.db");
 		colGroup.setDBContext(clfcdb);
 		colGroup.setCloseable(false);
@@ -105,16 +105,16 @@ public class ControlPanelActivity extends ControlActivity
 			hasCapture = false;
 		}
 		
-		DBContext ctx = new DBContext("clfccapture.db");
-		try { 
-			String sql = "SELECT * FROM capture_payment";
-			List list = ctx.getList(sql, new HashMap());
-			println("capture list " + list);
-		} catch (Throwable t) {
-			t.printStackTrace();
-		} finally {
-			ctx.close();
-		}
+//		DBContext ctx = new DBContext("clfccapture.db");
+//		try { 
+//			String sql = "SELECT * FROM capture_payment";
+//			List list = ctx.getList(sql, new HashMap());
+//			println("capture list " + list);
+//		} catch (Throwable t) {
+//			t.printStackTrace();
+//		} finally {
+//			ctx.close();
+//		}
 		
 		
 //		boolean hasBillingid = false;
@@ -155,7 +155,7 @@ public class ControlPanelActivity extends ControlActivity
 		if (hasCapture) {
 			list.add(ApplicationUtil.createMenuItem("capture", "Capture", null, R.drawable.payment));
 		}
-		list.add(ApplicationUtil.createMenuItem("request", "Request", null, R.drawable.request));
+//		list.add(ApplicationUtil.createMenuItem("request", "Request", null, R.drawable.request));
 		list.add(ApplicationUtil.createMenuItem("remit", "Remit", null, R.drawable.remit));
 		list.add(ApplicationUtil.createMenuItem("tracker", "Tracker", null, R.drawable.tracker));
 		list.add(ApplicationUtil.createMenuItem("changepassword", "Change Password", null, R.drawable.change_password));

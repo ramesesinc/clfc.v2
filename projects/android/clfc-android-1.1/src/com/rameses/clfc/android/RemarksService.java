@@ -57,6 +57,7 @@ public class RemarksService
 			delay = appSettings.getUploadTimeout()*1000;
 			createTask();
 			Platform.getTaskManager().schedule(actionTask, 1000, delay);
+			ApplicationUtil.println("RemarksService", "starting service");
 		}
 	}
 	
@@ -81,7 +82,8 @@ public class RemarksService
 					remarksSvc.setCloseable(false);
 					try {
 //						remarksdb.beginTransaction();
-						list = remarksSvc.getPendingRemarks(SIZE);					
+//						list = remarksSvc.getPendingRemarks(SIZE);	
+						list = remarksSvc.getForUploadRemarks(SIZE);
 //						remarksdb.commit();
 					} catch (Throwable t) {
 						t.printStackTrace();
