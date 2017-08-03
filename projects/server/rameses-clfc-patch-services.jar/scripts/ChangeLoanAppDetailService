@@ -34,6 +34,7 @@ class ChangeLoanAppDetailService
 
 	@ProxyMethod
 	public def save( params ) {
+		//println 'params-> ' + params;
 		/*def prm = [
 			objid 		: params.objid,
 			appno		: params.appno,
@@ -47,6 +48,30 @@ class ChangeLoanAppDetailService
 		loanapp_detail.update(params, "loanapp");
 
 		loanapp_detail.update(params, "loanapp_capture");
+
+
+		def search = loanapp.read([objid: params.objid], "loanapp_search");
+		if (search) {
+			search.fullborrowername = params.borrower.name;
+			search.appno = params.appno;
+			search.loanamount = params.loanamount;
+			loanapp.update(search, "loanapp_search");
+
+
+			loanapp.removeBorrowerIndicesWithNoBorrowerid([appid: params.objid]);
+
+			def searchvalues = [params.appno, params.borrower.name]; 
+			for (sval in searchvalues) {
+				def o = [
+					objid: 'IDX' + new UID(), 
+					appid: params.objid, 
+					searchtext: sval 
+				];
+				loanapp.create(o, 'loanapp_search_index'); 		
+			} 
+		}
+
+		//throw new RuntimeException("stopping");
 
 		def app = loanapp.read([objid: params.objid]);
 		def ledger = loan_ledger.findByAppId([appid: params.objid]);
