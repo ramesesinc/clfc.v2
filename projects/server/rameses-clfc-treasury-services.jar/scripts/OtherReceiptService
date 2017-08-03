@@ -13,6 +13,9 @@ class OtherReceiptService
 	@ActiveDB('collection_cb')
 	def collection_cb;
 
+	@ActiveDB("checkaccount")
+	def checkaccount;
+
 	@Service('DateService')
 	def dateSvc;
 
@@ -48,7 +51,6 @@ class OtherReceiptService
 		def currdate = dateSvc.serverDate;
 		def user = getUser();
 
-
 		def data = em.findUnremittedOtherReceiptByDateAndCollector([date: params.txndate, collectorid: user.objid]);
 		if (!data) {
 			def xlist = getCollectionList([txndate: params.txndate, collectorid: user.objid]);
@@ -79,7 +81,7 @@ class OtherReceiptService
 				payoption		: params.payoption,
 				dtcollected 	: currdate,
 				collector 		: user,
-				onlinedeposit 	: params.onlinedeposit
+				onlinedeposit 	: 0
 			];
 
 			def branch = branchSvc.open([:]);
@@ -93,10 +95,16 @@ class OtherReceiptService
 
 			em.create(dtl, 'detail');
 
-			if (params.payoption == 'check') {
-				dtl.check = params.check;
-				dtl.bank = params.bank;
-				em.update(dtl, 'detail-check');
+			switch (params.payoption) {
+				case 'check':
+					dtl.check = params.check;
+					dtl.bank = params.bank;
+					em.update(dtl, 'detail-check');
+					break;
+				case 'onlinedeposit':
+					dtl.od = params.od;
+					dtl.onlinedeposit = params.onlinedeposit;
+					em.update(dtl, 'detail-onlinedeposit');
 			}
 		}
 
@@ -199,25 +207,57 @@ class OtherReceiptService
 		data.poster = getUser();
 		em.update(data, 'post');
 
-		def cb = collection_cb.findCashbreakdown([collectionid: data?.objid, groupid: data?.objid, grouptype: 'OTHER_RECEIPT']);
-		if (cb) {
-			cb.state = 'FOR_VERIFICATION';
-			collection_cb.update(cb);
-			def i = collection_cb.read([objid: cb.objid], 'cb-forverification');
-			if (!i) {
-				collection_cb.create(cb, 'cb-forverification');
+		def payments = getPayments(data);
+		def hascash = false;
+		if (payments?.find{ it.payoption == 'cash' && it.state != 'VOIDED'}) {
+			hascash = true;
+		}
 
-				def msginfo = [ 
-					objid 		: cb.objid, 
-					dtcreated	: data.dtposted, 
-					refid 		: cb.objid, 
-					filetype 	: 'cashbreakdown', 
-					message 	: 'For verification of Cash Breakdown Sheet with CBS No. '+ cb.cbsno, 
-					senderid	: env.USERID, 
-					sendername 	: env.NAME, 
-					recipientid : 'ACCT_ASSISTANT' 
-				]; 
-				inboxSvc.addMessage( msginfo );
+		if (hascash) {
+			def cb = collection_cb.findCashbreakdown([collectionid: data?.objid, groupid: data?.objid, grouptype: 'OTHER_RECEIPT']);
+			if (cb) {
+				cb.state = 'FOR_VERIFICATION';
+				collection_cb.update(cb);
+				def i = collection_cb.read([objid: cb.objid], 'cb-forverification');
+				if (!i) {
+					collection_cb.create(cb, 'cb-forverification');
+
+					def msginfo = [ 
+						objid 		: cb.objid, 
+						dtcreated	: data.dtposted, 
+						refid 		: cb.objid, 
+						filetype 	: 'cashbreakdown', 
+						message 	: 'For verification of Cash Breakdown Sheet with CBS No. '+ cb.cbsno, 
+						senderid	: env.USERID, 
+						sendername 	: env.NAME, 
+						recipientid : 'ACCT_ASSISTANT' 
+					]; 
+					inboxSvc.addMessage( msginfo );
+				}
+			}
+		}
+
+		def hascheck = false;
+		if (payments?.find{ it.payoption=='check' && it.state!='VOIDED' && it.onlinedeposit==0 }) {
+			def currentdate = data.dtposted;
+			def list = payments?.findAll{ it.payoption=='check' && it.state!='VOIDED' && it.onlinedeposit==0 }
+			list?.each{ o->
+				def ca = checkaccount.findByRefid([refid: o.objid]);
+				if (!ca) {
+					ca = [
+						objid		: 'CA' + new UID(),
+						state 		: 'CLEARED',
+						reftype		: 'OTHER_RECEIPT',
+						dtcreated	: currentdate,
+						author		: [objid: env.USERID, name: env.NAME],
+						refid 		: o.objid,
+						checkno 	: o.check.no,
+						txndate 	: o.check.date,
+						amount 		: o.amount,
+						bank 		: o.bank
+					];
+					checkaccount.create(ca);
+				}
 			}
 		}
 

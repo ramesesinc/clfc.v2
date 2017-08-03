@@ -82,6 +82,13 @@ SELECT d.*
 FROM checkout_detail d 
 WHERE d.refid = $P{refid} 
 
+[findDetailByRefidAndState]
+SELECT d.* 
+FROM checkout c
+inner join checkout_detail d on c.objid=d.parentid
+WHERE d.refid = $P{refid} 
+	and c.txnstate=$P{state}
+
 [changeState]
 UPDATE checkout SET txnstate = $P{txnstate}
 WHERE objid = $P{objid}

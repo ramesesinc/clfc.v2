@@ -1,5 +1,6 @@
 import com.rameses.common.*;
 import com.rameses.annotations.*;
+import java.text.*;
 
 class LedgerAmnestySMCPostingPreviewService
 {
@@ -26,6 +27,10 @@ class LedgerAmnestySMCPostingPreviewService
 
 	@Service('LedgerAmnestyPreviewService')
 	def prevSvc;
+
+
+	private def DATE_FORMAT = new SimpleDateFormat("MMM-dd-yyyy");
+	private def DECIMAL_FORMAT = new DecimalFormat("#,##0.00;(#,##0.00)");
 
 	@ProxyMethod
 	public def open( params ) {
@@ -65,9 +70,15 @@ class LedgerAmnestySMCPostingPreviewService
 				info = em.serializer.read(info);
 				o.putAll(info);
 
-				item = [name: o.name, caption: o.title, sequence: o.sequence];
+				item = [name: o.name, caption: o.title, sequence: o.sequence, xdatatype: o.datatype];
+				switch (item.xdatatype) {
+					case 'decimal':
+						item.alignment = "right";
+						break;
+				}
+				/*
 				if (o.datatype) {
-					item.type = o.datatype;
+					item.xdatatype = o.datatype;
 					if (o.format) {
 						switch (item.type) {
 							case 'decimal'	: item.format = o.format; break;
@@ -75,6 +86,7 @@ class LedgerAmnestySMCPostingPreviewService
 						}
 					}
 				}
+				*/
 				cols << item;
 			}
 
@@ -89,12 +101,52 @@ class LedgerAmnestySMCPostingPreviewService
 
 	@ProxyMethod
 	public def getList( params ) {
+		if (!params.objid) return [];
+
+		def headers = getColumns(params);
+		def h = headers?.findAll{ it.xdatatype == 'decimal' }
+		def i = headers?.findAll{ it.xdatatype == 'date' }
+
 		def list = em.getPostingDetails(params);
 		def info;//, regex = '(dtschedule|dtpaid)';
 		list?.each{ o->
 			info = o.remove('info');
 			info = em.serializer.read(info);
 			o.putAll(info);
+
+			h?.each{ d->
+				if (o[d.name] != null) {
+					o[d.name] = DECIMAL_FORMAT.format(o[d.name]);
+				}
+			}
+
+			i?.each{ d->
+				if (o[d.name] != null) {
+					o[d.name] = DATE_FORMAT.format(parseDate(o[d.name]));
+				}
+			}
+
+
+			if (o.adjustmentid != null) {
+				def item = em.read(o, "posting-detail");
+				//println 'debit ' + o.debit;
+				//println 'credit ' + o.credit;
+				def debit = item.debit;
+				if (debit && o[debit.type] != null) {
+					o[debit.type] = 'Dr: ' + o[debit.type];//DECIMAL_FORMAT.format(o[debit.type]);
+					//o[debit.type] = o[debit.type];
+				}
+
+				def credit = item.credit;
+				if (credit && o[credit.type] != null) {
+					o[credit.type] = 'Cr: ' + o[credit.type];//DECIMAL_FORMAT.format(o[credit.type]);
+					//o[credit.type] = o[credit.type];
+				}
+				//println 'item';
+				//o?.each{ println it }
+			}
+
+
 		}
 
 		return list;

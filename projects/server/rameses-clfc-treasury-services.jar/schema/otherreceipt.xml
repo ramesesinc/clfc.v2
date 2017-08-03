@@ -46,6 +46,8 @@
 		<field name='payoption' required='true' />
 		<field name='check_no' />
 		<field name='check_date' />
+		<field name='od_no' />
+		<field name='od_date' />
 		<field name='bank_objid' />
 		<field name='bank_name' />
 		<field name='dtcollected' required='true' />
@@ -60,6 +62,13 @@
 		<field name='check_date' required='true' />
 		<field name='bank_objid' required='true' />
 		<field name='bank_name' required='true' />
+	</element>
+
+	<element name='detail-onlinedeposit' tablename='otherreceipt_detail'>
+		<field name='objid' primary='true' />
+		<field name='od_no' required='true' />
+		<field name='od_date' required='true' />
+		<field name='onlinedeposit' required='true' />
 	</element>
 
 	<element name='voidrequest' tablename='otherreceipt_voidrequest'>
