@@ -266,7 +266,7 @@ class MigrationTask
 
 		while (true) {
 			_start = (_page*_limit)-_limit;
-			list = loanresolver.getForMigrationList([_start: _start, _limit: _limit+1, borrowerid: borrower.objid]);
+			list = loanresolver.getForMigrationList([_start: _start, _limit: _limit+1, borrowerid: borrower.objid, taskkey: getMigrationKey()]);
 
 			for (i = 0; i < list.size(); i++) {
 				if (i >= _limit) break;

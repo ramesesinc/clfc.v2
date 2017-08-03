@@ -1,0 +1,11 @@
+import com.rameses.annotations.*;
+
+class ExampleTestService {
+	
+
+	@ProxyMethod
+	public def test( params ) {
+		println 'params-> ' + params;
+	}
+
+}

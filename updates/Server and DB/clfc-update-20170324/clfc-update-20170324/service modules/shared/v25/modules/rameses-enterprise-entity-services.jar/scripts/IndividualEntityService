@@ -1,0 +1,119 @@
+import com.rameses.annotations.*
+import com.rameses.common.*
+import java.rmi.server.UID;
+import com.rameses.util.*;
+import com.rameses.io.*;
+import com.rameses.services.extended.*;
+
+class IndividualEntityService extends ActiveCrudListService {
+
+	@ActiveDB("entityindividual")
+	def	em; 
+
+	@Env
+	def env;
+
+	@Service('DateService')
+	def dtSvc;
+
+	@Service("LOVService")
+	def LOV;
+
+	@Service("EntityService")
+    def entitySvc;
+
+
+	def INDEX_CHAR_COUNT = 300;
+
+	String pagingKeys = 'e.objid'
+
+	@ProxyMethod
+	public def getColumns( params ) {
+		return [
+			[name:'entityno', caption:'Entity No', width:80, resizable:false],
+			[name:'name', caption:'Name'], 
+			[name:'address.text', caption:'Address'], 				
+			[name:'gender', caption:'Gender', width:50, resizable:false, alignment:'center'], 
+			[name:'birthdate', caption:'Birth Date', width:70, resizable:false, alignment:'center']
+		]; 
+	}
+
+	void updateName( o ) {
+		o.name = o.lastname+', '+o.firstname; 
+		if (o.middlename) o.name += ' '+o.middlename;	
+		def len = o.name.length()
+		if (len > INDEX_CHAR_COUNT) len = INDEX_CHAR_COUNT
+		o.entityname = o.name.substring(0, len);		
+	}
+
+	public void beforeCreate(o) {
+		if(!o.objid) o.objid = "IND"+new UID();
+		updateName(o);
+		o.type = 'INDIVIDUAL';
+		o.loaded = true;
+		entitySvc.create( o );
+	}
+
+	public void afterCreate(o) { 
+		if(o.photo) {
+			updatePhoto(o);			
+		}
+	}
+
+	public void beforeUpdate(o) {
+		updateName(o);
+		o.loaded = true;
+		entitySvc.update( o );
+	}
+
+	public void afterRemoveEntity(o) {
+		o.loaded = true;
+		entitySvc.removeEntity( o );
+	}
+
+	public void afterOpen(o) {
+		o.loaded = true;
+		def m = entitySvc.open( o );
+		o.putAll(m);
+		o.photo = getPhoto( o );
+	}
+
+	@ProxyMethod
+	public def updatePhoto( def o ) {
+		em.updatePhoto( o );
+	}
+
+	@ProxyMethod
+	public def getPhoto( def o ) {
+		return em.findPhoto( o )?.photo;
+	}
+
+	@ProxyMethod
+	public def getCitizenshipList(o) {
+		o.searchtext += "%";
+		o._limit = 8;
+		return em.getCitizenshipList( o )*.citizenship;
+	}
+
+	@ProxyMethod
+	public def getReligionList(o) {
+		o.searchtext += "%";
+		o._limit = 8;
+		return em.getReligionList( o )*.religion;
+	}
+
+	@ProxyMethod
+	public def getProfessionList(o) {
+		o.searchtext += "%";
+		o._limit = 8;
+		return em.getProfessionList( o )*.profession;
+	}
+
+	@ProxyMethod
+	public void editName(o) {
+		updateName(o);
+		em.update( o );
+		em.updateName( o );
+	}
+
+}

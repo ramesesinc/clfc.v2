@@ -62,6 +62,7 @@ public class PaymentService
 			delay = appSettings.getUploadTimeout()*1000;
 			createTask();
 			Platform.getTaskManager().schedule(actionTask, 1000, delay);
+			ApplicationUtil.println("PaymentService", "starting service");
 		}
 	}
 	
@@ -95,7 +96,7 @@ public class PaymentService
 //							println("for upload " + m);
 //						} 
 						
-						println("for upload " + list.size());
+//						println("for upload " + list.size());
 //						paymentdb.commit(); 
 					} catch (Throwable t) {
 						t.printStackTrace();
@@ -118,11 +119,12 @@ public class PaymentService
 					paymentSvc.setDBContext(ctx);
 					paymentSvc.setCloseable(false);
 					try {
-						list = paymentSvc.getForUploadPayments(SIZE);
+//						hasUnpostedPayments = paymentvc.hasUnpostedPayments()
+						list = paymentSvc.getForUploadPayments(1);
 						if (list.isEmpty() || list.size() == 0) {
 							hasUnpostedPayments = false;
 						}
-						println("has unposted " + hasUnpostedPayments);
+//						println("has unposted " + hasUnpostedPayments);
 					} catch (Throwable t) {
 						t.printStackTrace();
 					} finally {

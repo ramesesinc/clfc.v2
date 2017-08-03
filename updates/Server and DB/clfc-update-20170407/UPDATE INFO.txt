@@ -1,0 +1,5 @@
+1. Added permission for Capture New Application and Capture Renew Application
+
+2. Change adjustment transaction
+
+3. Fix adjustment posting

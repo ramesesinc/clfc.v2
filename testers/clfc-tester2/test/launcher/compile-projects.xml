@@ -36,7 +36,7 @@
                     ant.echo('compiling ' + projname);
                     ant.exec(executable:ANT_HOME+'/bin/ant.bat', outputproperty:'cmdOutput', errorproperty:'cmdError', failonerror:false){ 
                         arg(value: '-f')  
-                        arg(path: 'C:/RAMESES/clfcv2/projects/client/'+ projname +'/build.xml') 
+                        arg(path: 'C:/RAMESES/clfc2/projects/client/'+ projname +'/build.xml') 
                         arg(line: 'clean jar')
                         env(key: 'ANT_HOME', path: ANT_HOME)
                         env(key: 'CLASSPATH', path: CLASSPATH)

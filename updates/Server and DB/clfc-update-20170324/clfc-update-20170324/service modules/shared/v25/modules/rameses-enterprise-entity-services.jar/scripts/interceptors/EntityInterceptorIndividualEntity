@@ -1,0 +1,69 @@
+import com.rameses.annotations.*
+import com.rameses.common.*
+import java.rmi.server.UID;
+import com.rameses.util.*;
+import com.rameses.io.*;
+import com.rameses.services.extended.*;
+
+class EntityInterceptorIndividualEntity  {
+
+	@ActiveDB("entityindividual")
+	def	em; 
+
+	@Service("LOVService")
+	def LOV;
+
+	@Service("DateService")
+	def dtSvc;
+
+	@Service('LogService')
+	def logSvc 
+
+
+	@After(pattern="EntityService.create", eval="args[0].type == 'INDIVIDUAL'")
+	public void beforeCreateIndividual(def evt ) {
+		def parms = evt.args[0];
+		if( !parms?.loaded ) {
+			em.create( parms );
+		}
+		logSvc?.log('create', 'IndividualEntity', parms.objid)
+	}
+
+	@After(pattern="EntityService.update", eval="args[0].type == 'INDIVIDUAL'")
+	public void beforeUpdateIndividual(def evt ) {
+		def parms = evt.args[0];
+		if( !parms?.loaded ) {
+			em.update( parms );
+		}
+		logSvc?.log('update', 'IndividualEntity', parms.objid)
+	}
+
+	private void loadData( def entity ) {
+		if (entity.birthdate){
+			entity.age = dtSvc.calculateAge( entity.birthdate );
+		}		
+		if( entity.gender ) {
+			entity.gendername = LOV.GENDER.get( entity.gender );
+		}
+		if( entity.civilstatus ) {
+			entity.civilstatusname = LOV.CIVIL_STATUS.get( entity.civilstatus );
+		}
+	}
+
+	@After(pattern="EntityService.open", eval="result.type == 'INDIVIDUAL'")
+	public void afterOpen( evt ) {
+		def parms = evt.args[0];
+		def entity = evt.result;
+		if( !parms?.loaded ) {
+			entity.putAll ( em.read( [objid: entity.objid ] )  );
+			loadData( entity );
+		}
+	}
+
+	@After(pattern="IndividualEntityService.open")
+	public void showInfo( evt ) {
+		def entity = evt.result;
+		loadData( entity );
+	}
+
+}

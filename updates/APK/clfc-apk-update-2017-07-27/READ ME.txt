@@ -1,0 +1,20 @@
+1. update apk resources
+  1.a. apk folder
+    1.a.1. copy apk folder
+    1.a.2. go to app-server-directory > workspace > web > resources > downloads
+    1.a.3. delete apk folder in app-server-directory
+    1.a.4. paste copied apk folder from updates folder
+
+2. update phone application
+  2.a. go to phone settings
+  2.b. select applications/apps > clfc collection
+  2.c. choose uninstall
+  2.d. open google chrome
+  2.e. type in the url server-ip-address/downloads/apk
+  2.f. download clfc-1.13.pk
+
+3. configure clfc application settings
+  3.a. set public ip for mobile
+  3.b. set local ip of server for wifi
+  3.c. set 8070 for port
+  3.d. click save

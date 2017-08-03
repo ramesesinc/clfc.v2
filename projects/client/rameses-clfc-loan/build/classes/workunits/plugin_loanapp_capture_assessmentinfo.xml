@@ -6,6 +6,10 @@
         <invoker type="formActions" action="assess" caption="Assess"  
             visibleWhen="#{mode=='read' &amp;&amp; entity.txnstate=='ASSESSMENT'}" 
             role="ASSESSOR" />
+            
+        <invoker type="formActions" action="addOtherCharges" caption="Add Other Charges"
+            visibleWhen="#{mode=='read' &amp;&amp; entity.txnstate=='ASSESSMENT'}"
+            role="ASSESSOR" />
     </invokers>
     
     <code class="com.rameses.clfc.loan.capture.CaptureAssessmentInfoController" />

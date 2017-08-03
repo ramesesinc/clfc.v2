@@ -31,6 +31,7 @@ public class PaymentDateResolverService {
 			createTask();
 			Platform.getTaskManager().schedule(actionTask, 1000, 1000);
 			serviceStarted = true;
+			ApplicationUtil.println("PaymentDateResolverService", "starting service");
 		}
 	}
 	

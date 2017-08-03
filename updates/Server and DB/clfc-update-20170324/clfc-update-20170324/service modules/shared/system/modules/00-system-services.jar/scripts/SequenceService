@@ -1,0 +1,64 @@
+
+import com.rameses.annotations.*;
+import java.text.DecimalFormat;
+
+class SequenceService {
+
+	@PersistenceContext("system")
+	def em;	
+
+	def FORMATTED_LEN = 5;
+	
+	@ProxyMethod(local=true)
+	public def getCurrentSeries( objid )  {
+		def seq = em.sqlContext.createNamedQuery("sequence:getCurrentSeries").setParameter("objid",objid).singleResult;
+		if ( ! seq ) {
+			seq = create( objid );
+			return seq.nextSeries;
+		}
+		return seq.currentSeries;
+	}
+	
+    @ProxyMethod(local=true)
+	public def getNextFormattedSeries( objid ) {
+		return getNextFormattedSeriesA( objid, FORMATTED_LEN ) ;
+	}
+	
+	@ProxyMethod(local=true)
+	public def getNextFormattedSeriesA( objid, len ) {
+		def nextSeries = getNextSeries( objid );
+		return "$nextSeries".padLeft(len, '0')
+	}
+	
+	@ProxyMethod(local=true)
+	public def getNextSeries( objid ) {
+		def seq = em.read("sequence:sequence", [objid:objid])
+		def nextSeries = 1;
+		if( ! seq ) {
+			seq = create( objid );
+		}
+		nextSeries = seq.nextSeries;
+		em.sqlContext.createNamedExecutor("sequence:incrementNextSeries").setParameter("objid",seq.objid).execute()
+		return nextSeries;
+	}
+	
+	@ProxyMethod(local=true)
+	public def create( objid ) {
+		def seq = em.read("sequence:sequence", [objid:objid])
+		def nextSeries = 1;
+		if( ! seq ) {
+			seq = [
+				objid      : objid,
+				nextSeries : nextSeries,
+			];
+			em.create("sequence:sequence",seq);
+		}
+		return seq;
+	}
+	
+	@ProxyMethod(local=true)
+	public void updateNextSeries( objid, nextSeries ) {
+		em.sqlContext.createNamedExecutor("sequence:updateNextSeries").setParameters([objid:objid, nextSeries:nextSeries]).execute();
+	}
+	
+}

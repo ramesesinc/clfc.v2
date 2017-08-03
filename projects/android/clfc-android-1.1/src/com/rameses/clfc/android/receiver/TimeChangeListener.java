@@ -1,7 +1,6 @@
 package com.rameses.clfc.android.receiver;
 
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Map;
 
@@ -33,6 +32,7 @@ public class TimeChangeListener extends BroadcastReceiver {
 					public void run() {
 						app.paymentDateResolverSvc.stop();
 						app.captureDateResolverSvc.stop();
+						app.remarksDateResolverSvc.stop();
 					}
 				}, 1);
 			}
@@ -91,6 +91,13 @@ public class TimeChangeListener extends BroadcastReceiver {
 								app.captureDateResolverSvc.restart();
 							} else {
 								app.captureDateResolverSvc.start();
+							}
+							
+							flag = app.remarksDateResolverSvc.getServiceStarted();
+							if (flag == true) {
+								app.remarksDateResolverSvc.restart();
+							} else {
+								app.remarksDateResolverSvc.start();
 							}
 						}
 					}, 1);   

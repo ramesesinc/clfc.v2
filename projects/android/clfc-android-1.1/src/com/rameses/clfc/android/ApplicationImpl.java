@@ -47,9 +47,14 @@ public class ApplicationImpl extends UIApplication
 	public PaymentService paymentSvc;
 	public PaymentDateResolverService paymentDateResolverSvc;
 	public RemarksService remarksSvc;
+	public RemarksDateResolverService remarksDateResolverSvc;
 	public RemarksRemovedService remarksRemovedSvc;
 	public BroadcastLocationService broadcastLocationSvc;
 	public LocationTrackerService locationTrackerSvc;
+	public LocationTrackerDateResolverService locationTrackerDateResolverSvc;
+	public BroadcastMobileStatusService broadcastMobileStatusSvc;
+	public MobileStatusTrackerService mobileStatusTrackerSvc;
+	public MobileStatusTrackerDateResolverService mobileStatusTrackerDateResolverSvc;
 	public CaptureService captureSvc;
 	public CaptureDateResolverService captureDateResolverSvc;
 	public SpecialCollectionService specialColSvc;
@@ -62,7 +67,7 @@ public class ApplicationImpl extends UIApplication
 	private DBVoidService voidsvc = new DBVoidService();
 	private DBSpecialCollectionPendingService scPendingSvc = new DBSpecialCollectionPendingService();
 
-	public File getLogFile() {
+		public File getLogFile() {
 		// TODO Auto-generated method stub
 		File dir = Environment.getExternalStorageDirectory();
 		return new File(dir, "clfclog.txt");
@@ -72,7 +77,7 @@ public class ApplicationImpl extends UIApplication
 		super.init();
 //		System.out.println(getClass().getProtectionDomain());
 	}
-
+	
 	protected void onCreateProcess() {
 		super.onCreateProcess();
 		println("is date synced " + getIsDateSync());
@@ -84,6 +89,8 @@ public class ApplicationImpl extends UIApplication
 //		}
 		//if(rc == MapModule.SUCCESS ) Ti.API.info(" TEST    >    Google Play services is installed.");
 //		Platform.setDebug(true);
+				
+		
 		NetworkLocationProvider.setEnabled(true);
 		System.out.println("NetworkLocationProvider enabled");
 //		NetworkLocationProvider.setDebug(true);
@@ -118,27 +125,43 @@ public class ApplicationImpl extends UIApplication
 		
 		networkCheckerSvc = new NetworkCheckerService(this);
 		locationTrackerSvc = new LocationTrackerService(this);
-		new Handler().postDelayed(new Runnable() {
-			public void run() {
-				networkCheckerSvc.start();
-				locationTrackerSvc.start();
-			}
-		}, 1);
-//		
+		locationTrackerDateResolverSvc = new LocationTrackerDateResolverService(this);
+		mobileStatusTrackerSvc = new MobileStatusTrackerService(this);
+		mobileStatusTrackerDateResolverSvc = new MobileStatusTrackerDateResolverService(this); 
 		voidRequestSvc = new VoidRequestService(this);
 		paymentSvc = new PaymentService(this);
 		paymentDateResolverSvc = new PaymentDateResolverService(this);
 		remarksSvc = new RemarksService(this);
+		remarksDateResolverSvc = new RemarksDateResolverService(this);
 		remarksRemovedSvc = new RemarksRemovedService(this);
 		broadcastLocationSvc = new BroadcastLocationService(this);
+		broadcastMobileStatusSvc = new BroadcastMobileStatusService(this);
 		captureSvc = new CaptureService(this);
 		captureDateResolverSvc = new CaptureDateResolverService(this);
 		specialColSvc = new SpecialCollectionService (this);
+
+		new Handler().postDelayed(new Runnable() {
+			public void run() {
+				networkCheckerSvc.start();
+				locationTrackerSvc.start();
+				mobileStatusTrackerSvc.start();
+			}
+		}, 1);
 		
 		DBContext ctx = new DBContext("clfctracker.db");
 		tracker.setDBContext(ctx);
 		try {
-			boolean flag = tracker.hasLocationTrackers();
+			boolean flag = false;
+			flag = tracker.hasTrackerForDateResolving();
+			if (flag) {
+				new Handler().postDelayed(new Runnable() {
+					public void run() {
+						locationTrackerDateResolverSvc.start();
+					}
+				}, 1);
+			}
+			
+			flag = tracker.hasLocationTrackers();
 			if (flag) {
 				new Handler().postDelayed(new Runnable() {
 					public void run() {
@@ -146,6 +169,7 @@ public class ApplicationImpl extends UIApplication
 					}
 				}, 1);
 			}
+			
 		} catch (Throwable t) {
 			t.printStackTrace();
 		} 
@@ -183,7 +207,19 @@ public class ApplicationImpl extends UIApplication
 		ctx = new DBContext("clfcremarks.db");
 		remarks.setDBContext(ctx);
 		try {
-			boolean flag = remarks.hasUnpostedRemarks();
+			boolean flag = false;
+
+			flag = remarks.hasRemarksForDateResolving();
+			println("has payment for date resolving: " + flag);
+			if (flag) {
+				new Handler().postDelayed(new Runnable() {
+					public void run() {
+						remarksDateResolverSvc.start();
+					}
+				}, 1);  
+			}
+			
+			remarks.hasUnpostedRemarks();
 			if (flag) {
 				new Handler().postDelayed(new Runnable() {
 					public void run() {

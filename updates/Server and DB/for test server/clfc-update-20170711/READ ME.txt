@@ -1,0 +1,49 @@
+1. shut down app server
+2. create database for mobile tracker
+3. execute tracker table.sql
+  3.a. open navicat
+  3.b. connect to server
+  3.c. connect to tracker database
+  3.d. open new query
+  3.e. open tracker table.sql to notepad
+  3.f. copy all except use sql syntax
+  3.g. paste to navicat new query
+  3.h. change syntax "use trackerdb" to  "use [mobile tracker database]"
+  3.i. execute query
+
+4. execute clfc table patch 2017-07-13.sql
+  4.a. open navicat
+  4.b. connect to server
+  4.c. connect to main database e.g. [branchname]db
+  4.d. open new query
+  4.e. open clfc table patch 2017-07-13.sql to notepad
+  4.f. copy all except use sql syntax
+  4.g. paste to navicat new query
+  4.h. execute query
+
+5. update app server service
+
+  5.a. datasources folder
+    5.a.1. open services 
+    5.a.2. copy datasources folder and paste to app-server-directory > workspace > services
+    5.a.3. open datasources folder and edit trackerds file
+    5.a.4. change "url=jdbc:mysql://localhost/clfc2_bacalso_20141201_tracker" to "url=jdbc:mysql://[server ip]/[mobile tracker database]"
+    5.a.5. change "user=root" to "user=[database username]"
+    5.a.6. change "pwd=1234" to "pwd=[database password]"
+
+  5.b. adapters folder
+    5.b.1. open services > apps > clfc
+    5.b.2. copy adapters folder and paste to app-server-directory > workspace > services > apps > clfc
+
+  5.c. modules folder
+    5.c.1. open services > apps > clfc
+    5.c.2. copy modules folder and paste to app-server-directory > workspace > services > apps > clfc
+
+6. update app server web
+  
+  6.a. go to app-server-directory > workspace > web > clfc
+  6.b. delete content, files, images, themes folders
+  6.c. open web
+  6.d. copy content, files, images, themes folders and paste to app-server-directory > workspace > web > clfc
+  
+7. start app server

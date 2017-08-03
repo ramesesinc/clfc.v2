@@ -1,0 +1,29 @@
+import com.rameses.annotations.*
+import com.rameses.common.*
+import java.rmi.server.UID;
+import com.rameses.util.*;
+import com.rameses.io.*;
+import com.rameses.services.extended.*;
+
+class IndividualEntityLookupService extends ActiveListService {
+
+	@ActiveDB("entityindividual")
+	def	em; 
+
+	String pagingKeys = 'e.objid'
+	String listMethod = 'getLookup'
+
+	@ProxyMethod
+	public def getColumns( params ) {
+		return [
+			[name:'entityno', caption:'Entity No', width:80, resizable:false],
+			[name:'name', caption:'Name'], 
+			[name:'address', caption:'Address'], 				
+			[name:'gender', caption:'Gender', width:50, resizable:false, alignment:'center'], 
+			[name:'birthdate', caption:'Birth Date', width:70, resizable:false, alignment:'center']
+		]; 
+	}
+
+	
+
+}

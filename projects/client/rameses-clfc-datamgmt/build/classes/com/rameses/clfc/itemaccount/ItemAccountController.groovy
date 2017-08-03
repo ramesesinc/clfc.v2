@@ -39,7 +39,7 @@ class ItemAccountController extends CRUDController {
     
     void checkEditable( data ) {
         allowEdit = false;
-        if (data.txnstate?.matches("DRAFT|DISAPPROVED")) {
+        if (data.txnstate?.matches("DRAFT|DEACTIVATED")) {
             allowEdit = true;
         }
         binding?.refresh("formActions");

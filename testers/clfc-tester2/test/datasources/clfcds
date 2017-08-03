@@ -1,5 +1,5 @@
 dialect=mysql
 driverClass=com.mysql.jdbc.Driver
-url=jdbc:mysql://localhost/clfc2_bacalso_20161128
+url=jdbc:mysql://localhost/clfc2_bacalso_20141201
 user=root
 pwd=1234

@@ -1,0 +1,12 @@
+
+1. shut down app server
+2. update app server service
+
+  2.a. modules folder
+    2.b.1. open service modules > modules
+    2.b.2. copy rameses-clfc-patch-services.jar folder 
+    2.b.3. delete app-server-directory > workspace > services > apps > clfc > modules > rameses-clfc-patch-services.jar folder
+    2.b.4. paste rameses-clfc-patch-services.jar folder
+
+3. execute clfc table patch 2017-03-27.sql
+4. start app server

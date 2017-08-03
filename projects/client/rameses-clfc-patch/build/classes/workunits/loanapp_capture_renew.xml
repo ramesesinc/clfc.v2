@@ -1,7 +1,7 @@
 <workunit>
     <invokers>
         <invoker type="loanapp-capture:renew" caption="Renew Application" action="create" target="popup"
-            visibleWhen="#{editableMode == true}" role="CAO_OFFICER" />
+            visibleWhen="#{editableMode == true}" role="CAO_OFFICER" domain="LOAN" />
         
         <invoker type="loanapp:capture:renew:open" action="open" caption="Renew Application" target="popup" />
         <!--
@@ -15,26 +15,27 @@
             visibleWhen="#{mode!='read'}" immediate="true" />
         
         <invoker type="formActions" action="edit" caption="Edit" mnemonic="e" shortcut="ctrl e"
-            visibleWhen="#{mode=='read' &amp;&amp; entity.txnstate=='DRAFT'}" role="CAO_OFFICER" />
+            visibleWhen="#{mode=='read' &amp;&amp; entity.txnstate=='DRAFT'}" 
+            role="CAO_OFFICER" domain="LOAN" />
         <invoker type="formActions" action="save" caption="Save" mnemonic="s" shortcut="ctrl s"
             visibleWhen="#{mode!='read'}" />
         <invoker type="formActions" action="submitForAssessment" caption="Submit for Assessment" mnemonic="s" shortcut="ctrl s"
             visibleWhen="#{mode=='read' &amp;&amp; entity.txnstate=='DRAFT'}" icon="images/toolbars/arrow_right.png" 
-            role="CAO_OFFICER" />
+            role="CAO_OFFICER" domain="LOAN" />
             
         <invoker type="formActions" action="returnFromAssessment" caption="Return" mnemonic="r" shortcut="ctrl r"
             visibleWhen="#{mode=='read' &amp;&amp; entity.txnstate=='ASSESSMENT'}" icon="images/toolbars/arrow_left.png" 
-            role="ASSESSOR" />
+            role="ASSESSOR" domain="LOAN" />
         <invoker type="formActions" action="submitForVerification" caption="Submit for Verification" mnemonic="s" shortcut="ctrl s"
             visibleWhen="#{mode=='read' &amp;&amp; entity.txnstate=='ASSESSMENT'}" icon="images/toolbars/arrow_right.png" 
-            role="ASSESSOR" />
+            role="ASSESSOR" domain="LOAN" />
             
         <invoker type="formActions" action="returnFromForVerification" caption="Return" mnemonic="r" shortcut="ctrl r"
             visibleWhen="#{mode=='read' &amp;&amp; entity.txnstate=='FOR_VERIFICATION'}" icon="images/toolbars/arrow_left.png" 
-            role="APPROVER" />
+            role="APPROVER" domain="LOAN" />
         <invoker type="formActions" action="verify" caption="Verify" mnemonic="v" shortcut="ctrl v"
             visibleWhen="#{mode=='read' &amp;&amp; entity.txnstate=='FOR_VERIFICATION'}" 
-            role="APPROVER" />
+            role="APPROVER" domain="LOAN" />
     </invokers>
     
     <code class="com.rameses.clfc.patch.loan.ManualCaptureRenewLoanAppController"/>

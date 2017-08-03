@@ -11,13 +11,15 @@ import java.util.UUID;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
+import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.wifi.WifiManager;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.rameses.clfc.android.db.DBCapturePayment;
 import com.rameses.clfc.android.db.DBCollectionGroup;
 import com.rameses.clfc.android.db.DBCollectionSheet;
-import com.rameses.clfc.android.db.DBLocationTracker;
 import com.rameses.clfc.android.db.DBPaymentService;
 import com.rameses.clfc.android.db.DBRemarksService;
 import com.rameses.clfc.android.db.DBSystemService;
@@ -33,6 +35,9 @@ import com.rameses.db.android.SQLTransaction;
 public final class ApplicationUtil 
 {
 	private static boolean isDeviceRegistered = false;
+	private static WifiManager wifimngr;
+	private static LocationManager locationmngr;
+	private static ConnectivityManager connectivitymngr;
 
 	public static boolean getIsDeviceRegistered() { 
 		return isDeviceRegistered; 
@@ -75,6 +80,27 @@ public final class ApplicationUtil
 		} finally {
 			ctx.close();
 		}
+	}
+	
+	public static WifiManager getWifiManager() {
+		if (wifimngr == null) {
+			wifimngr = (WifiManager) Platform.getApplication().getSystemService(Context.WIFI_SERVICE);
+		}
+		return wifimngr;
+	}
+	
+	public static LocationManager getLocationManager() {
+		if (locationmngr == null) {
+			locationmngr = (LocationManager) Platform.getApplication().getSystemService(Context.LOCATION_SERVICE);;
+		}
+		return locationmngr;
+	}
+	
+	public static ConnectivityManager getConnectivityManager() {
+		if (connectivitymngr == null) {
+			connectivitymngr = (ConnectivityManager) Platform.getApplication().getSystemService(Context.CONNECTIVITY_SERVICE);
+		}
+		return connectivitymngr;
 	}
 	
 	public static String createPrefix() {
@@ -289,7 +315,12 @@ public final class ApplicationUtil
 	}
 	
 	private static void println(String msg) {
-		Log.i("[ApplicationUtil]", msg);
+//		Log.i("[ApplicationUtil]", msg);
+		println("[ApplicationUtil]", msg);
+	}
+	
+	public static void println(String tag, String msg) {
+		Log.i(tag, msg);
 	}
 
 	public static Map<String, Object> createMenuItem(String id, String text, String subtext, int iconid) {
@@ -417,36 +448,36 @@ public final class ApplicationUtil
 		return flag;
 	}
 	
-	public static boolean checkUnpostedTracker() throws Exception  {
-		UserProfile prof = SessionContext.getProfile();
-		String collectorid = (prof == null)? "" : prof.getUserId();
-		return checkUnpostedTracker(collectorid);
-	}
-	
-	public static boolean checkUnpostedTracker(String collectorid) throws Exception {
-		boolean flag = false;
-
-		DBContext ctx = new DBContext("clfctracker.db");
-		DBLocationTracker trackerSvc = new DBLocationTracker();
-		trackerSvc.setDBContext(ctx);
-		trackerSvc.setCloseable(false);
-		
-		String date = Platform.getApplication().getServerDate().toString();
-		
-		try {
-			flag = trackerSvc.hasLocationTrackerByCollectoridLessThanDate(collectorid, date);
-			
-			return flag;
-		} catch (RuntimeException re) {
-			throw re; 
-		} catch (Exception e) {
-			throw e; 
-		} catch (Throwable t) {
-			throw new Exception(t.getMessage(), t); 
-		} finally {
-			ctx.close();
-		}
-	}
+//	public static boolean xcheckUnpostedTracker() throws Exception  {
+//		UserProfile prof = SessionContext.getProfile();
+//		String collectorid = (prof == null)? "" : prof.getUserId();
+//		return xcheckUnpostedTracker(collectorid);
+//	}
+//	
+//	public static boolean xcheckUnpostedTracker(String collectorid) throws Exception {
+//		boolean flag = false;
+//
+//		DBContext ctx = new DBContext("clfctracker.db");
+//		DBLocationTracker trackerSvc = new DBLocationTracker();
+//		trackerSvc.setDBContext(ctx);
+//		trackerSvc.setCloseable(false);
+//		
+//		String date = Platform.getApplication().getServerDate().toString();
+//		
+//		try {
+//			flag = trackerSvc.xhasLocationTrackerByCollectoridLessThanDate(collectorid, date);
+//			
+//			return flag;
+//		} catch (RuntimeException re) {
+//			throw re; 
+//		} catch (Exception e) {
+//			throw e; 
+//		} catch (Throwable t) {
+//			throw new Exception(t.getMessage(), t); 
+//		} finally {
+//			ctx.close();
+//		}
+//	}
 	
 	public static boolean checkUnposted(String itemid) throws Exception {
 		boolean flag = false;

@@ -1,0 +1,7 @@
+<app>  
+    <modules>		
+		<!-- plugins -->
+		<module file="rameses-clfc-treasury.jar" version="5.7"/>
+    </modules>
+</app>
+

@@ -168,5 +168,4 @@ class CheckoutController extends CRUDController
         entity = service.confirm(entity);
         checkEditable(entity);
     }
-    
 }

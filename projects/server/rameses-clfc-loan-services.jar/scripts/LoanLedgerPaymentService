@@ -322,6 +322,7 @@ class LoanLedgerPaymentService extends ActiveListService
 				remarks 		: remarks
 			]
 			//println 'item ' + item;
+			ledgerdb.update([objid: l.objid, balance: balance]);
 			ledgerdb.create(item, "detail");
 
 			item.parentid = amnesty.refid;

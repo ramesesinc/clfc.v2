@@ -1,5 +1,6 @@
 package com.rameses.clfc.android;
 
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,6 +13,7 @@ import com.rameses.clfc.android.db.DBCapturePayment;
 import com.rameses.clfc.android.services.LoanPostingService;
 import com.rameses.client.android.Platform;
 import com.rameses.client.android.Task;
+import com.rameses.client.android.UIApplication;
 import com.rameses.db.android.DBContext;
 import com.rameses.db.android.SQLTransaction;
 import com.rameses.util.Base64Cipher;
@@ -37,6 +39,7 @@ public class CaptureService
 	private Map bank = new HashMap();
 	private Map check = new HashMap();
 	private Map response = new HashMap();
+	private LoanPostingService svc = new LoanPostingService();
 //	private LoanPostingService svc = new LoanPostingService();
 	
 	private boolean serviceStarted = false;
@@ -124,8 +127,14 @@ public class CaptureService
 			private void execPayments(List<Map> list) {
 				if (!list.isEmpty()) {
 					size = (list.size() < SIZE-1? list.size() : SIZE-1);
+					
+
+//					AppSettingsImpl settings = (AppSettingsImpl) Platform.getApplication().getAppSettings();
+					
 					String option, sql;
-					for(int i=0; i<size; i++) {
+//					String captureid = settings	.getCaptureid();
+					
+					for (int i=0; i<size; i++) {
 						proxy = new MapProxy((Map) list.get(i));
 						
 						mode = "ONLINE_WIFI";
@@ -138,14 +147,55 @@ public class CaptureService
 							break;
 						}
 
+						UIApplication app = Platform.getApplication();
+						AppSettingsImpl settings = (AppSettingsImpl) Platform.getApplication().getAppSettings();
+						
+						String captureid = proxy.getString("captureid");
+						String txndate = proxy.getString("txndate");
+						
+						collector.clear();
+						collector.put("objid", proxy.getString("collector_objid"));
+						collector.put("name", proxy.getString("collector_name"));
+
+						String collectorid = collector.get("objid").toString();
+						Date dt = java.sql.Date.valueOf(txndate);
+						String prefix = ApplicationUtil.getPrefix(collectorid, dt);
+						Map xparams = new HashMap();
+						while (true) {
+							try {
+								xparams.put("captureid", captureid);
+								boolean flag = svc.checkIfCaptureIsRemitted(xparams);
+								if (flag) {
+									String xcaptureid = settings.getCaptureid(prefix);
+									if (!xcaptureid.equals(captureid)) {
+										Map xmap = ApplicationUtil.renewCapture(prefix);
+										captureid = xmap.get(prefix + "captureid").toString();
+										xparams.put("captureid", captureid);
+									}
+									
+									
+//									xparams = ApplicationUtil.renewCapture();
+								} else if (flag == false) {
+									settings.put(prefix + "captureid", captureid);
+//									captureid = xparams.get("captureid").toString();
+									break;
+								}	
+							} catch (Exception e) {
+								
+							}
+						}
+						
+
+//						app.getAppSettings().putAll(map);
+
 						params = new HashMap();
-						params.put("captureid", proxy.getString("captureid"));
+						params.put("captureid", captureid);
 						params.put("sessionid", proxy.getString("billingid"));
 						params.put("state", proxy.getString("state"));
 						params.put("trackerid", proxy.getString("trackerid"));
 						params.put("lng", proxy.getDouble("lng"));
 						params.put("lat", proxy.getDouble("lat"));
-						params.put("txndate", proxy.getString("txndate"));
+						params.put("txndate", txndate);
 						params.put("type", "CAPTURE");
 						params.put("mode", mode);
 //						params.put("sessionid", proxy.getString("billingid"));
@@ -157,9 +207,6 @@ public class CaptureService
 //						params.put("latitude", proxy.getDouble("lat"));
 //						params.put("type", proxy.getString("type"));
 //						
-						collector.clear();
-						collector.put("objid", proxy.getString("collector_objid"));
-						collector.put("name", proxy.getString("collector_name"));
 						
 						params.put("collector", collector);						
 						
@@ -199,7 +246,6 @@ public class CaptureService
 						response.clear();
 						for (int j=0; j<10; j++) {
 							try {
-								LoanPostingService svc = new LoanPostingService();
 								response = svc.postCapturePaymentEncrypt(param);
 								break;
 							} catch (Throwable e) {
@@ -208,7 +254,7 @@ public class CaptureService
 							} 
 						}
 						
-						println("response " + response);
+//						println("response " + response);
 						
 						if (response != null && response.containsKey("response")) {
 							String str = MapProxy.getString(response, "response").toLowerCase();//response.get("response").toString();
