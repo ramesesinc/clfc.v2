@@ -304,6 +304,274 @@ class LoanPaymentService
 		}
 
 		def ledger = ledgerdb.findByAppId(params);
+
+		def df = new java.text.SimpleDateFormat('MMM-dd-yyyy');
+
+		def strdate = df.format(parseDate(txndate));
+
+		def ad = ledger_adjustment.read([objid: params.adjustmentid]);
+
+
+		def list = [];
+		def ledgeramnesty;
+		//def dt = dateSvc.getServerDateAsString().split(" ")[0];
+		def curramnesty = ledgeramnestydb.findActiveByDateAndLedgerid([date: txndate, ledgerid: ledger?.objid]);
+		def type = curramnesty?.type;
+		if (!type || type == 'FIX') {
+			def balance = ledger.balance;
+			def lastitem = ledgerdb.findLastLedgerItemByParentId([parentid: ledger.objid]);
+			def item = [
+				objid			: ad.objid,//'LDTL' + new UID(),
+				parentid 		: ledger.objid,
+				state 			: 'ADJUSTMENT',
+				amtdue 			: 0,//(lastitem? lastitem.amtdue : 0),
+				interestdue 	: 0,//(lastitem? lastitem.interestdue : 0),
+				penaltydue 		: 0,//(lastitem? lastitem.penaltydue : 0),
+				amtpaid 		: params.payamount,
+				interestpaid	: 0,//(lastitem? lastitem.interestpaid : 0),
+				penaltypaid		: 0,//(lastitem? lastitem.penaltypaid : 0),
+				amtbal 			: 0,//(lastitem? lastitem.amtbal : 0),
+				interestbal 	: 0,//(lastitem? lastitem.interestbal : 0),
+				penaltybal 		: 0,//(lastitem? lastitem.penaltybal : 0),
+				dtpaid 			: txndate,
+				refno			: lastitem?.refno,
+				day 			: lastitem?.day,
+				balance 		: ledger.balance, //(lastitem? lastitem.balance : l.totalprincipal),
+				partialpayment 	: 0,//(lastitem? lastitem.partialpayment : 0),
+				txndate 		: (ad? ad.dtcreated : params.txndate),//params.txndate,
+				baseamount 		: 0,//(lastitem? lastitem.baseamount : 0),
+				groupbaseamount : 0,//(lastitem? lastitem.groupbaseamount : 0),
+				amnestyid 		: lastitem?.amnestyid,//ledgeramnesty?.objid,
+				remarks 		: ad?.remarks,//'Adjustment of ' + params.payamount + ' on ' + strdate
+				adjustmentid 	: ad.objid,
+				debit 			: ad.debit,
+				credit 			: ad.credit
+			];
+
+			if (curramnesty) {
+				ledgeramnesty = ledgeramnesty_fix.read([objid: curramnesty?.refid]);
+				if (ledgeramnesty) {
+					ledgeramnesty.balance += params.payamount;
+					ledgeramnesty_fix.update([objid: ledgeramnesty.objid, balance: ledgeramnesty.balance]);
+					//item.balance = ledgeramnesty?.balance;
+					balance = ledgeramnesty?.balance;
+				}
+			}
+
+			def partialpayment = lastitem.partialpayment? lastitem.partialpayment : 0;
+			balance += partialpayment;
+
+			//def xitem = [interest: item.interestpaid, penalty: item.penaltypaid, partialpayment: item.partialpayment];
+			def xitem = applyAdjustment(ad, partialpayment);
+
+			//item.interestpaid = 0;
+			if (xitem.interest != null) {
+				item.interestpaid = xitem.interest;
+			}
+
+			//item.penaltypaid = 0;
+			if (xitem.penalty != null) {
+				item.penaltypaid = xitem.penalty;
+			}
+			
+			//item.partialpayment = 0;
+			if (xitem.partialpayment != null) {
+				item.partialpayment = xitem.partialpayment;
+				//item.balance -= item.partialpayment;
+
+				if (xitem.xpartialpayment > 0) {
+					partialpayment = xitem.xpartialpayment;
+
+					balance -= partialpayment;
+					item.balance = balance;
+					ledger.balance = balance;
+					if (ledgeramnesty) {
+						ledgeramnesty.balance = balance;
+						ledgeramnesty_fix.update(ledgeramnesty);
+					}
+				}
+			}
+
+
+			ledgerdb.create(item, "detail");
+
+			list.add([item: item]);
+			//ledger.balance = item.balance;
+
+		} else if (type == 'SMC') {
+			ledgeramnesty = ledgeramnesty_smc.read([objid: curramnesty?.refid]);
+			def lastitem = ledgeramnesty_smc.findLastDetailItem([objid: ledgeramnesty?.objid]);
+			lastitem = ledgeramnesty_smc.read(lastitem, "posting-detail");
+
+			def balance = ledger.balance;
+			def item = [
+				objid			: ad.objid,
+				parentid 		: lastitem.parentid,
+				sequenceno 		: lastitem.sequenceno,
+				idx 			: lastitem.idx + 1,
+				paymentid 		: lastitem.paymentid,
+				//balance 		: lastitem.balance? lastitem.balance : 0,
+				//interest 		: lastitem.interest? lastitem.interest : 0,
+				//penalty 		: lastitem.penalty? lastitem.penalty : 0,
+				totalinterest 	: lastitem.totalinterest? lastitem.totalinterest : 0,
+				totalpenalty 	: lastitem.totalpenalty? lastitem.totalpenalty : 0,
+				dtpaid 			: ad.txndate,
+				remarks 		: ad.remarks,
+				debit 			: ad.debit,
+				credit 			: ad.credit,
+				adjustmentid 	: ad.objid
+			];
+
+			//println 'balance1 ' + ledger.balance;
+			def partialpayment = lastitem.partialpayment? lastitem.partialpayment : 0;
+			balance += partialpayment;
+			//println 'balance2 ' + balance;
+			item.totalinterest -= lastitem.interest? lastitem.interest : 0;
+			item.totalpenalty -= lastitem.penalty? lastitem.penalty : 0;
+			//item.balance += item.partialpayment;
+			//item.totalinterest -= item.interest;
+			//item.totalpenalty -= item.penalty;
+
+			//xitem = [interest: lastitem.interest, penalty: lastitem.penalty, partialpayment: lastitem?.partialpayment]
+			def xitem = applyAdjustment(ad, partialpayment);
+
+			if (xitem.interest != null) {
+				item.interest = xitem.interest;
+				item.totalinterest += item.interest;
+			}
+
+			if (xitem.penalty != null) {
+				item.penalty = xitem.penalty;
+				item.totalpenalty += item.penalty;
+			}
+
+			if (xitem.partialpayment != null) {
+				item.partialpayment = xitem.partialpayment;
+			}
+
+			if (xitem.xpartialpayment) {
+				partialpayment = xitem.xpartialpayment;
+			}
+
+			balance -= partialpayment;
+			ledger.balance = balance;
+			//println 'balance ' + ledger.balance;
+
+			ledgeramnesty_smc.create(item, "posting-detail");
+
+			ledgeramnesty.balance = ledger.balance;
+			ledgeramnesty_smc.update(ledgeramnesty);
+		}
+
+		if (ledger.balance <= 0) ledger.balance = 0;
+
+		def la = loanapp.read([objid: ledger.appid], 'loanapp_close');
+		if (la || ledger.balance == 0) {
+			ledger.state = 'CLOSE';
+			loanapp.update([objid: ledger.appid, state: 'CLOSED']);
+			def l = loanapp.read([objid: ledger.appid], 'loanapp_search');
+			if (l) {
+				l.state = 'CLOSED';
+				loanapp.update(l, 'loanapp_search');
+			}
+		} else if (ledger.balance > 0) {
+			ledger.state = 'OPEN';
+			loanapp.update([objid: ledger.appid, state: 'RELEASED']);
+			def l = loanapp.read([objid: ledger.appid], 'loanapp_search');
+			if (l) {
+				l.state = 'RELEASED';
+				loanapp.update(l, 'loanapp_search');
+			}
+		}
+		
+		ledgerdb.update(ledger);
+
+		def result = [
+			results 		: list, 
+			amnestyid 		: curramnesty?.amnestyid, 
+			isfullpayment 	: (ledger.balance <= 0? true : false),
+			ledgerid 		: ledger.objid
+		];
+
+		return result;
+
+		/*
+		switch (curramnesty?.type) {
+			case 'FIX': 
+			case 'SMC':
+				if (ledgeramnesty) {
+					ledgeramnesty.balance += params.payamount;
+					ledgeramnesty_smc.update([objid: ledgeramnesty.objid, balance: ledgeramnesty.balance]);
+					ledger.balance = ledgeramnesty?.balance;	
+				}
+				break;
+			case 'FIX'		: ledgeramnesty = ledgeramnesty_fix.read([objid: curramnesty?.refid]);
+							  if (ledgeramnesty) {
+							  	ledgeramnesty.balance += params.payamount;
+							  	ledgeramnesty_fix.update([objid: ledgeramnesty.objid, balance: ledgeramnesty.balance]);
+							  	ledger.balance = ledgeramnesty?.balance;
+							  }
+							  break; 
+			case 'SMC' 		: ledgeramnesty = ledgeramnesty_smc.read([objid: curramnesty?.refid]);
+							  if (ledgeramnesty) {
+							  	ledgeramnesty.balance += params.payamount;
+							  	ledgeramnesty_smc.update([objid: ledgeramnesty.objid, balance: ledgeramnesty.balance]);
+							  	ledger.balance = ledgeramnesty?.balance;	
+							  }
+							  break;
+			default 		: ledger.balance += params.payamount;
+							  break;
+		}
+		*/
+	}
+
+	private def applyAdjustment( adjustment, partialpayment ) {
+
+		//def xitem = [:];
+		//xitem.putAll(item);
+
+		def item = [:]
+
+		switch (adjustment?.debit?.type) {
+			case 'interest':
+				item.interest = adjustment.debit.amount;
+				break;
+			case 'penalty':
+				item.penalty = adjustment.debit.amount
+				break;
+			case 'partialpayment':
+				item.partialpayment = adjustment.debit.amount;
+				partialpayment += item.partialpayment;
+				break;
+		}
+
+		switch (adjustment?.credit?.type) {
+			case 'interest':
+				item.interest = adjustment.credit.amount;
+				break;
+			case 'penalty':
+				item.penalty = adjustment.credit.amount;
+				break;
+			case 'partialpayment':
+				item.partialpayment = adjustment.credit.amount;
+				partialpayment -= item.partialpayment;
+				break;
+		}
+
+		item.xpartialpayment = partialpayment;
+
+		return item;
+	}
+
+	private def xpostAdjustment( params ) {
+		def txndate;
+		if(params.entity) {
+			txndate = params.entity.txndate;
+		} else {
+			txndate = params.txndate;
+		}
+
+		def ledger = ledgerdb.findByAppId(params);
 		//println 'balance 1 ' + ledger.balance;
 
 		def df = new java.text.SimpleDateFormat('MMM-dd-yyyy');

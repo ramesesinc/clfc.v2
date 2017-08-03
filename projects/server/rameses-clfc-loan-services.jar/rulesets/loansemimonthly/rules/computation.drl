@@ -6,38 +6,40 @@ global java.util.Map floating;
 global java.util.Map resultMap;
 
 declare Payment
-	amountPaid		: double
-	datePaid		: String
-	lackingInterest	: double
-	lackingPenalty	: double
-	balance			: double
-	days			: int
-	totalPenalty	: double
-	totalInterest	: double
-	currentSchedule	: int
-	addLacking 		: Boolean
+	amountPaid			: double
+	datePaid			: String
+	lackingInterest		: double
+	lackingPenalty		: double
+	balance				: double
+	days				: int
+	totalPenalty		: double
+	totalInterest		: double
+	totalPrepaidInterest: double
+	currentSchedule		: int
+	addLacking 			: Boolean
 end
 
 declare References
-	amountPaid 		: double
-	interest 		: double
-	noOfSchedules 	: int
-	noOfDelays		: int
-	term 			: int
-	isOverdue 		: Boolean
-	totalPayment 	: double
-	amountDue 		: double
-	underpaymentRate: double
-	absentRate 		: double
-	arrearsRate 	: double
-	overduePenalty 	: double
-	hasPrepaid 		: Boolean
-	isFullPayment 	: Boolean
-	isOffset 		: Boolean
-	isOffset 		: Boolean
-	arrears 		: double
-	totalSchedule 	: int
-	isDelayed 		: Boolean
+	amountPaid 			: double
+	interest 			: double
+	noOfSchedules 		: int
+	noOfDelays			: int
+	term 				: int
+	isOverdue 			: Boolean
+	totalPayment 		: double
+	amountDue 			: double
+	underpaymentRate 	: double
+	absentRate 			: double
+	arrearsRate 		: double
+	overduePenalty 		: double
+	isFullPayment 		: Boolean
+	isOffset 			: Boolean
+	isOffset 			: Boolean
+	arrears 			: double
+	totalSchedule 		: int
+	isDelayed 			: Boolean
+	isPrepaidInterest 	: Boolean
+	prepaidInterest 	: double
 end
 
 declare CurrentSchedule
@@ -104,6 +106,20 @@ declare OverduePenalty
 	penaltyRate 	: double
 end
 
+declare ResolvePrepaidInterestSchedule
+	allowResolve	: Boolean
+	noOfSchedules 	: int
+	noOfDelays 		: int
+	amountPaid 		: double
+	interest 		: double
+	arrears 		: double
+	underpaymentRate: double
+	absentRate 		: double
+	arrearsRate 	: double
+	prepaidInterest : double
+	schedOfPayment 	: double
+end
+
 rule "compute overdue penalty"
 	when
 		o: OverduePenalty(allowCompute == true)
@@ -154,6 +170,102 @@ rule "resolve schedule date"
 			update(r);
 		} else if (allowupdate == false) {
 			resultMap.put("scheduledate", new java.text.SimpleDateFormat("yyyy-MM-dd").format(runningdate));
+		}
+end
+
+rule "resolve number of schedules and delays with prepaid interest"
+	when
+		r: ResolvePrepaidInterestSchedule(allowResolve == true)
+	then
+		double amountpaid = r.getAmountPaid();
+		double interest = r.getInterest();
+		double prepaidinterest = r.getPrepaidInterest();
+		double schedpyt = r.getSchedOfPayment();
+		int noofschedules = r.getNoOfSchedules();
+		int noofdelays = r.getNoOfDelays();
+
+		//if (amountpaid > 0 && prepaidinterest > 0) amountpaid -= prepaidinterest;
+
+		/*
+		double lackinginterest = r.getLackingInterest();
+		if (amountpaid > 0 && lackinginterest > 0) amountpaid -= lackinginterest;
+
+		double lackingpenalty = r.getLackingPenalty();
+		if (amountpaid > 0 && lackingpenalty > 0) amountpaid -= lackingpenalty;
+		*/
+
+		//System.out.println("lacking interest " + lackinginterest);
+		//System.out.println("lacking penalty " + lackingpenalty);
+		//System.out.println("no of schedules " + noofschedules);
+		//System.out.println("no of delays " + noofdelays);
+
+		if (amountpaid > 0) {
+			double ar = r.getAbsentRate();
+			double arrate = r.getArrearsRate();
+			double totalinterest = interest * noofschedules;
+			if (prepaidinterest > 0) totalinterest += prepaidinterest;
+
+			double totalpenalty = 0, u = 0, tp = 0;
+			double arrears = r.getArrears();
+			if (arrears > 0) {
+				u = arrears * arrate;
+				if (u > 0) totalpenalty += u;
+			}
+
+			int idx = 1;
+			while (idx <= noofdelays) {
+				u = ((schedpyt * idx) + totalpenalty) * ar;
+				if (u > 0) totalpenalty += u;
+				idx++;
+			}
+
+			double underpyt = (schedpyt * noofschedules) - r.getAmountPaid();
+			if (underpyt > 0) {
+				double ur = r.getUnderpaymentRate();
+				tp = 0;
+				if (arrears > 0) tp += arrears;
+				tp += (schedpyt * noofdelays) + underpyt;
+				u = (tp + totalpenalty) * ur;
+				if (u > 0) totalpenalty += u;
+				//u += tp;
+				//if (tp > 0) totalpenalty = tp;
+			}
+
+			//System.out.println("\nlacking interest " + lackinginterest);
+			//System.out.println("lacking penalty " + lackingpenalty);
+			//System.out.println("no of schedules " + noofschedules);
+			//System.out.println("no of delays " + noofdelays);
+			//System.out.println("total interest " + totalinterest);
+			//System.out.println("total penalty " + totalpenalty);
+			amountpaid -= (totalinterest + totalpenalty);
+		}
+
+		if (noofschedules <= 0) {
+			amountpaid = 0;
+		}
+
+		Boolean allowupdate = false;
+		if (amountpaid < 0) {
+			allowupdate = true;
+		}
+
+		//System.out.println("allow update " + allowupdate + " amount paid " + amountpaid);
+
+
+		if (allowupdate == true) {
+			if (noofschedules == noofdelays) {
+				noofdelays--;
+			}
+			noofschedules--;
+			r.setNoOfSchedules(noofschedules);
+			r.setNoOfDelays(noofdelays);
+			update(r);
+		} else if (allowupdate == false) {
+			if (noofschedules < 0) noofschedules = 0;
+			resultMap.put("noOfSchedules", noofschedules);
+
+			if (noofdelays < 0) noofdelays = 0;
+			resultMap.put("noOfDelays", noofdelays);
 		}
 end
 
@@ -423,10 +535,105 @@ rule "count number of schedules"
 		}
 end
 
+rule "prepaid interest"
+	salience 25
+	when
+		r: References(isPrepaidInterest == true, pi: prepaidInterest > 0)
+		p: Payment(amtpaid: amountPaid > 0)
+	then
+		java.util.Map item = new java.util.HashMap();
+
+		double interest = 0, totalinterest = 0;
+
+		boolean allowUpdate = false;
+		if (amtpaid > pi) {
+			interest = pi;
+			amtpaid -= pi;
+			pi = 0;
+
+			r.setPrepaidInterest(pi);
+			p.setAmountPaid(amtpaid);
+		} else if (amtpaid <= pi) {
+			interest = amtpaid;
+			pi -= amtpaid;
+			amtpaid = 0;
+
+			r.setPrepaidInterest(pi);
+			p.setAmountPaid(amtpaid);
+		}
+
+		totalinterest += interest;
+
+		item.put("interestPaid", interest);
+		item.put("prepaidinterestpaid", interest);
+		//item.put("totalinterest", totalinterest);
+		item.put("state", "PREPAIDINTEREST");
+		item.put("remarks", "Prepaid Interest");
+		results.add(item);
+
+		if (amtpaid > 0) {
+			allowUpdate = true;
+		}
+
+		//System.out.println("allow update " + allowUpdate + " amountpaid " + amtpaid);
+
+		if (allowUpdate == true) {
+			update(r);
+			update(p);
+		}
+		//System.out.println("prepaid interest " + pi);
+end
+
+rule "prepaid interest: amount paid greater than equal to total payment"
+	salience 20
+	when
+		r: References(isPrepaidInterest == true, totalpayment: totalPayment, interest: interest)
+		p: Payment(amtpaid: amountPaid >= totalpayment, amountPaid > 0)
+	then
+		//System.out.println("prepaid interest: amtpaid >= totalpayment");
+		//System.out.println("amount paid-> " + amtpaid + " total payment-> " + totalpayment);
+
+		java.util.Map item = new java.util.HashMap();
+
+end
+
+rule "prepaid interest: amount paid less than total payment"
+	salience 20
+	when
+		r: References(isPrepaidInterest == true, totalpayment: totalPayment, interest: interest)
+		p: Payment(amountPaid < totalpayment, amountPaid > 0)
+	then
+		System.out.println("prepaid interest: amtpaid < totalpayment");
+end
+
+rule "prepaid interest resolve last result item"
+	when
+		r: References(isPrepaidInterest == true, amtpaid: amountPaid)
+	then
+
+		if (results.size() > 0) {
+			java.util.Map item = (java.util.HashMap) results.get(results.size() - 1);
+			if (item != null) {
+				item.put("payment", amtpaid);
+			}
+		}
+end
+
+/*
+rule "test"
+	when
+		r: References()
+		p: Payment(amountPaid > 0)
+	then 
+		//amtpaid: amountPaid >= totalPayment, isOffset == false, isOverdue == false, isFullPayment == false)
+		System.out.println("amtpaid " + r.getAmountPaid() + " total payment " + r.getTotalPayment() + " isoffset " + r.getIsOffset() + " isoverdue " + r.getIsOverdue() + " isfullpayment " + r.getIsFullPayment());
+end
+*/
+
 rule "full payment within term"
 	salience 20
 	when
-		r: References(isFullPayment == true, isOverdue == false)
+		r: References(isFullPayment == true, isOverdue == false, isPrepaidInterest == false)
 		p: Payment(amountPaid > 0)
 	then
 		java.util.Map listItem = new java.util.HashMap();
@@ -537,7 +744,7 @@ end
 
 rule "amount paid less than equal to interest"
 	when
-		r: References(amountPaid <= interest, isOverdue == false, isFullPayment == false)
+		r: References(amountPaid <= interest, isOverdue == false, isFullPayment == false, isPrepaidInterest == false)
 		p: Payment()
 	then
 		java.util.Map listItem = new java.util.HashMap();
@@ -666,7 +873,7 @@ end
 
 rule "amount paid greater than equal to total payment"
 	when
-		r: References(amtpaid: amountPaid >= totalPayment, isOffset == false, isOverdue == false, isFullPayment == false)
+		r: References(amtpaid: amountPaid >= totalPayment, isOffset == false, isOverdue == false, isFullPayment == false, isPrepaidInterest == false)
 		p: Payment()
 	then
 		Map listItem = new HashMap();
@@ -810,7 +1017,7 @@ end
 
 rule "amount paid less than total payment"
 	when
-		r: References(amtpaid: amountPaid < totalPayment, amountPaid > interest, isOffset == false, isOverdue == false, isFullPayment == false)
+		r: References(amtpaid: amountPaid < totalPayment, amountPaid > interest, isOffset == false, isOverdue == false, isFullPayment == false, isPrepaidInterest == false)
 		p: Payment()
 	then 
 		Map listItem = new HashMap();
@@ -939,13 +1146,14 @@ rule "amount paid less than total payment"
 		} else if (amtpaid > 0) {
 			p.setCurrentSchedule(currentSchedule);
 			p.setDays(days);
+			
 			update(p);
 		}
 end
 
 rule "amount paid greater than equal to total payment and is offset true"
 	when
-		r: References(amtpaid: amountPaid >= totalPayment, isOffset == true, isOverdue == false, isFullPayment == false)
+		r: References(amtpaid: amountPaid >= totalPayment, isOffset == true, isOverdue == false, isFullPayment == false, isPrepaidInterest == false)
 		p: Payment()
 	then
 		java.util.Map listItem = new java.util.HashMap();
@@ -1077,6 +1285,7 @@ rule "amount paid greater than equal to total payment and is offset true"
 				results.add(listItem);
 			} else if (addItem == false) {
 				//System.out.println("days " + days);
+			
 				days--;
 				if (days < noofschedule) days = noofschedule;
 				amtpaid = 0;
@@ -1090,7 +1299,8 @@ rule "amount paid greater than equal to total payment and is offset true"
 			double totalinterest = 0;
 			double totalpenalty = 0;
 
-			//System.out.println("add lacking " + addLacking);
+			//System.out.println("lacking penalty " + lackingpenalty);
+
 			if (addLacking == true) {
 				totalinterest = interestpaid;
 				totalpenalty = penaltypaid;
@@ -1098,10 +1308,13 @@ rule "amount paid greater than equal to total payment and is offset true"
 				totalinterest = (days * i) + lackinginterest;
 				double u = 0, tp = 0;
 
+				//System.out.println("totalpenalty " + totalpenalty);
 				if (arrears > 0) {
 					u = arrears * arrate;
 					if (u > 0) totalpenalty += u;
 				}
+
+				//System.out.println("totalpenalty1 " + totalpenalty);
 
 				int idx = 1;
 				while (idx <= noofdelays) {
@@ -1114,6 +1327,7 @@ rule "amount paid greater than equal to total payment and is offset true"
 					//if (tp > 0) totalpenalty = tp;
 					idx++;
 				}
+				//System.out.println("totalpenalty2 " + totalpenalty);
 
 				totalpenalty += lackingpenalty;
 			}
@@ -1121,7 +1335,12 @@ rule "amount paid greater than equal to total payment and is offset true"
 			item.put("totaldays", days);
 			if (totalpenalty > 0) item.put("totalpenalty", totalpenalty);
 			if (totalinterest > 0) item.put("totalinterest", totalinterest);
+
+			//System.out.println("item " + item);
+
 		}
+
+		//System.out.println("amtpaid " + amtpaid);
 
 		if (amtpaid > 0) {
 			//p.setAmountPaid(amountPaid);
@@ -1133,9 +1352,10 @@ end
 
 rule "amount paid less than total payment and is offset true"
 	when
-		r: References(amtpaid: amountPaid < totalPayment, amountPaid > interest, isOffset == true, isOverdue == false, isFullPayment == false)
+		r: References(amtpaid: amountPaid < totalPayment, amountPaid > interest, isOffset == true, isOverdue == false, isFullPayment == false, isPrepaidInterest == false)
 		p: Payment()
 	then
+		System.out.println("amount paid < total payment and offset is true");
 		java.util.Map listItem = new java.util.HashMap();
 
 		double i = r.getInterest();
@@ -1297,7 +1517,7 @@ end
 
 rule "overdue payment and offset is false"
 	when
-		r: References(isOverdue == true, isOffset == false, amtpaid: amountPaid)
+		r: References(isOverdue == true, isOffset == false, amtpaid: amountPaid, isPrepaidInterest == false)
 		p: Payment()
 	then
 		Map listItem = new HashMap();
@@ -1396,7 +1616,7 @@ end
 
 rule "overdue payment and offset is true"
 	when
-		r: References(isOverdue == true, isOffset == true, amtpaid: amountPaid)
+		r: References(isOverdue == true, isOffset == true, amtpaid: amountPaid, isPrepaidInterest == false)
 		p: Payment()
 	then
 		Map listItem = new HashMap();

@@ -46,8 +46,10 @@ class LoanLedgerTask
 		}
 	}
 
-	@Schedule(interval=15, timeUnit="SECONDS")
+	@Schedule(interval=1, timeUnit="SECONDS")
 	public void executeSegregation( task ) {
+
+		println 'segregrate ledger';
 
 		def sysvar = var.read([name: "enable_segregation_task"]);
 		if (!sysvar || sysvar.value.toLowerCase() != 'true') return;

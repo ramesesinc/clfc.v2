@@ -192,6 +192,22 @@ class LoanSpecialCollectionService extends ActiveListService
 		data.cancelledby = [objid: env.USERID, name: env.NAME, remarks: params.cancelremarks];
 		em.update(data, "sc-cancel");
 
+
+		return open(data);
+	}
+
+
+	@ProxyMethod
+	public def cancelBilling2( params ) {
+		params.cancelremarks = "Cancelled created billing.";
+		def data = cancelBilling(params);
+
+		def item = ledger_billing.read([objid: data.objid], "billing-item");
+		if (item) {
+			item.state = data.state;
+			ledger_billing.update(item, "billing-item");
+		}
+
 		return open(data);
 	}
 
@@ -1122,6 +1138,11 @@ class LoanSpecialCollectionService extends ActiveListService
 		def txndate = data.txndate.toString();
 		if (date.compareTo(txndate) >= 0 && (data.state=='FOR_DOWNLOAD' || data.state=='DOWNLOADED')) {
 			data.allowReset = true;
+		}
+
+		def regex = '(FOR_DOWNLOAD|DOWNLOADED)';
+		if (data.state?.matches(regex)) {
+			data.allowcancel = true;
 		}
 
 		return data;

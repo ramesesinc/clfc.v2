@@ -282,6 +282,7 @@ class CaptureLoanAppService extends ActiveListService
 	@ProxyMethod
 	public def assess( params ) {
 		def data = em.read(params);
+		if (!data) throw new RuntimeException("Loan application record does not exist or has already been deleted.");
 
 		def prevloan = [:];
 		if (data.previousloans) {
@@ -289,11 +290,40 @@ class CaptureLoanAppService extends ActiveListService
 			prevloan = [objid: pl.objid, amount: pl.loanamount];
 		}
 
+		def oc = data.assessmentinfo?.charges?.findAll{ it.allowDelete==true };
+		if (!oc) oc = [];
+
 		def info = appAssessmentSvc.getAssessmentInfo(data, prevloan);
+		if (!info.charges) info.charges = [];
+		info.charges.addAll(oc);
 		data.assessmentinfo  = info;
 		em.update(data);
 
 		return info
+	}
+
+	@ProxyMethod
+	public def saveCharges( params ) {
+		def data = em.read(params);
+		if (!data) throw new RuntimeException("Loan application record does not exist or has already been deleted.");
+
+
+		if (!data.assessmentinfo) data.assessmentinfo = [charges: []];
+		data.assessmentinfo.charges << params.charge;
+		em.update(data);
+
+		return data.assessmentinfo.charges;
+	}
+
+	@ProxyMethod
+	public def removeCharges( params ) {
+		def data = em.read(params);
+		if (!data) throw new RuntimeException("Loan application record does not exist or has already been deleted.");
+
+		data.assessmentinfo.charges = params.charges;
+		em.update(data);
+
+		return data.assessmentinfo.charges;
 	}
 
 	@ProxyMethod
@@ -310,7 +340,7 @@ class CaptureLoanAppService extends ActiveListService
 			message 	: 'Assessment for Loan Application (' + data.appno + ')',
 			senderid 	: env.USERID,
 			sendername 	: env.NAME,
-			recipientid : 'CAO_OFFICER'
+			recipientid : 'ASSESSOR'
 		];
 		inboxSvc.addMessage( msginfo );
 
@@ -349,8 +379,10 @@ class CaptureLoanAppService extends ActiveListService
 
 		def sysvar = var.read([name: 'validate_application_charges']);
 		if (sysvar?.value == "true") {
-			if (!data.assessmentinfo || !data.assessmentinfo.charges) {
-				throw new RuntimeException("Please assess document before proceeding.");
+			if (data.loantype != 'BRANCH') {
+				if (!data.assessmentinfo || !data.assessmentinfo.charges) {
+					throw new RuntimeException("Please assess document before proceeding.");
+				}
 			}
 		}
 
@@ -436,10 +468,11 @@ class CaptureLoanAppService extends ActiveListService
 		loanapp.create(app, 'loanapp_capture_open'); 
 
 		def assessment = data.assessmentinfo;
+		if (!assessment) assessment = [:];
 		def extinfo = [
 			objid 			: data.objid,
-			netamount 		: assessment.netamount,
-			totalcharges 	: assessment.totalcharges,
+			netamount 		: assessment?.netamount? assessment.netamount : 0,
+			totalcharges 	: assessment?.totalcharges? assessment.totalcharges : 0,
 			dtmatured 		: data.dtmatured,
 			assessmentinfo 	: assessment
 		];
@@ -599,9 +632,11 @@ class CaptureLoanAppService extends ActiveListService
 			def bj = borrowerjuridical.read([objid: o.objid]);
 			if (!bj) {
 				borrowerjuridical.create(o);
-			} else {
+			} 
+
+			/*else {
 				borrowerjuridical.update(o);
-			}
+			}*/
 		}
 
 

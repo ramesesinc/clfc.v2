@@ -77,6 +77,12 @@ class LoanFollowupCollectionService extends ActiveListService
 		return specialColSvc.cancelBilling(params);
 	}
 
+	@ProxyMethod
+	public def cancelBilling2( params ) {
+		return specialColSvc.cancelBilling2(params);
+	}
+
+
 	@Async
 	@ProxyMethod
 	public def createNewBillingWithoutLedgerValidation( params ) {

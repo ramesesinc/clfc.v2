@@ -49,6 +49,7 @@
 		<field name="groupbaseamount" required="true"/>
 		<field name="amnestyid" />
 		<field name="remarks" />
+		<complex name="info" required="false" serializer="default" merge="true" />
 	</element> 
 
 	<element name="payment" tablename="loan_ledger_payment">

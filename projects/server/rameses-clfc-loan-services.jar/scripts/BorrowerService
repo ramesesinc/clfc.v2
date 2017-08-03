@@ -13,7 +13,7 @@ class BorrowerService
 
 	@ProxyMethod 
 	public def open( data ) {
-		def o = em.findByObjid(data); 
+		def o = em.findByObjid(data);
 		if (o == null) throw new Exception('borrower record not found');
 
 		//o.name = createFullName(o.lastname, o.firstname, o.middlename);

@@ -14,7 +14,7 @@
 		<field name="borrower_name" required="true" />
 		<field name="amount" required="true" />
 		<field name="dtreleased" required="true" />
-		<field name="dtmatured" required="true" />
+		<field name="dtmatured" />
 		<field name="producttype_name" required="true" />
 		<field name="producttype_term" required="true" />
 		<field name="route_code" required="true" />

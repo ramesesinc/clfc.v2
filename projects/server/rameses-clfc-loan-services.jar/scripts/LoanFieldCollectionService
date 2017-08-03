@@ -17,7 +17,7 @@ class LoanFieldCollectionService
 	@ActiveDB("ledger_billing")
 	def ledger_billing;
 
-	@ActiveDB("mobile_tracker")
+	@ActiveDB(em="tracker", value="mobile_tracker")
 	def tracker;
 
 	@ActiveDB("collection_cb")
@@ -668,11 +668,6 @@ class LoanFieldCollectionService
 		
 		//def list = collection.getFieldcollectionLoansWithInfo(params);
 
-		
-		if (params.parentid == 'LBccc596:15860efe2ef:-208f') {
-			params.parentid = 'LB-5fb1f20e:15866d34854:-7075';
-		}
-
 		def fc = collection.read([objid: params.parentid]);
 		def xlist = getCollectionList([collectionid: params.objid]);
 		def list = [];
@@ -740,14 +735,14 @@ class LoanFieldCollectionService
 
 		def t = trackerSvc.open([objid: params.trackerid]);
 		if (t && t.state == 'OPEN') {
-			def trackerItem = tracker.findLastTrackerItemByParentid([parentid: params.trackerid]);
-			def tracker = [
+			def dtl = tracker.findLastTrackerDetail([objid: t.objid]);
+			def trck = [
 				trackerid 	: params.trackerid,
 				username	: (env.NAME? env.NAME : 'SYSTEM'),
-				lng 		: (trackerItem? trackerItem.lng : 0.00),
-				lat 		: (trackerItem? trackerItem.lat : 0.00)
+				lng 		: (dtl? dtl.lng : 0.00),
+				lat 		: (dtl? dtl.lat : 0.00)
 			];
-			trackerSvc.stop(tracker);
+			trackerSvc.stop(trck);
 		}
 
 		afterPost(params);

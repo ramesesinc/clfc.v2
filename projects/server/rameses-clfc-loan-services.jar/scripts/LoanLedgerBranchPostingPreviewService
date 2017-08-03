@@ -1,5 +1,6 @@
 import com.rameses.common.*;
 import com.rameses.annotations.*;
+import java.text.*;
 
 class LoanLedgerBranchPostingPreviewService
 {
@@ -27,6 +28,9 @@ class LoanLedgerBranchPostingPreviewService
 	@Service('DateService')
 	def dateSvc;
 
+	private def DATE_FORMAT = new SimpleDateFormat("MMM-dd-yyyy");
+	private def DECIMAL_FORMAT = new DecimalFormat("#,##0.00");
+
 	@ProxyMethod
 	public def getColumns( params ) {
 		def cols = [];
@@ -36,14 +40,10 @@ class LoanLedgerBranchPostingPreviewService
 			def item;
 			headers?.each{ o->
 				item = [name: o.name, caption: o.title, sequence: o.sequence];
-				if (o.datatype) {
-					item.type = o.datatype;
-					if (o.format) {
-						switch (item.type) {
-							case 'decimal'	: item.format = o.format; break;
-							case 'date' 	: item.outputFormat = o.format; break;
-						}
-					}
+				switch (o.xdatatype) {
+					case 'decimal':
+						item.alignment = "right";
+						break;
 				}
 				cols << item;
 			}
@@ -71,14 +71,27 @@ class LoanLedgerBranchPostingPreviewService
 			}
 		}
 
+		def cols = [];
 		def list = em.getPostingHeaders(params);
 		list?.sort{ it.sequence }
-		def info;
+		def info, item;
 		list?.each{ o->
 			info = o.remove('info');
 			info = em.serializer.read(info);
-			o.putAll(info);
+			//o.putAll(info);
+			o.xdatatype = info.datatype;
+			/*
+			if (info.datatype == 'decimal') {
+				o.alignment = "right";
+			}
+			*/
+			//println 'horizontalAlignment ' + o.horizontalAlignment;
 		}
+
+		//list?.each{ println it }
+
+		//println 'get posting headers';
+
 		return list;
 	}
 
@@ -104,12 +117,47 @@ class LoanLedgerBranchPostingPreviewService
 	public def getList( params ) {
 		if (!params.objid) return [];
 
+		def headers = getPostingHeaders(params);
+		def h = headers?.findAll{ it.xdatatype == 'decimal' }
+		def i = headers?.findAll{ it.xdatatype == 'date' }
+
 		def list = em.getPostingDetails(params);
 		def info;
 		list?.each{ o->
 			info = o.remove('info');
 			info = em.serializer.read(info);
 			o.putAll(info);
+
+			h?.each{ d->
+				if (o[d.name] != null) {
+					o[d.name] = DECIMAL_FORMAT.format(o[d.name]);
+				}
+			}
+
+			i?.each{ d->
+				if (o[d.name] != null) {
+					o[d.name] = DATE_FORMAT.format(parseDate(o[d.name]));
+				}
+			}
+
+			if (o.adjustmentid != null) {
+				def item = em.read(o, "posting-detail");
+				//println 'debit ' + o.debit;
+				//println 'credit ' + o.credit;
+				def debit = item.debit;
+				if (debit && o[debit.type] != null) {
+					o[debit.type] = 'Dr: ' + o[debit.type];//DECIMAL_FORMAT.format(o[debit.type]);
+					//o[debit.type] = o[debit.type];
+				}
+
+				def credit = item.credit;
+				if (credit && o[credit.type] != null) {
+					o[credit.type] = 'Cr: ' + o[credit.type];//DECIMAL_FORMAT.format(o[credit.type]);
+					//o[credit.type] = o[credit.type];
+				}
+				//println 'item';
+				//o?.each{ println it }
+			}
 		}
 
 		return list;

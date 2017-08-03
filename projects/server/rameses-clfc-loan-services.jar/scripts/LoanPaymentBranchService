@@ -91,7 +91,7 @@ class LoanPaymentBranchService
 		cal.setTime(parseDate(app?.dtreleased));
 
 		def lastpayment;
-		def lastitem = em.findLastDetailItem([objid: ledger?.objid]);
+		def lastitem = em.findLastDetailItemNotAdjustment([objid: ledger?.objid]);
 		if (lastitem) {
 			def info = lastitem.remove('info');
 			info = em.serializer.read(info);
@@ -527,30 +527,80 @@ class LoanPaymentBranchService
 	}
 
 	def postAdjustment( params, ledger ) {
+		def ad = ledger_adjustment.read([objid: params.adjustmentid]);
 		def lastitem = em.findLastDetailItem([objid: ledger?.objid]);
-		if (lastitem) {
+		if (lastitem && ad) {
+			def balance = ledger.balance;
 			lastitem = em.read([objid: lastitem?.objid], 'posting-detail');
 
-			ledger?.balance += params.payamount;
-			loan_ledger.update([objid: ledger?.objid, balance: ledger?.balance]);
-
 			def item = [
-				objid			: 'LDTL' + new UID(),
+				objid			: ad.objid,
 				parentid 		: ledger?.objid,
 				sequenceno 		: lastitem?.sequenceno,
 				idx 			: lastitem?.idx + 1,
 				paymentid 		: lastitem?.paymentid,
-				balance 		: ledger?.balance,
-				partialpayment 	: params?.payamount,
-				totalpayment 	: params?.payamount,
-				totalinterest  	: lastitem?.totalinterest,
-				totalpenalty 	: lastitem?.totalpenalty
+				//balance 		: ledger?.balance,
+				//partialpayment 	: 0,//lastitem.partialpayment? lastitem.partialpayment : 0,
+				//interest 		: 0,//lastitem.interest? lastitem.interest : 0,
+				//penalty 		: 0,//lastitem.penalty? lastitem.penalty : 0,
+				totalinterest  	: lastitem.totalinterest? lastitem.totalinterest : 0,
+				totalpenalty 	: lastitem.totalpenalty? lastitem.totalPenalty : 0,
+				dtpaid 			: ad.txndate,
+				remarks 		: ad.remarks,
+				debit 			: ad.debit,
+				credit 			: ad.credit,
+				adjustmentid 	: ad.objid
 			];
 
-			def ad = ledger_adjustment.read([objid: params.adjustmentid]);
+			def partialpayment = lastitem.partialpayment? lastitem.partialpayment : 0;
+			balance += partialpayment;
+			item.totalinterest -= lastitem.interest? lastitem.interest : 0;
+			item.totalpenalty -= lastitem.penalty? lastitem.penalty : 0;
+
+			switch (ad?.debit?.type) {
+				case 'interest':
+					item.interest = ad.debit.amount;
+					item.totalinterest += item.interest;
+					break;
+				case 'penalty':
+					item.penalty = ad.debit.amount;
+					item.totalpenalty += item.penalty;
+					break;
+				case 'partialpayment':
+					item.partialpayment = ad.debit.amount;
+					partialpayment += item.partialpayment;
+					break;
+			}
+
+			switch (ad?.credit?.type) {
+				case 'interest':
+					item.interest = ad.credit.amount;
+					break;
+				case 'penalty':
+					item.penalty = ad.credit.amount;
+					break;
+				case 'partialpayment':
+					item.partialpayment = ad.credit.amount;
+					partialpayment -= item.partialpayment;
+					break;
+			}
+
+			if (partialpayment != null) balance -= partialpayment;
+			//item.totalinterest += item.interest;
+			//item.totalpenalty += item.penalty;
+			em.create(item, "posting-detail");
+
+			ledger.balance = balance;
+			loan_ledger.update([objid: ledger?.objid, balance: ledger?.balance]);
+			/*
+			ledger?.balance += params.payamount;
+			loan_ledger.update([objid: ledger?.objid, balance: ledger?.balance]);
+
+
 			item.remarks = ad?.remarks;
 
 			em.create(item, 'posting-detail');
+			*/
 		}
 	}
 

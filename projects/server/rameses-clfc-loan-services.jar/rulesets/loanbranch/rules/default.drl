@@ -222,28 +222,31 @@ then
 	Boolean allowPost = flag;
 	Boolean constraintFlag = false;
 	if (seqItem.containsKey("constraints")) {
-		params.put("constraints", seqItem.get("constraints"));
-		params.put("item", item);
-		params.put("bindings", bindings2);
+		List list = (List) seqItem.get("constraints");
+		if (list != null && !list.isEmpty()) {
+			params.put("constraints", list);
+			params.put("item", item);
+			params.put("bindings", bindings2);
 
-		action.execute("buildConstraintExpression", params, drools);
+			action.execute("buildConstraintExpression", params, drools);
 
-		String constraintExpr = params.get("constraintexpr").toString();
-		Map xbindings = (Map) params.get("bindings2");
+			String constraintExpr = params.get("constraintexpr").toString();
+			Map xbindings = (Map) params.get("bindings2");
 
-		params = new HashMap();
+			params = new HashMap();
 
-		//println("constraint expr " + constraintExpr);
-		params.put("action", (new ActionExpression(constraintExpr, xbindings)));
-		action.execute("validateConstraintExpression", params, drools);
+			//println("constraint expr " + constraintExpr);
+			params.put("action", (new ActionExpression(constraintExpr, xbindings)));
+			action.execute("validateConstraintExpression", params, drools);
 
-		if (params.containsKey("value")) {
-			String val = params.get("value").toString();
-			if (val != null) {
-				allowPost = Boolean.valueOf(val);
+			if (params.containsKey("value")) {
+				String val = params.get("value").toString();
+				if (val != null) {
+					allowPost = Boolean.valueOf(val);
+				}
 			}
+			//println("params " + params);
 		}
-		//println("params " + params);
 	}
 
 	//Boolean constraintFlag = false;
