@@ -177,3 +177,19 @@ DELETE FROM sys_rule_fact_field WHERE parentid=$P{objid}
 
 [removeFact]
 DELETE FROM sys_rule_fact WHERE objid=$P{objid}
+
+[updateRulesetFact]
+update sys_ruleset_fact 
+set 
+	ruleset=$P{ruleset}, 
+	rulefact=$P{rulefact}
+where ruleset=$P{pruleset} 
+	and rulefact=$P{prulefact}
+
+[updateRulesetActiondef]
+update sys_ruleset_actiondef 
+set
+	ruleset=$P{ruleset},
+	actiondef=$P{actiondef}
+where ruleset=$P{pruleset}
+	and actiondef=$P{pactiondef}
