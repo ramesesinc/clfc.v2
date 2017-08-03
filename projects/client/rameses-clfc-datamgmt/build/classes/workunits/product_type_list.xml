@@ -1,6 +1,6 @@
-<workunit extends="wtemplates/ListController.xml" >
+<workunit extends="wtemplates/ListController.xml">
     <invokers>
-        <invoker folderid="/home/online/master" caption="Item Accounts" role="DATAMGMT_AUTHOR" /> 
+        <invoker folderid="/home/online/master" caption="Product Types 2" role="DATAMGMT_AUTHOR" />
     </invokers>
     
     <code>
@@ -9,13 +9,13 @@
         import com.rameses.osiris2.client.*;
         import com.rameses.osiris2.common.*;
         
-        class ItemAccountListController extends ListController {
+        class LoanProductTypeListController extends ListController {
             
-            @Service("LoanItemAccountService")
+            @Service("NewLoanProductTypeService")
             def svc;
         
-            String serviceName = "LoanItemAccountService";
-            String entityName = "loan:itemaccount";
+            String serviceName = "NewLoanProductTypeService";
+            String entityName = "loan:producttype";
         
             Map createPermission = [domain:'DATAMGMT', role:'DATAMGMT_AUTHOR']; 
             Map readPermission = [domain:'DATAMGMT', role:'DATAMGMT_AUTHOR'];
@@ -24,7 +24,7 @@
                 params.state = selectedOption?.state;
             }
         
-            def selectedOption, borrower, xlist;
+            def selectedOption;
             def optionsModel = [
                 getItems: {
                     return svc.getStates();
@@ -38,6 +38,6 @@
     </code>
     
     <pages>
-        <page template="com.rameses.clfc.migrationsupport.ui.ListPage" />
+        <page template="com.rameses.clfc.ui.ListPage" />
     </pages>
 </workunit>
