@@ -51,7 +51,9 @@
             visibleWhen="#{mode=='read' &amp;&amp; entity.state=='APPROVED'}" role="ACCT_ASSISTANT" />
         
         <invoker type="formActions" action="resetBilling" caption="Reset" mnemonic="r" shortcut="ctrl R"
-            visibleWhen="#{mode=='read' &amp;&amp; entity.allowReset==true}" />
+            visibleWhen="#{mode=='read' &amp;&amp; entity.allowReset==true}" role="ACCT_ASSISTANT" />
+        <invoker type="formActions" action="cancelBilling2" caption="Cancel Billing" mnemonic="a" shortcut="ctrl A"
+            visibleWhen="#{mode=='read' &amp;&amp; entity.allowcancel==true}" role='ACCT_ASSISTANT' />
     </invokers>
     
     <code class="com.rameses.clfc.ledger.specialcollection.SpecialCollectionController"/>
