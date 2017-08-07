@@ -56,7 +56,9 @@ class DailyCollectionReportController extends ReportModel {
             new SubReport('COLLECTION_DETAIL', 'com/rameses/clfc/report/dailycollectionreport/DCRCollectionDetail.jasper'),
             new SubReport('COLLECTION_ITEM_DETAIL', 'com/rameses/clfc/report/dailycollectionreport/DCRCollectionItemDetail.jasper'),
             new SubReport('OVERAGE', 'com/rameses/clfc/report/dailycollectionreport/DCROverageDetail.jasper'),
-            new SubReport('CASH_ON_HAND', 'com/rameses/clfc/report/dailycollectionreport/DCRCashOnHandDetail.jasper')
+            new SubReport('CASH_ON_HAND', 'com/rameses/clfc/report/dailycollectionreport/DCRCashOnHandDetail.jasper'),
+            new SubReport('OTHER_RECEIPT_DEPOSITED', 'com/rameses/clfc/report/dailycollectionreport/DCROtherReceiptDeposited.jasper'),
+            new SubReport('OTHER_RECEIPT_UNDEPOSITED', 'com/rameses/clfc/report/dailycollectionreport/DCROtherReceiptUndeposited.jasper')
         ];  
     }
 }

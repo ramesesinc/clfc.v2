@@ -7,8 +7,11 @@ import com.rameses.osiris2.common.*;
 import com.rameses.common.*;
 import java.rmi.server.UID;
 
-abstract class AbstractFollowupCollectionController 
-{	
+abstract class AbstractFollowupCollectionController {	
+    
+    @Caller
+    def caller;
+    
     @Binding
     def binding;
     
@@ -335,12 +338,26 @@ abstract class AbstractFollowupCollectionController
             entity = service.cancelBilling(entity);
             
             MsgBox.alert("Billing successfully cancelled!");
-            binding?.refresh();
+            EventQueue.invokeLater({
+                caller?.reload();
+                binding?.refresh();
+            });
         }
         def op = Inv.lookupOpener('remarks:create', [title: 'Reason for cancellation', handler: handler]);
         if (!op) return null;
         
         return op;
+    }
+    
+    void cancelBilling2() {
+        if (!MsgBox.confirm("You are about to cancel this billing. Continue?")) return;
+        
+        entity = service.cancelBilling2(entity);
+        EventQueue.invokeLater({ 
+            caller?.reload();
+            binding?.refresh();
+        });
+        
     }
     
     void disapprove() {

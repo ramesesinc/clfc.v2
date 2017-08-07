@@ -7,8 +7,11 @@ import com.rameses.osiris2.common.*;
 import com.rameses.common.*;
 import java.rmi.server.UID;
 
-abstract class AbstractSpecialCollectionController 
-{
+abstract class AbstractSpecialCollectionController  {
+    
+    @Caller
+    def caller;
+    
     @Binding
     def binding;
     
@@ -332,6 +335,18 @@ abstract class AbstractSpecialCollectionController
         return loadingOpener;
     }
     
+    void cancelBilling() {
+        if (!MsgBox.confirm('You are about to cancel this billing. Continue?')) return;
+        
+        entity = service.cancelBilling(entity);
+        EventQueue.invokeLater({ 
+            caller?.reload();
+            binding?.refresh();
+            listHandler?.reload();
+        });
+        
+    }
+    
     def cancelBilling() {
         if (!MsgBox.confirm("You are about to cancel creation for this billing. Continue?")) return;
         
@@ -346,6 +361,17 @@ abstract class AbstractSpecialCollectionController
         if (!op) return null;
         
         return op;
+    }
+    
+    void cancelBilling2() {
+        if (!MsgBox.confirm("You are about to cancel this billing. Continue?")) return;
+        
+        entity = service.cancelBilling2(entity);
+        EventQueue.invokeLater({ 
+            caller?.reload();
+            binding?.refresh();
+        });
+        
     }
     
     void disapprove() {

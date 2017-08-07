@@ -4,7 +4,8 @@
         <invoker type="loanledger-plugin" action="init" caption="Adjustments" index="3" />
         -->
         <invoker type='loanledger-plugin' reftype='adjustment' caption='Adjustments' index='3' />
-        <invoker type='loanledger:adjustment' action='init' caption='Adjustments' />
+        <!-- <invoker type='loanledger:adjustment' action='init' caption='Adjustments' /> -->
+        <invoker type="loanledger:adjustment" caption="Adjustments" />
     </invokers>
     
     <code>
@@ -13,24 +14,31 @@
         import com.rameses.osiris2.client.*;
         import com.rameses.osiris2.common.*;
         
-        class LoanLedgerAdjustmentsListController extends ListController
-        {
-            @Service("LoanLedgerAdjustmentService")
+        class LoanLedgerAdjustmentsListController extends ListController {
+        
+            //@Service("LoanLedgerAdjustmentService")
+            //def svc;
+            @Service("NewLedgerAdjustmentService")
             def svc;
             
-            String serviceName = "LoanLedgerAdjustmentService";
-            String entityName = "ledgeradjustment";
+            //String serviceName = "LoanLedgerAdjustmentService";
+            //String entityName = "ledgeradjustment";
+            String serviceName = "NewLedgerAdjustmentService";
+            String entityName = "ledger:adjustment";
         
             boolean allowClose = false;
         
             Map createPermission = [domain: 'LOAN', role: 'CAO_OFFICER'];
         
             def entity;
+            /*
+            def entity;
             void init() {
                 if (entity) {
                     entity.borrower = svc.getBorrower([objid: entity.acctid]);
                 }
             }
+            */
         
             void beforeFetchList(Map params) {
                 if (entity) params.ledgerid = entity.objid;

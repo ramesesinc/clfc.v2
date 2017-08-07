@@ -1,0 +1,15 @@
+1. shut down app server
+2. update app server service
+
+  2.a. modules folder
+    2.b.1. open service modules
+    2.b.2. copy modules folder and paste to app-server-directory > workspace > services > apps > clfc
+
+3. update app server shared
+
+  3.a. shared modules folder
+    3.a.1. open service modules > shared
+    3.a.2. copy 03-rameses-rule-services.jar and paste to app-server-directory > workspace > services > shared > v25 > modules
+
+  
+4. start app server

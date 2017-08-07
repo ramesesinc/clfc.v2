@@ -149,11 +149,13 @@ class MobileBillingService
 			trackerSvc.start(param);
 		}
 		def prm = [
-			objid 		: "TRKRR" + new UID(),
+			//objid 		: "TRKRR" + new UID(),
 			parentid 	: params.trackerid,
-			routecode 	: params.routecode
+			itemid 		: billing_item.objid
+			//routecode 	: params.routecode
 		];
-		trackerSvc.addRoute(prm);
+		//trackerSvc.addRoute(prm);
+		trackerSvc.addItem(prm);
 
 		def result = [billings: list, item: billing_item];
 		return result;
@@ -304,6 +306,7 @@ class MobileBillingService
 		return list;
 	}
 
+	/*
 	@ProxyMethod
 	public def downloadBillingx(params) {
 		if (!params.route_code) throw new Exception('Please specify route code');
@@ -356,12 +359,7 @@ class MobileBillingService
 				it.txndate = it.dtfiled;
 				itm.payments.add(it);
 			}
-			/*notes = batch_collectionsheet.getNotesByDetailid([parentid: itm.objid]);
-			itm.notes = [];
-			notes.each{
-				it.loanappid = itm.loanappid;
-				itm.notes.add(it);
-			}*/
+			
 			map = field_collection.read(itm);//batch_collectionsheet.findDetailById([objid: itm.objid]);
 			if (map && map.remarks) itm.remarks = map.remarks;
 			else itm.remove("remarks");
@@ -382,6 +380,7 @@ class MobileBillingService
 		//throw new Exception()
 		return [billings: list, trackerid: params.trackerid];
 	}	
+	*/
 
 	@ProxyMethod
 	public void removeTracker( params ) {
@@ -476,77 +475,19 @@ class MobileBillingService
 
 		if (!data.billdate) data.billdate = billing.billdate;
 		def result = [
-			list 		: [],
+			list 		: list,
 			item 		: data,
 			//trackerid 	: params.trackerid,
 			billingid 	: data.parentid
 		];
 
-		def r;
-		list.eachWithIndex{ itm, idx->
-			itm.seqno = (idx+1);
-			result.list.add(itm);
-
-			r = tracker.findRouteByParentidAndCode([parentid: params.trackerid, routecode: itm.route.code]);
-			if (!r) {
-				r = [
-					objid 		: "TRKRR" + new UID(),
-					parentid	: params.trackerid,
-					routecode 	: itm.route.code
-				];
-				trackerSvc.addRoute(r);
-			}
-		}
-
-		//println 'result ' + result;
-		return result;
-		/*def mParams = [
-			trackerid	: params.trackerid,
-			lng 		: params.longitude,
-			lat 		: params.latitude,
-			terminalid 	: params.terminalid,
-			userid 		: params.userid
+		def xprm = [
+			parentid 	: params.trackerid,
+			itemid 		: data.objid
 		];
+		trackerSvc.addItem(xprm);
 
-		params = special_collection.read(params);
-		if (!params) throw new Exception("Special collection request does now exist or has already been deleted.");
-		if (params.state == 'PENDING') throw new Exception("Request is still pending.");
- 
-
-		def session = trackerSvc.open([objid: mParams.trackerid]);
-		if (!session) {
-			mParams.trackerid = trackerSvc.create([lng: mParams.lng, lat: mParams.lat, terminalid: mParams.terminalid, userid: mParams.userid]).objid;
-		}
-
-		def routes = [];
-		def mRoutes = special_collection.getRoutesBySpecialcollectionid([specialcollectionid: params.objid]);
-		def map;
-		mRoutes.each{
-			map = [
-				code 		: it.route.code,
-				description : it.route.description,
-				area 		: it.route.area
-			];
-			routes.add(map);
-
-			map = [
-				objid 		: "TRKRR" + new UID(),
-				parentid	: mParams.trackerid,
-				routecode 	: it.route.code
-			];
-			trackerSvc.addRoute(map);
-		}
-
-		def loans = [];
-		def mLoans = special_collection.getBillingDetailsBySpecialcollectionid([specialcollectionid: params.objid]);
-		mLoans.each{
-			it.sessionid = params.billingid;
-			it.routecode = it.route.code;
-			it.remove("route");
-			loans.add(it);
-		}
-
-		return [routes: routes, list: loans, request: params, trackerid: mParams.trackerid];*/
+		return result;
 	}
 
 	@ProxyMethod

@@ -1,7 +1,7 @@
 <workunit>
     <invokers>
         <invoker folderid='/home/online/report' action='init' caption='Loan Expiries' domain='LOAN' 
-            role='BRANCH_MANAGER,ASST_BRANCH_MANAGER,ACCT_ASSISTAN,CAO_OFFICER' />
+            role='BRANCH_MANAGER,ASST_BRANCH_MANAGER,ACCT_ASSISTANT,CAO_OFFICER' />
         
         <invoker type="formActions" action="close" caption="Close" mnemonic="c" shortcut="ctrl c"
             visibleWhen="#{mode=='init'}" immediate="true" />

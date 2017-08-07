@@ -42,12 +42,16 @@ public class BroadcastLocationService
 		if (handler == null) { 
 			handler = new Handler();
 //			new RunnableImpl().run(); 
-		} 
+		}  
+
+		ApplicationUtil.println("BroadcastLocationService", "service started " + serviceStarted);
+		
 		if (serviceStarted == false) {
 			serviceStarted = true;
 			createTask();
-			Platform.getTaskManager().schedule(actionTask, 1000, 5000);
-		}
+			Platform.getTaskManager().schedule(actionTask, 1000, 1000);
+			ApplicationUtil.println("BroadcastLocationService", "start");
+		} 
 	}
 	
 	public void restart() {
@@ -70,10 +74,12 @@ public class BroadcastLocationService
 					ctx = new DBContext("clfctracker.db");
 					locationTracker.setDBContext(ctx);
 					locationTracker.setCloseable(false);
-					try {
+					try { 
 //						trackerdb.beginTransaction();
-						list = locationTracker.getLocationTrackers(SIZE);					
-//						trackerdb.commit();
+//						list = locationTracker.getLocationTrackers(SIZE);	
+						list = locationTracker.getForUploadLocationTrackers(SIZE);
+						ApplicationUtil.println("BroadcastLocationLService", "list " + list);
+//						trackerdb.commit(); 
 					} catch (Throwable t) {
 						t.printStackTrace();
 					} finally { 
@@ -92,8 +98,9 @@ public class BroadcastLocationService
 					locationTracker.setCloseable(false);
 					try {
 //						trackerdb.beginTransaction();
-						list = locationTracker.getLocationTrackers(SIZE);
-						if (list == null || list.isEmpty()) {
+//						list = locationTracker.getLocationTrackers(1);
+						list = locationTracker.getForUploadLocationTrackers(1);
+						if (list.isEmpty() || list.size() == 0) {
 							hasLocationTrackers = false;
 						}
 //						trackerdb.commit();
@@ -165,7 +172,7 @@ public class BroadcastLocationService
 								break;
 							} catch (Throwable e) {;}
 						}
-						
+						 
 						if (response != null && response.containsKey("response")) {
 							String str = response.get("response").toString();
 							if (str.toLowerCase().equals("success")) {
@@ -181,7 +188,7 @@ public class BroadcastLocationService
 									trackerdb.endTransaction();
 								}
 							}
-						}
+						} 
 						
 //						if (response.containsKey("response") && response.get("response").toString().toLowerCase().equals("success")) {
 //							synchronized (TrackerDB.LOCK) {

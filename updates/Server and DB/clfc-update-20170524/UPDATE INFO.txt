@@ -1,0 +1,3 @@
+1. Fix rules listing
+2. Fix add other charges for capture new and capture renew assessment 
+

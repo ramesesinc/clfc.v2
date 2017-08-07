@@ -1,0 +1,10 @@
+<app>  
+    <modules>		
+		<!-- plugins -->
+		<module file="rameses-clfc-report.jar" version="5.5"/>
+		<module file="rameses-clfc-treasury.jar" version="5.8"/>
+		<module file="rameses-clfc-migration-support.jar" version="1.8"/>
+		<module file="rameses-clfc-patch.jar" version="4.2"/>
+    </modules>
+</app>
+

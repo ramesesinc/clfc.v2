@@ -1,0 +1,12 @@
+<app>  
+    <modules>		
+		<!-- plugins -->
+		<module file="rameses-clfc-customer.jar" version="2.3"/>
+		<module file="rameses-clfc-datamgmt.jar" version="3.2"/>
+		<module file="rameses-clfc-loan.jar" version="7.6"/>
+		<module file="rameses-clfc-report.jar" version="5.5"/>
+		<module file="rameses-clfc-migration-support.jar" version="1.7"/>
+		<module file="rameses-clfc-audit.jar" version="2.2"/>
+    </modules>
+</app>
+

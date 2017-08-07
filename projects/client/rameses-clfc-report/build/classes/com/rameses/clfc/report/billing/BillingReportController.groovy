@@ -27,7 +27,7 @@ class BillingReportController extends ReportModel {
     }
     
     def back() {
-        page = "init";
+        mode = "init";
         return "default";
     }
     

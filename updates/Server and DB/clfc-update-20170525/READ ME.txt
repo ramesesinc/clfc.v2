@@ -1,0 +1,18 @@
+1. shut down app server
+2. update app server service
+
+  2.a. modules folder
+    2.a.1. open service modules
+    2.a.2. copy modules folder and paste to app-server-directory > workspace > services > apps > clfc
+
+3. execute clfc table patch 2017-05-25.sql
+  3.a. open navicat
+  3.b. connect to server
+  3.c. connect to main database e.g. [branchname]db
+  3.d. open new query
+  3.e. open clfc table patch 2017-05-25.sql to notepad
+  3.f. copy all except use sql syntax
+  3.g. paste to navicat new query
+  3.h. execute query
+  
+4. start app server

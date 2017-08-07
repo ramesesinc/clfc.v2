@@ -1,0 +1,18 @@
+import com.rameses.annotations.*;
+import com.rameses.util.*;
+import edu.vt.middleware.password.*;
+
+class SMSService {
+
+    @Service(value="SMSService", connection="sms_sender")
+    def remote;
+
+    @ProxyMethod
+    public def send( data ) { 
+        if(!data.objid) throw new Exception("objid is required");
+        if(!data.phoneno) throw new Exception("phoneno is required");
+        if(!data.message) throw new Exception("message is required");
+        return remote.send(data);
+    }
+    
+}

@@ -11,7 +11,7 @@ from (
 	from loan_ledger l
 	inner join loan_ledger_payment p on l.objid = p.parentid 
 	where p.txndate = $P{date}
-	group by l.objid
+	group by p.objid, l.objid, p.refno, p.txndate, p.amount
 ) q 
 	inner join loan_ledger l on q.objid = l.objid
 	inner join loanapp a on l.appid = a.objid
@@ -44,13 +44,14 @@ WHERE d.parentid = $P{objid}
 	AND d.dtpaid = $P{date}
 ORDER BY d.day, d.dtpaid, d.refno, s.level, d.txndate
 
-[getLedgerDetailByDate]
+[getLedgerDetailByDateAndRefno]
 SELECT d.* 
 FROM loan_ledger_detail d
 INNER JOIN ledger_detail_state_type s ON d.state = s.name
 WHERE d.parentid = $P{objid}
 	AND d.amnestyid IS NULL
 	AND d.dtpaid = $P{date}
+	AND d.refno = $P{refno}
 ORDER BY d.day, d.dtpaid, d.refno, s.level, d.txndate
 
 [getLedgerDetailByStartdateAndEnddate]

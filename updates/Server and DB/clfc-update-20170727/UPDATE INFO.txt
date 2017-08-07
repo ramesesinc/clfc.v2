@@ -1,0 +1,7 @@
+web enhancement(s)
+
+1. pin for payment includes first letter of the last name of the borrower
+2. added line between locations for tracking map
+3. added selecting of route for the tracking list
+4. scheduler for tracker migration from maindb to trackerdb
+5. trackerdb tables

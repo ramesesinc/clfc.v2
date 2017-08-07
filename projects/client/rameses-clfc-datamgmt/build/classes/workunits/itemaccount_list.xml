@@ -11,11 +11,33 @@
         
         class ItemAccountListController extends ListController {
             
+            @Service("LoanItemAccountService")
+            def svc;
+        
             String serviceName = "LoanItemAccountService";
             String entityName = "loan:itemaccount";
         
             Map createPermission = [domain:'DATAMGMT', role:'DATAMGMT_AUTHOR']; 
             Map readPermission = [domain:'DATAMGMT', role:'DATAMGMT_AUTHOR'];
+        
+            void beforeGetColumns(Map params) {
+                params.state = selectedOption?.state;
+            }
+        
+            def selectedOption, borrower, xlist;
+            def optionsModel = [
+                getItems: {
+                    return svc.getStates();
+                }, 
+                onselect: { o->
+                    query.state = o.state;
+                    reloadAll();
+                }
+            ] as ListPaneModel;
         }
     </code>
+    
+    <pages>
+        <page template="com.rameses.clfc.migrationsupport.ui.ListPage" />
+    </pages>
 </workunit>

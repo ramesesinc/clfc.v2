@@ -16,12 +16,37 @@ class PostingHeaderController extends CRUDController
     Map createPermission = [role: 'ADMIN_SUPPORT', domain: 'ADMIN'];
     Map editPermission = [role: 'ADMIN_SUPPORT', domain: 'ADMIN'];
     
+    def typeList = ["DEFAULT"];
+    def dataTypeList = ["decimal", "date"];
+    def preventity, varlist = [];
+    
     Map createEntity() {
         return [groupwith: []];
     }
     
     boolean allowApprove = false;
     boolean allowDelete = false;
+    
+    void afterCreate( data ) {
+        varlist = service.getDefaultVarList();
+    }
+    
+    void afterOpen( data ) {
+        varlist = service.getDefaultVarList();
+    }
+        
+    void afterEdit( data ) {
+        preventity = [:];
+        if (data) {
+            preventity.putAll(data);
+        }
+    }
+    
+    void afterCancel() {
+        if (preventity) {
+            entity = preventity;
+        }
+    }
     
     def selectedItem;
     def listHandler = [
@@ -51,6 +76,23 @@ class PostingHeaderController extends CRUDController
         if (entity.groupwith) entity.groupwith.remove(selectedItem);
         
         listHandler?.reload();
+    }
+    
+    def getExprOpener() {
+        def handler = { expr->
+            entity.postingexpr = expr;
+        }
+        
+        entity.expr = entity.postingexpr;
+        def params = [
+            entity  : entity,
+            mode    : mode,
+            handler : handler,
+            vars    : varlist
+        ]
+        def op = Inv.lookupOpener("posting:header:expression", params);
+        if (!op) return null;
+        return op;
     }
 }
 

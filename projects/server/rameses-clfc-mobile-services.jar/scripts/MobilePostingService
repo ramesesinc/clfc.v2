@@ -4,12 +4,12 @@ import com.rameses.util.*;
 import com.rameses.services.extended.*;
 import java.rmi.server.UID;
 
-class MobilePostingService
-{
+class MobilePostingService {
+
 	@Env
 	def env;
 
-	@ActiveDB('mobile_tracker')
+	@ActiveDB(em="tracker", value="mobile_tracker")
 	def mobile_tracker;
 
 	@ActiveDB("fieldcollection")
@@ -42,6 +42,15 @@ class MobilePostingService
 	@ActiveDB("loan_ledger")
 	def ledger;
 
+	@ActiveDB("borrower")
+	def borrower;
+
+	@ActiveDB("loanapp")
+	def loanapp;
+
+	@ActiveDB("loan_route")
+	def loan_route;
+
 	@ActiveDB('entity')
 	def entity;
 
@@ -56,6 +65,9 @@ class MobilePostingService
 
 	@Service("LoanSpecialCollectionRequestService")
 	def requestSvc;
+
+	@Service("BranchService")
+	def branchSvc;
 
 	@Service("InboxService")
 	def inboxSvc;
@@ -84,6 +96,12 @@ class MobilePostingService
 			l.overpaymentamount = params.payment.overpaymentamount;
 			ledger.update(l);
 		}
+
+		def branch = branchSvc.open([:]);
+
+		def app = loanapp.read([objid: l.appid]);
+		def pb = borrower.read([objid: app.borrower.objid]);
+		def route = loan_route.read([code: app.route.code]);
 
 		def fc = fieldcollection.read([objid: params.sessionid]);
 		if (!fc) throw new Exception("Field collection does not exist or has already been deleted.");
@@ -128,6 +146,7 @@ class MobilePostingService
 			def xitem = mobile_tracker.read([objid: params.trackerid]);
 			if (xitem) {
 				def tracker = [
+					objid 		: item.objid,
 					trackerid	: params.trackerid,
 					txntype		: (params.type? params.type : 'NORMAL'),
 					txndate		: params.payment.txndate,
@@ -136,7 +155,12 @@ class MobilePostingService
 					lng 		: params.longitude,
 					lat 		: params.latitude,
 					remarks 	: 'RECEIVED PAYMENT FROM '+params.payment.paidby,
-					state 		: 1
+					state 		: 1,
+					borrower 	: pb, 
+					payment 	: item,
+					branch 		: branch,
+					route 		: route,
+					loanapp 	: app
 				];
 				trackerSvc.log(tracker);
 			}
@@ -218,6 +242,12 @@ class MobilePostingService
 		def loan = fieldcollection.read([objid: params.collectionsheet.detailid], "fc-loan");
 		if (!loan) throw new Exception("Field collection loan does not exist or has already been deleted.");
 
+		def branch = branchSvc.open([:]);
+
+		def app = loanapp.read([objid: loan.loanapp.objid]);
+		def pb = borrower.read([objid: app.borrower.objid]);
+		def route = loan_route.read([code: app.route.code]);
+
 		loan.remarks = params.remarks;
 		fieldcollection.update(loan, "fc-loan");
 
@@ -246,6 +276,7 @@ class MobilePostingService
 		def xitem = mobile_tracker.read([objid: params.trackerid]);
 		if (xitem) {
 			def t = [
+				objid 		: detail.objid,
 				trackerid 	: params.trackerid,
 				txntype 	: (params.type? params.type : 'NORMAL'),
 				txndate 	: params.txndate,
@@ -254,7 +285,12 @@ class MobilePostingService
 				lng 		: params.longitude,
 				lat  		: params.latitude,
 				remarks 	: params.remarks,
-				state 		: 1
+				state 		: 1,
+				borrower 	: pb,
+				branch 		: branch,
+				route 		: route,
+				loanapp 	: app,
+				info 		: [remarks: params.remarks],
 			];
 			//println 'log ' + t;
 			trackerSvc.log(t);
@@ -408,6 +444,18 @@ class MobilePostingService
 	}
 
 	@ProxyMethod
+	public def checkBillingCancelledEncrypt( params ) {
+		def prm = decode(params);
+		def list = prm.list;
+		list.each{ o->
+			o.iscancelled = false;
+			println 'o-> ' + o;
+		}
+
+		return [list: list];
+	}
+
+	@ProxyMethod
 	public def voidPaymentEncrypt( params ) {
 		return voidPayment(decode(params));
 	}
@@ -510,6 +558,19 @@ class MobilePostingService
 	}
 
 	@ProxyMethod
+	public def checkIfCaptureIsRemitted( params ) {
+		if (!params.captureid) throw new RuntimeException("Please specify captureid.");
+
+		def flag = true;
+		def data = capture_payment.read([objid: params.captureid], "cp-pending");
+		if (data) {
+			flag = false;
+		}
+
+		return flag;
+	}
+
+	@ProxyMethod
 	public def postCapturePayment( params ) {
 		if (!params.captureid) throw new Exception("Please specify captureid.");
 		if (!params.payment) throw new Exception("Please specify payment.");
@@ -551,7 +612,7 @@ class MobilePostingService
 				capture_payment.update(data, "detail-check");
 			}
 
-
+			/*
 			def xitem = mobile_tracker.read([objid: params.trackerid]);
 			if (xitem) {
 				def tracker = [
@@ -562,10 +623,16 @@ class MobilePostingService
 					lng 		: params.lng,
 					lat 		: params.lat,
 					remarks 	: 'RECEIVED PAYMENT FROM '+params.payment.paidby,
-					state 		: 1
+					state 		: 1,
+					borrower 	:
+					payment 	:
+					branch 		: 
+					route 		:
+					loanapp 	:
 				];
 				trackerSvc.log(tracker);
 			}
+			*/
 		}
 
 		return [ response: "success" ];
@@ -589,20 +656,25 @@ class MobilePostingService
 			list?.each{ o->
 				xitem = mobile_tracker.read([objid: o.trackerid]);
 				if (xitem) {
+					item = [
+						objid 		: o.objid,
+						trackerid	: o.trackerid,
+						txndate 	: o.txndate,
+						txntype		: 'NORMAL',
+						refid		: o.objid,
+						reftype		: 'TRACK',
+						lng 		: o.lng,
+						lat 		: o.lat,
+						state 		: 1
+					];
+					trackerSvc.log(item);
+
+					/*
 					item = mobile_tracker.findDetailByParentidAndRefid([parentid: o.trackerid, refid: o.objid]);
 					if (!item) {
-						item = [
-							trackerid	: o.trackerid,
-							txndate 	: o.txndate,
-							txntype		: 'NORMAL',
-							refid		: o.objid,
-							reftype		: 'TRACK',
-							lng 		: o.lng,
-							lat 		: o.lat,
-							state 		: 1
-						];
-						trackerSvc.log(item);
-					}	
+						
+					}
+					*/	
 				}
 			}
 			//list.each{ println it }

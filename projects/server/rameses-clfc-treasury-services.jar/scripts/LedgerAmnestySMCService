@@ -85,7 +85,7 @@ class LedgerAmnestySMCService extends ActiveCrudListService
 		cols << [name: 'ledger.dtreleased', caption: 'Release Date', type: 'date', outputFormat: 'MMM-dd-yyyy'];
 		cols << [name: 'ledger.dtmatured', caption: 'Maturity Date', type: 'date', outputFormat: 'MMM-dd-yyyy'];
 		*/
-		def regex = '(DECIDED|FOR_VERIFICATION|VERIFIED)';
+		def regex = 'DECIDED|FOR_VERIFICATION|VERIFIED';
 		if (params.state && params.state.toUpperCase().matches(regex)) {
 			cols << [name: 'dtstarted', caption: 'Effectivity Date', type: 'date', outputFormat: 'MMM-dd-yyyy'];
 			cols << [name: 'dtended', caption: 'Maturity Date', type: 'date', outputFormat: 'MMM-dd-yyyy'];
@@ -281,11 +281,12 @@ class LedgerAmnestySMCService extends ActiveCrudListService
 		DEFAULT_VAR_LIST?.each{ o->
 			data = smc_condition.read([code: o]);
 			if (data) {
-				item = [:];
-				item.caption = data.code;
-				item.title = data.code;
-				item.signature = data.code;
-				item.handler = data.handler;
+				item = [
+					caption 	: data.code,
+					title		: data.code,
+					signature	: data.code,
+					handler 	: data.handler
+				];
 				if (data.datatype) {
 					item.description = '(' + data.datatype + ')';
 				} else if (data.handler == 'expression') {
@@ -546,6 +547,7 @@ class LedgerAmnestySMCService extends ActiveCrudListService
 		def addeddocs, removeddocs, updateddocs;
 		def addedfees, removedfees, updatedfees;
 		def fi = params.filinginfo;
+		fi.title = "FILINGINFO";
 		if (fi) {
 			data.filinginfo = fi;
 
@@ -563,6 +565,7 @@ class LedgerAmnestySMCService extends ActiveCrudListService
 		}
 
 		def ci = params.courtinfo;
+		ci.title = "COURTINFO";
 		if (ci) {
 			data.courtinfo = ci;
 

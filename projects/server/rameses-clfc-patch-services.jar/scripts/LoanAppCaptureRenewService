@@ -196,12 +196,42 @@ class LoanAppCaptureRenewService
 	@ProxyMethod
 	public def assess( params ) {
 		def data = em.read(params);
+		if (!data) throw new RuntimeException("Loan application record does not exist or has already been deleted.");
 
-		def info = appAssessmentSvc.getAssessmentInfo(data);
+
+		def oc = data.assessmentinfo?.charges?.findAll{ it.allowDelete==true };
+		if (!oc) oc = [];
+
+		def info = appAssessmentSvc.getAssessmentInfo(data, [:]);
+		if (!info.charges) info.charges = [];
+		info.charges.addAll(oc);
 		data.assessmentinfo  = info;
 		em.update(data);
 
 		return info
+	}
+
+	@ProxyMethod
+	public def saveCharges( params ) {
+		def data = em.read(params);
+		if (!data) throw new RuntimeException("Loan application record does not exist or has already been deleted.");
+
+		if (!data.assessmentinfo) data.assessmentinfo = [charges: []];
+		data.assessmentinfo.charges << params.charge;
+		em.update(data);
+
+		return data.assessmentinfo.charges;
+	}
+
+	@ProxyMethod
+	public def removeCharges( params ) {
+		def data = em.read(params);
+		if (!data) throw new RuntimeException("Loan application record does not exist or has already been deleted.");
+
+		data.assessmentinfo.charges = params.charges;
+		em.update(data);
+
+		return data.assessmentinfo.charges;
 	}
 
 	@ProxyMethod
@@ -218,7 +248,7 @@ class LoanAppCaptureRenewService
 			message 	: 'Assessment for Loan Application (' + data.appno + ')',
 			senderid 	: env.USERID,
 			sendername 	: env.NAME,
-			recipientid : 'CAO_OFFICER'
+			recipientid : 'ASSESSOR'
 		];
 		inboxSvc.addMessage( msginfo );
 
@@ -254,11 +284,13 @@ class LoanAppCaptureRenewService
 	@ProxyMethod
 	public def submitForVerification( params ) {
 		def data  = changeState(params, 'FOR_VERIFICATION');
-
+		
 		def sysvar = var.read([name: 'validate_application_charges']);
 		if (sysvar?.value == "true") {
-			if (!data.assessmentinfo || !data.assessmentinfo.charges) {
-				throw new RuntimeException("Please assess document before proceeding.");
+			if (data.loantype != 'BRANCH') {
+				if (!data.assessmentinfo || !data.assessmentinfo.charges) {
+					throw new RuntimeException("Please assess document before proceeding.");
+				}
 			}
 		}
 
@@ -360,10 +392,12 @@ class LoanAppCaptureRenewService
 		loanapp.create(app, 'loanapp_capture_open'); 
 
 		def assessment = data.assessmentinfo;
+		if (!assessment) assessment = [:];
+
 		def extinfo = [
 			objid 			: data.objid,
-			netamount 		: assessment.netamount,
-			totalcharges 	: assessment.totalcharges,
+			netamount 		: assessment?.netamount? assessment.netamount : 0,
+			totalcharges 	: assessment?.totalcharges? assessment.totalcharges : 0,
 			dtmatured 		: data.dtmatured,
 			assessmentinfo 	: assessment
 		];
