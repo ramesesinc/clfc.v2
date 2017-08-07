@@ -29,7 +29,10 @@
 	<field name="name" class="java.lang.String"/>
 	<field name="list" class="java.lang.Object"/>
 	<field name="noofaccounts" class="java.lang.Integer"/>
+	<field name="totalprincipalbalance" class="java.math.BigDecimal"/>
 
+	<variable name="totalprincipalbalance" class="java.lang.Double" resetType="Report" calculation="Sum">
+	</variable>
 		<background>
 			<band height="0"  isSplitAllowed="true" >
 			</band>
@@ -47,7 +50,7 @@
 			</band>
 		</columnHeader>
 		<detail>
-			<band height="56"  isSplitAllowed="true" >
+			<band height="97"  isSplitAllowed="true" >
 				<staticText>
 					<reportElement
 						x="0"
@@ -128,6 +131,40 @@
 						<font size="10" isUnderline="false"/>
 					</textElement>
 				<textFieldExpression   class="java.lang.Integer"><![CDATA[$F{noofaccounts}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="0"
+						y="60"
+						width="120"
+						height="16"
+						key="staticText-3"
+						positionType="Float"/>
+					<box>					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.0"/>
+					<bottomPen lineWidth="0.0"/>
+					<rightPen lineWidth="0.0"/>
+</box>
+					<textElement verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Total Principal Balance:]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="120"
+						y="60"
+						width="140"
+						height="16"
+						key="textField-3"
+						positionType="Float"
+						isPrintRepeatedValues="false"/>
+					<box>					<bottomPen lineWidth="0.5"/>
+</box>
+					<textElement verticalAlignment="Middle">
+						<font size="10" isUnderline="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Double"><![CDATA[$F{totalprincipalbalance}]]></textFieldExpression>
 				</textField>
 			</band>
 		</detail>

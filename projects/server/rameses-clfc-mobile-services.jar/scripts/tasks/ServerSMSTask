@@ -33,7 +33,7 @@ class ServerSMSTask
 	private int MAX_WAIT = 60000;
 
 	//@Schedule(interval=1, timeUnit='SECONDS')
-	@Schedule(interval=1, timeUnit='SECONDS')
+	//@Schedule(interval=1, timeUnit='SECONDS')
 	public def sendSMS( task ) {
 		def xlist = em.getList([_limit: 1]);
 		if (!xlist) return;

@@ -132,11 +132,11 @@
 						width="750"
 						height="22"
 						key="subreport-1"/>
-					<subreportParameter  name="DETAIL">
-						<subreportParameterExpression><![CDATA[$P{DETAIL}]]></subreportParameterExpression>
-					</subreportParameter>
 					<subreportParameter  name="CATEGORY_DETAIL">
 						<subreportParameterExpression><![CDATA[$P{CATEGORY_DETAIL}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter  name="DETAIL">
+						<subreportParameterExpression><![CDATA[$P{DETAIL}]]></subreportParameterExpression>
 					</subreportParameter>
 					<dataSourceExpression><![CDATA[$F{items}]]></dataSourceExpression>
 					<subreportExpression  class="net.sf.jasperreports.engine.JasperReport"><![CDATA[$P{ROUTE_DETAIL}]]></subreportExpression>
@@ -161,7 +161,7 @@
 			</band>
 		</columnFooter>
 		<pageFooter>
-			<band height="45"  isSplitAllowed="true" >
+			<band height="157"  isSplitAllowed="true" >
 				<staticText>
 					<reportElement
 						x="10"
@@ -173,7 +173,7 @@
 					<textElement verticalAlignment="Middle">
 						<font/>
 					</textElement>
-				<text><![CDATA[Run Date]]></text>
+				<text><![CDATA[Run Shit]]></text>
 				</staticText>
 				<staticText>
 					<reportElement

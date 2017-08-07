@@ -100,13 +100,24 @@ class LoanMasterListReportService
 						*/
 					}
 
+					def totalPrincipalBalance = xlist?.loanapp.balance.sum();
+
+					println 'tp ' + totalPrincipalBalance;
+
 					def xl = [];
 					xl.addAll(xlist);
 					xl.unique{ it.borrower.objid }
 
 					def noofaccounts = xl?.size();
 					if (!noofaccounts) noofaccounts = 0;
-					r.list.add([objid: ps.objid, name: ps.name, list: xlist, noofaccounts: noofaccounts]);
+					r.list.add([objid: ps.objid, name: ps.name, list: xlist, noofaccounts: noofaccounts, totalprincipalbalance: totalPrincipalBalance]);
+
+				
+
+
+
+
+
 				}
 			}
 			list.add(r);
@@ -158,4 +169,5 @@ class LoanMasterListReportService
 			return java.sql.Date.valueOf(date);
 		}
 	}
+
 }
