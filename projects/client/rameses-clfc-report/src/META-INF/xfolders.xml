@@ -3,8 +3,11 @@
     </folder>
     <folder id="home">
         <folder id="online" caption="Online" >
-            <folder id='loan' caption='Loan' />
-            <folder id='support' caption='Support' />
+            <folder id='report' caption='Report'>
+                <folder id="cao" caption="CAO Report" />
+                <folder id="eca" caption="ECA Report" />
+                <folder id="aa" caption="AA Report" />
+            </folder>
         </folder>
     </folder>
 </folders>
