@@ -1,6 +1,6 @@
 <workunit>
     <invokers>
-        <invoker folderid="/home/online/report" caption="Branch Loan Release" action="init" 
+        <invoker folderid="/home/online/report/cao" caption="Loan Release" action="init" 
             role="ACCT_ASSISTANT,CASHIER,BRANCH_MANAGER" />
         
         <invoker type="formActions" action="close" caption="Close" mnemonic="c" shortcut="ctrl c"

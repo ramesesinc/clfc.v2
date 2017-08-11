@@ -37,6 +37,8 @@
 	<field name="totalbalance" class="java.math.BigDecimal"/>
 	<field name="totalamount" class="java.math.BigDecimal"/>
 	<field name="noofaccounts" class="java.lang.Integer"/>
+	<field name="totalcharges" class="java.math.BigDecimal"/>
+	<field name="totalnetrelease" class="java.math.BigDecimal"/>
 
 	<variable name="PAGE_INFO" class="java.lang.String" resetType="Report" calculation="Nothing">
 		<variableExpression><![CDATA["PAGE " + $V{PAGE_NUMBER} + " OF " + $V{PAGE_COUNT}]]></variableExpression>
@@ -110,7 +112,7 @@
 			</band>
 		</columnHeader>
 		<detail>
-			<band height="116"  isSplitAllowed="true" >
+			<band height="137"  isSplitAllowed="true" >
 				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="10"
@@ -208,6 +210,65 @@
 						<font size="12"/>
 					</textElement>
 				<textFieldExpression   class="java.lang.Integer"><![CDATA[$F{noofaccounts}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="346"
+						y="96"
+						width="150"
+						height="17"
+						key="staticText-10"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Total Charges:]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="496"
+						y="96"
+						width="90"
+						height="17"
+						key="textField-14"
+						positionType="Float"/>
+					<box>					<bottomPen lineWidth="1.0" lineStyle="Double"/>
+</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="12"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{totalcharges}
+]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="346"
+						y="113"
+						width="150"
+						height="17"
+						key="staticText-11"
+						positionType="Float"/>
+					<box></box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Total Net Release:]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="496"
+						y="113"
+						width="90"
+						height="17"
+						key="textField-15"
+						positionType="Float"/>
+					<box>					<bottomPen lineWidth="1.0" lineStyle="Double"/>
+</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="12"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{totalnetrelease}]]></textFieldExpression>
 				</textField>
 			</band>
 		</detail>

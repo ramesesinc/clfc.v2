@@ -3,7 +3,6 @@ import com.rameses.annotations.*;
 import com.rameses.util.*;
 import java.rmi.server.UID;
 import java.text.SimpleDateFormat;
-
 class BranchLoanReleaseReportService
 {
 	@Env
@@ -159,7 +158,11 @@ class BranchLoanReleaseReportService
 		def noofaccounts = list?.size();
 		if (!noofaccounts) noofaccounts = 0;
 
-		def list2 = [];
+		def totalcharges= list?.totalcharges?.sum();
+		def totalnetamount= list?.netamount?.sum();
+
+
+		def list2 = []; 
 		def routelist = [];
 		routelist.addAll(list.findAll{ it.route.code != null }.collect{ it.route });
 		if (routelist) {
@@ -176,12 +179,14 @@ class BranchLoanReleaseReportService
 
 		def branch = branchSvc.open([:]);
 		def data = [
-			date_period 	: sd + " TO " + ed,//new SimpleDateFormat("yyyy-MMM-dd").format(java.sql.Date.valueOf(params.txndate+"")),
-			dtprinted		: new SimpleDateFormat("MMM-dd-yyyy hh:mm:ss a").format(currdate),
-			printedby 		: env.NAME,
-			items			: list2,
-			totalamount 	: totalamount,
-			noofaccounts	: noofaccounts
+			date_period 		: sd + " TO " + ed,//new SimpleDateFormat("yyyy-MMM-dd").format(java.sql.Date.valueOf(params.txndate+"")),
+			dtprinted			: new SimpleDateFormat("MMM-dd-yyyy hh:mm:ss a").format(currdate),
+			printedby 			: env.NAME,
+			items				: list2,
+			totalamount 		: totalamount,	
+			noofaccounts		: noofaccounts,
+			totalcharges    	: totalcharges,
+			totalnetrelease	    : totalnetamount
 		];
 		branch.each{ k, v->
 			data["branch_"+k] = v;

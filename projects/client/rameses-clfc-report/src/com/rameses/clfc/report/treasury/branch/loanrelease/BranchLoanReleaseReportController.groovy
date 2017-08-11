@@ -14,7 +14,7 @@ class BranchLoanReleaseReportController extends ReportModel
     @Service("DateService")
     def dateSvc;
     
-    String title = "Branch Loan Release Report";
+    String title = "Loan Release Report";
 
     def mode = 'init'
     def startdate, enddate, criteria;

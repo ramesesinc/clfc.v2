@@ -114,6 +114,7 @@ SELECT a.borrower_name AS borrower, a.appno, c.dtreleased, a.loanamount, a.appty
 FROM loanapp a
 INNER JOIN loan_route r ON a.route_code = r.code
 INNER JOIN loanapp_capture c ON a.objid = c.objid
+LEFT JOIN loanapp_extinfo le ON a.objid = le.objid
 WHERE c.dtreleased = CURDATE()
 ORDER BY r.description, a.borrower_name
 
@@ -125,22 +126,24 @@ SELECT q.*,
 		q.bname
 	END AS borrower
 FROM (
-	SELECT a.borrower_name AS bname, a.appno, a.objid AS appid, c.dtreleased, a.loanamount, a.apptype,
+	SELECT a.borrower_name AS bname, a.appno, a.objid AS appid, c.dtreleased, a.loanamount, a.apptype, /*galz*/le.totalcharges, le.netamount,/*galz*/
 		r.code AS route_code, r.description AS route_description, c.dtreleased AS txndate,
 		(SELECT objid FROM loanapp_borrower WHERE parentid = a.objid AND `type` = 'JOINT' LIMIT 1) AS jointid
 	FROM loanapp a
 	INNER JOIN loan_route r ON a.route_code = r.code
 	INNER JOIN loanapp_capture c ON a.objid = c.objid
+	/*galz*/LEFT JOIN loanapp_extinfo le ON a.objid = le.objid
 	WHERE c.dtreleased BETWEEN $P{startdate} AND $P{enddate}
 	ORDER BY r.description, a.borrower_name
-) q LEFT JOIN loanapp_borrower lb ON q.jointid = lb.objid
+) q LEFT JOIN loanapp_borrower lb ON q.jointid = lb.objid 
 
 [xgetLoanReleaseByStartDateAndEndDate]
-SELECT a.borrower_name AS borrower, a.appno, c.dtreleased, a.loanamount, a.apptype,
+SELECT a.borrower_name AS borrower, a.appno, c.dtreleased, a.loanamount, a.apptype, 
 	r.code AS route_code, r.description AS route_description, c.dtreleased AS txndate
 FROM loanapp a
 INNER JOIN loan_route r ON a.route_code = r.code
 INNER JOIN loanapp_capture c ON a.objid = c.objid
+LEFT JOIN loanapp_extinfo le ON a.objid = le.objid
 WHERE c.dtreleased BETWEEN $P{startdate} AND $P{enddate}
 ORDER BY r.description, a.borrower_name
 
