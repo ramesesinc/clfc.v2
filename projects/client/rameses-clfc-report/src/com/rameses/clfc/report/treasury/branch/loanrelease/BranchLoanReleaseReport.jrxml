@@ -238,8 +238,7 @@
 					<textElement textAlignment="Right" verticalAlignment="Middle">
 						<font size="12"/>
 					</textElement>
-				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{totalcharges}
-]]></textFieldExpression>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$F{totalcharges}]]></textFieldExpression>
 				</textField>
 				<staticText>
 					<reportElement

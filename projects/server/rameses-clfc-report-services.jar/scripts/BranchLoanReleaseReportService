@@ -153,13 +153,17 @@ class BranchLoanReleaseReportService
 		}
 
 		def totalamount = list?.loanamount?.sum();
-		if (!totalamount) totalamount = 0;
+		if (!totalamount) totalamount = 0.0;
 
 		def noofaccounts = list?.size();
-		if (!noofaccounts) noofaccounts = 0;
+		if (!noofaccounts) noofaccounts = 0.0;
 
-		def totalcharges= list?.totalcharges?.sum();
-		def totalnetamount= list?.netamount?.sum();
+		def totalcharges= list?.sum{( it.totalcharges ? it.totalcharges : 0.0 )};
+		if (!totalcharges) totalcharges = 0.0;
+		def totalnetamount= list?.sum{(it.netamount ? it.netamount : 0.0)};
+		if(!totalnetamount) totalnetamount= 0.0;
+
+
 
 
 		def list2 = []; 
@@ -187,6 +191,7 @@ class BranchLoanReleaseReportService
 			noofaccounts		: noofaccounts,
 			totalcharges    	: totalcharges,
 			totalnetrelease	    : totalnetamount
+			
 		];
 		branch.each{ k, v->
 			data["branch_"+k] = v;
