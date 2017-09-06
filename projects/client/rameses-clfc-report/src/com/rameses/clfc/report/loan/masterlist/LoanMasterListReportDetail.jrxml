@@ -24,6 +24,8 @@
 	<import value="net.sf.jasperreports.engine.*" />
 	<import value="net.sf.jasperreports.engine.data.*" />
 
+	<parameter name="noofaccounts" isForPrompting="false" class="java.lang.Integer"/>
+	<parameter name="totalprincipalbalance" isForPrompting="false" class="java.math.BigDecimal"/>
 
 	<field name="borrower.name" class="java.lang.String"/>
 	<field name="loanapp.appno" class="java.lang.String"/>
@@ -40,6 +42,8 @@
 	<field name="loanapp.address" class="java.lang.String"/>
 	<field name="lastpayment.txndate" class="java.lang.String"/>
 	<field name="lastpayment.amount" class="java.math.BigDecimal"/>
+	<field name="noofaccounts" class="java.lang.Integer"/>
+	<field name="totalprincipalbalance" class="java.math.BigDecimal"/>
 
 	<variable name="amnesty_dtstarted_annotation" class="java.lang.String" resetType="Report" calculation="Nothing">
 		<variableExpression><![CDATA[" SD: "  + ($F{amnesty.dtstarted} != null? new SimpleDateFormat("MMM-dd-yyyy").format(java.sql.Date.valueOf($F{amnesty.dtstarted})) : "No SD")]]></variableExpression>
@@ -78,7 +82,7 @@
 			</band>
 		</pageHeader>
 		<columnHeader>
-			<band height="36"  isSplitAllowed="true" >
+			<band height="37"  isSplitAllowed="true" >
 				<staticText>
 					<reportElement
 						x="0"
@@ -219,19 +223,16 @@
 			</band>
 		</columnHeader>
 		<detail>
-			<band height="46"  isSplitAllowed="true" >
+			<band height="45"  isSplitAllowed="true" >
 				<textField isStretchWithOverflow="true" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="0"
-						y="0"
+						y="-1"
 						width="200"
 						height="16"
 						key="textField-1"
 						isPrintWhenDetailOverflows="true"/>
-					<box leftPadding="2" rightPadding="2" topPadding="2">					<topPen lineWidth="0.0"/>
-					<bottomPen lineWidth="0.0"/>
-					<rightPen lineWidth="0.0"/>
-</box>
+					<box leftPadding="2" rightPadding="2" topPadding="2"></box>
 					<textElement verticalAlignment="Middle">
 						<font size="8"/>
 					</textElement>
@@ -240,15 +241,12 @@
 				<textField isStretchWithOverflow="true" pattern="#,##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="420"
-						y="0"
+						y="-1"
 						width="120"
 						height="16"
 						key="textField-2"
 						isPrintWhenDetailOverflows="true"/>
-					<box leftPadding="2" rightPadding="2" topPadding="2">					<topPen lineWidth="0.0"/>
-					<bottomPen lineWidth="0.0"/>
-					<rightPen lineWidth="0.0"/>
-</box>
+					<box leftPadding="2" rightPadding="2" topPadding="2"></box>
 					<textElement textAlignment="Right" verticalAlignment="Middle">
 						<font size="8"/>
 					</textElement>
@@ -257,15 +255,12 @@
 				<textField isStretchWithOverflow="true" pattern="#,##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="300"
-						y="0"
+						y="-1"
 						width="120"
 						height="16"
 						key="textField-3"
 						isPrintWhenDetailOverflows="true"/>
-					<box leftPadding="2" rightPadding="2" topPadding="2">					<topPen lineWidth="0.0"/>
-					<bottomPen lineWidth="0.0"/>
-					<rightPen lineWidth="0.0"/>
-</box>
+					<box leftPadding="2" rightPadding="2" topPadding="2"></box>
 					<textElement textAlignment="Right" verticalAlignment="Middle">
 						<font size="8"/>
 					</textElement>
@@ -274,16 +269,13 @@
 				<textField isStretchWithOverflow="true" pattern="MMM-dd-yyyy" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="540"
-						y="0"
+						y="-1"
 						width="105"
 						height="16"
 						key="textField-4"
 						isPrintWhenDetailOverflows="true"/>
-					<box leftPadding="2" rightPadding="2" topPadding="2">					<topPen lineWidth="0.0"/>
-					<bottomPen lineWidth="0.0"/>
-					<rightPen lineWidth="0.0"/>
-</box>
-					<textElement verticalAlignment="Middle">
+					<box leftPadding="2" rightPadding="2" topPadding="2"></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
 						<font size="8"/>
 					</textElement>
 				<textFieldExpression   class="java.util.Date"><![CDATA[$V{dtreleased}]]></textFieldExpression>
@@ -291,16 +283,13 @@
 				<textField isStretchWithOverflow="true" pattern="MMM-dd-yyyy" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="645"
-						y="0"
+						y="-1"
 						width="105"
 						height="16"
 						key="textField-5"
 						isPrintWhenDetailOverflows="true"/>
-					<box leftPadding="2" rightPadding="2" topPadding="2">					<topPen lineWidth="0.0"/>
-					<bottomPen lineWidth="0.0"/>
-					<rightPen lineWidth="0.0"/>
-</box>
-					<textElement verticalAlignment="Middle">
+					<box leftPadding="2" rightPadding="2" topPadding="2"></box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
 						<font size="8"/>
 					</textElement>
 				<textFieldExpression   class="java.util.Date"><![CDATA[$V{dtmatured}]]></textFieldExpression>
@@ -308,15 +297,12 @@
 				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="200"
-						y="0"
+						y="-1"
 						width="100"
 						height="16"
 						key="textField-6"
 						isPrintWhenDetailOverflows="true"/>
-					<box leftPadding="2" rightPadding="2" topPadding="2">					<topPen lineWidth="0.0"/>
-					<bottomPen lineWidth="0.0"/>
-					<rightPen lineWidth="0.0"/>
-</box>
+					<box leftPadding="2" rightPadding="2" topPadding="2"></box>
 					<textElement textAlignment="Left" verticalAlignment="Middle">
 						<font size="8"/>
 					</textElement>
@@ -325,16 +311,13 @@
 				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="175"
-						y="19"
+						y="15"
 						width="575"
 						height="16"
 						key="textField-7"
 						positionType="Float"
 						isPrintWhenDetailOverflows="true"/>
-					<box leftPadding="2" rightPadding="2">					<topPen lineWidth="0.0"/>
-					<bottomPen lineWidth="0.0"/>
-					<rightPen lineWidth="0.0"/>
-</box>
+					<box leftPadding="2" rightPadding="2"></box>
 					<textElement textAlignment="Left" verticalAlignment="Top">
 						<font size="8"/>
 					</textElement>
@@ -343,7 +326,7 @@
 				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="0"
-						y="17"
+						y="16"
 						width="750"
 						height="0"
 						key="textField-8"
@@ -360,17 +343,14 @@
 				</textField>
 				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="0"
-						y="19"
-						width="175"
+						x="1"
+						y="15"
+						width="174"
 						height="16"
 						key="textField-9"
 						positionType="Float"
 						isPrintWhenDetailOverflows="true"/>
-					<box leftPadding="15" rightPadding="2">					<topPen lineWidth="0.0"/>
-					<bottomPen lineWidth="0.0"/>
-					<rightPen lineWidth="0.0"/>
-</box>
+					<box leftPadding="15" rightPadding="2"></box>
 					<textElement textAlignment="Left" verticalAlignment="Top">
 						<font size="8"/>
 					</textElement>
@@ -379,7 +359,7 @@
 				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="0"
-						y="17"
+						y="16"
 						width="750"
 						height="1"
 						key="textField-11"
@@ -397,7 +377,7 @@
 				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="0"
-						y="0"
+						y="-1"
 						width="2"
 						height="46"
 						key="textField-12"
@@ -417,7 +397,7 @@
 				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="748"
-						y="0"
+						y="-1"
 						width="2"
 						height="46"
 						key="textField-13"
@@ -437,7 +417,7 @@
 				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="0"
-						y="44"
+						y="43"
 						width="750"
 						height="2"
 						key="textField-15"
@@ -462,6 +442,76 @@
 			<band height="0"  isSplitAllowed="true" >
 			</band>
 		</pageFooter>
+		<lastPageFooter>
+			<band height="50"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="10"
+						y="7"
+						width="100"
+						height="16"
+						key="staticText-15"
+						positionType="Float"/>
+					<box>					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.0"/>
+					<bottomPen lineWidth="0.0"/>
+					<rightPen lineWidth="0.0"/>
+</box>
+					<textElement verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[No. of Accounts:]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="110"
+						y="7"
+						width="70"
+						height="16"
+						key="textField-16"
+						positionType="Float"/>
+					<box>					<bottomPen lineWidth="0.5"/>
+</box>
+					<textElement verticalAlignment="Middle">
+						<font size="10" isUnderline="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$P{noofaccounts}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="10"
+						y="23"
+						width="120"
+						height="16"
+						key="staticText-16"
+						positionType="Float"/>
+					<box>					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.0"/>
+					<bottomPen lineWidth="0.0"/>
+					<rightPen lineWidth="0.0"/>
+</box>
+					<textElement verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Total Principal Balance:]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="130"
+						y="23"
+						width="140"
+						height="16"
+						key="textField-17"
+						positionType="Float"/>
+					<box>					<bottomPen lineWidth="0.5"/>
+</box>
+					<textElement verticalAlignment="Middle">
+						<font size="10" isUnderline="false"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$P{totalprincipalbalance}]]></textFieldExpression>
+				</textField>
+			</band>
+		</lastPageFooter>
 		<summary>
 			<band height="0"  isSplitAllowed="true" >
 			</band>

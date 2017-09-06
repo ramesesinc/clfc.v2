@@ -5,6 +5,7 @@ import com.rameses.rcp.annotations.*;
 import com.rameses.osiris2.client.*;
 import com.rameses.osiris2.common.*;
 import com.rameses.osiris2.reports.*;
+import com.rameses.common.*;
 
 class LoanMasterListReportController extends ReportModel 
 {
@@ -13,6 +14,9 @@ class LoanMasterListReportController extends ReportModel
 
     @Service("DateService")
     def dateSvc;
+    
+    @Binding
+    def binding;
     
     String title = "Loan Master List";
 
@@ -48,12 +52,51 @@ class LoanMasterListReportController extends ReportModel
     }
     
     def rptdata;
+    def loadingOpener = Inv.lookupOpener("popup:loading", [:]);
+    
     def preview() {
-        //service.generate(getParams());
-        rptdata = service.getReportData(getParams());
-        viewReport();
-        mode = 'preview';
-        return 'preview';
+//        service.generate(getParams());
+
+//        println rptdata;
+//        println 'passing';
+//        rptdata = service.getReportData(getParams());
+//        viewReport();
+//        mode = 'preview';
+//        return 'preview';
+        def onMessageP = { o ->
+            
+            loadingOpener.handle.closeForm();
+            if (o == AsyncHandler.EOF) {
+                return;
+            }
+            rptdata = o;
+            viewReport();
+            mode = 'preview';
+            binding.fireNavigation('preview');
+           
+            
+        }
+
+        def handler = [
+            onMessage   : onMessageP,
+            onError     : { p ->
+                loadingOpener.handle.closeForm();
+                
+//                if (showconfirmation==true) {
+//                    def msg = p.message;
+//                    msg += 'Do you still want to continue?';
+//                    if (MsgBox.confirm(msg)) {
+//                        showconfirmation = false;
+//                    }
+//                } 
+//                else {
+                    MsgBox.err(p.message);
+//                }
+            }
+        ] as AsyncHandler;
+        service.getReportData(getParams(), handler);
+        return loadingOpener;
+        
     }
     
     def back() {
@@ -65,7 +108,7 @@ class LoanMasterListReportController extends ReportModel
     }
 
     public Object getReportData() {
-        return rptdata;//service.getReportData(getParams());
+        return rptdata; //service.getReportData(getParams());
     }
     
     public String getReportName() {
@@ -76,7 +119,7 @@ class LoanMasterListReportController extends ReportModel
         return [
             new SubReport('DETAIL', 'com/rameses/clfc/report/loan/masterlist/LoanMasterListReportDetail.jasper'),
             new SubReport('ROUTE_DETAIL', 'com/rameses/clfc/report/loan/masterlist/LoanMasterListReportRouteDetail.jasper'),
-            new SubReport('CATEGORY_DETAIL', 'com/rameses/clfc/report/loan/masterlist/LoanMasterListReportCategoryDetail.jasper')
+            //new SubReport('CATEGORY_DETAIL', 'com/rameses/clfc/report/loan/masterlist/LoanMasterListReportCategoryDetail.jasper')
         ];
     }
 }

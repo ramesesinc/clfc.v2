@@ -1,4 +1,4 @@
-import com.rameses.common.*;
+import com.rameses.common.*; 
 import com.rameses.annotations.*;
 import java.rmi.server.UID;
 import java.text.*;
@@ -42,22 +42,33 @@ class LoanMasterListReportService
 		return list;
 	}
 
-	@ProxyMethod
+	@ProxyMethod 
 	public def getCategories() {
 		def list = ledger_segregationtype.getListByStateAndCategory([state: 'ACTIVATED', category: 'PAYMENTSTATE']);
 		if (list) list.sort{ it.name }
 		return list;
 	}
 
+	/*@ProxyMethod
+	public def getReportData() {
+		def params = [routecode: "R-983794636"];
+		return getReportData(params);
+	}*/
+	@Async
 	@ProxyMethod
 	public def getReportData( params ) {
+		println 'pass 0';
 		def routes = [];
-		if (!params.routecode) {
+		println params;
+		if (!params.routecode){
 			routes = loan_route.getList([searchtext: '%']);
 		} else {
 			def r = loan_route.read([code: params.routecode]);
 			if (r) routes.add(r);
 		}
+
+
+		println 'pass 1';
 
 		def currdate = dateSvc.getServerDateAsString().split(" ")[0];
 
@@ -69,11 +80,30 @@ class LoanMasterListReportService
 			if (p) paymentsegregation.add(p);
 		}
 
+		
+
+		println 'pass 2';
 		def list = [];
-		routes?.each{ r->
+		routes?.each{ r ->
+			//println r;
+			//routeList.add(r);
+			
 			r.list = [];
-			paymentsegregation?.each{ ps->
+			
+			paymentsegregation?.eachWithIndex{ ps, index->
+				//ist.add(r);
+			def display = (index==0) ? true : false;
+			r.display = display;
+
+
+			def xroute = [:];
+				xroute.putAll(r);
+				xroute.category = ps;
+
 				def xlist = loan_report.getLoansByRouteAndSegregationType([routecode: r.code, typeid: ps.objid]);
+
+				
+
 				if (xlist) {
 					xlist?.each{ o->
 						def am = amnesty.findActiveAmnestyByLedgeridAndDate([ledgerid: o.loanapp.ledgerid, date: currdate]);
@@ -87,6 +117,7 @@ class LoanMasterListReportService
 								balance 	: am?.balance
 							];
 						}
+						
 						/*
 						def lp = loan_ledger_payment.findLastPayment([parentid: o.loanapp.ledgerid]);
 						if (lp) {
@@ -100,9 +131,9 @@ class LoanMasterListReportService
 						*/
 					}
 
-					def totalPrincipalBalance = xlist?.loanapp.balance.sum();
-
-					println 'tp ' + totalPrincipalBalance;
+					//def totalPrincipalBalance = xlist?.loanapp.balance.sum();
+					def totalPrincipalBalance = xlist?.sum{( it.loanapp.balance ? it.loanapp.balance : 0.0 )};
+				
 
 					def xl = [];
 					xl.addAll(xlist);
@@ -110,17 +141,23 @@ class LoanMasterListReportService
 
 					def noofaccounts = xl?.size();
 					if (!noofaccounts) noofaccounts = 0;
-					r.list.add([objid: ps.objid, name: ps.name, list: xlist, noofaccounts: noofaccounts, totalprincipalbalance: totalPrincipalBalance]);
 
-				
+					xroute.noofaccounts = noofaccounts;
+					xroute.totalprincipalbalance = totalPrincipalBalance;
+					xroute.list = xlist;
+					//xroute.list.add([noofaccounts: noofaccounts, totalprincipalbalance: totalPrincipalBalance]);
 
 
-
-
+					//r.list.add([objid: ps.objid, name: ps.name, list: xlist, noofaccounts: noofaccounts, totalprincipalbalance: totalPrincipalBalance]);
+ 
 
 				}
+
+				list << xroute;
+
+
 			}
-			list.add(r);
+
 			/*
 			def xlist = loan_report.getLoansByRoute([routecode: r.code]);
 			println 'size ' + xlist?.size();
@@ -143,6 +180,16 @@ class LoanMasterListReportService
 			}
 			*/
 		}
+	
+		println 'pass 3';
+		//println 'process1';
+		
+
+		/*list.each{
+			//println(it.category);
+
+			println(it.category);
+		}*/
 
 		//println 'size ' + list?.size();
 
@@ -152,14 +199,22 @@ class LoanMasterListReportService
 			dtprinted			: new SimpleDateFormat("MMM-dd-yyyy hh:mm:ss a").format(dateSvc.serverDate),
 			printedby 			: env.NAME,
 			items				: list
+			
+
 		];
 		branch.each{ k, v->
 			data["branch_"+k] = v;
 		}
 
+		//println 'process2';
 		//println 'data ' + data;
+		
 		return data;
+		
 	}
+	
+
+
 
 	private def parseDate( date ) {
 		if (!date) return null;
