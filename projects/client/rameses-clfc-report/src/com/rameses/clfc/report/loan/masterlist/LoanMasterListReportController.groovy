@@ -23,6 +23,7 @@ class LoanMasterListReportController extends ReportModel
     def mode = 'init'
     def startdate, enddate, criteria;
     def reportCriteriaList = [];
+    def handler;
 
     void init() {
         startdate = dateSvc.getServerDateAsString();
@@ -63,37 +64,30 @@ class LoanMasterListReportController extends ReportModel
 //        viewReport();
 //        mode = 'preview';
 //        return 'preview';
-        def onMessageP = { o ->
-            
-            loadingOpener.handle.closeForm();
-            if (o == AsyncHandler.EOF) {
-                return;
-            }
-            rptdata = o;
-            viewReport();
-            mode = 'preview';
-            binding.fireNavigation('preview');
-           
-            
+        if (!handler) {
+            handler = [
+                onMessage   : { o->
+                    if (o == AsyncHandler.EOF) {
+                        return;
+                    }
+                    rptdata = o;
+                    viewReport();
+                    mode = 'preview';
+                    loadingOpener.handle.closeForm();
+                    binding.fireNavigation('preview');
+                },
+                onTimeout: {
+                    handler?.retry();
+                },
+                onCancel: {
+                    loadingOpener.handle.closeForm();
+                },
+                onError     : { o->
+                    loadingOpener.handle.closeForm();
+                    MsgBox.err(o.message);
+                }
+            ] as AbstractAsyncHandler;
         }
-
-        def handler = [
-            onMessage   : onMessageP,
-            onError     : { p ->
-                loadingOpener.handle.closeForm();
-                
-//                if (showconfirmation==true) {
-//                    def msg = p.message;
-//                    msg += 'Do you still want to continue?';
-//                    if (MsgBox.confirm(msg)) {
-//                        showconfirmation = false;
-//                    }
-//                } 
-//                else {
-                    MsgBox.err(p.message);
-//                }
-            }
-        ] as AsyncHandler;
         service.getReportData(getParams(), handler);
         return loadingOpener;
         
@@ -103,24 +97,21 @@ class LoanMasterListReportController extends ReportModel
         mode = 'init';
         return "default";
     }
+    
     public Map getParameters() {
-        return [:];
+        def data = [:];
+        data.putAll(rptdata);
+        if (data.items) data.remove("items");
+        return data;
     }
 
-    public Object getReportData() {
-        return rptdata; //service.getReportData(getParams());
+    public Object getReportData() {        
+        def data = rptdata.remove("items");
+        return data;
     }
     
     public String getReportName() {
         return "com/rameses/clfc/report/loan/masterlist/LoanMasterListReport.jasper";
-    }
-
-    public SubReport[] getSubReports() {
-        return [
-            new SubReport('DETAIL', 'com/rameses/clfc/report/loan/masterlist/LoanMasterListReportDetail.jasper'),
-            new SubReport('ROUTE_DETAIL', 'com/rameses/clfc/report/loan/masterlist/LoanMasterListReportRouteDetail.jasper'),
-            //new SubReport('CATEGORY_DETAIL', 'com/rameses/clfc/report/loan/masterlist/LoanMasterListReportCategoryDetail.jasper')
-        ];
     }
 }
 

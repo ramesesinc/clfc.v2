@@ -57,7 +57,6 @@ class LoanMasterListReportService
 	@Async
 	@ProxyMethod
 	public def getReportData( params ) {
-		println 'pass 0';
 		def routes = [];
 		println params;
 		if (!params.routecode){
@@ -66,9 +65,6 @@ class LoanMasterListReportService
 			def r = loan_route.read([code: params.routecode]);
 			if (r) routes.add(r);
 		}
-
-
-		println 'pass 1';
 
 		def currdate = dateSvc.getServerDateAsString().split(" ")[0];
 
@@ -81,29 +77,19 @@ class LoanMasterListReportService
 		}
 
 		
-
-		println 'pass 2';
 		def list = [];
 		routes?.each{ r ->
 			//println r;
 			//routeList.add(r);
 			
-			r.list = [];
+			//r.list = [];
 			
 			paymentsegregation?.eachWithIndex{ ps, index->
 				//ist.add(r);
-			def display = (index==0) ? true : false;
-			r.display = display;
-
-
-			def xroute = [:];
-				xroute.putAll(r);
-				xroute.category = ps;
+				def display = (index==0) ? true : false;
+				r.display = display;
 
 				def xlist = loan_report.getLoansByRouteAndSegregationType([routecode: r.code, typeid: ps.objid]);
-
-				
-
 				if (xlist) {
 					xlist?.each{ o->
 						def am = amnesty.findActiveAmnestyByLedgeridAndDate([ledgerid: o.loanapp.ledgerid, date: currdate]);
@@ -129,9 +115,14 @@ class LoanMasterListReportService
 							];
 						}
 						*/
+						o.route = r;
+						o.category = ps;
+
+						list << o;
 					}
 
 					//def totalPrincipalBalance = xlist?.loanapp.balance.sum();
+					/*
 					def totalPrincipalBalance = xlist?.sum{( it.loanapp.balance ? it.loanapp.balance : 0.0 )};
 				
 
@@ -145,6 +136,7 @@ class LoanMasterListReportService
 					xroute.noofaccounts = noofaccounts;
 					xroute.totalprincipalbalance = totalPrincipalBalance;
 					xroute.list = xlist;
+					*/
 					//xroute.list.add([noofaccounts: noofaccounts, totalprincipalbalance: totalPrincipalBalance]);
 
 
@@ -153,7 +145,7 @@ class LoanMasterListReportService
 
 				}
 
-				list << xroute;
+				//list << xroute;
 
 
 			}
@@ -180,19 +172,7 @@ class LoanMasterListReportService
 			}
 			*/
 		}
-	
-		println 'pass 3';
-		//println 'process1';
 		
-
-		/*list.each{
-			//println(it.category);
-
-			println(it.category);
-		}*/
-
-		//println 'size ' + list?.size();
-
 		def branch = branchSvc.open([:]);
 		def data = [
 			date_period 		: new SimpleDateFormat("yyyy-MMM-dd").format(parseDate(currdate)),
@@ -205,9 +185,6 @@ class LoanMasterListReportService
 		branch.each{ k, v->
 			data["branch_"+k] = v;
 		}
-
-		//println 'process2';
-		//println 'data ' + data;
 		
 		return data;
 		
