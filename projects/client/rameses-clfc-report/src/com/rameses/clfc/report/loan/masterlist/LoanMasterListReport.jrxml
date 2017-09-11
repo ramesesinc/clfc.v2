@@ -50,6 +50,7 @@
 	<field name="loanapp.address" class="java.lang.String"/>
 	<field name="lastpayment.txndate" class="java.util.Date"/>
 	<field name="lastpayment.amount" class="java.math.BigDecimal"/>
+	<field name="borrower.objid" class="java.lang.String"/>
 
 	<variable name="PAGE_INFO" class="java.lang.String" resetType="Report" calculation="Nothing">
 		<variableExpression><![CDATA["PAGE " + $V{PAGE_NUMBER} + " OF " + $V{PAGE_COUNT}]]></variableExpression>
@@ -62,6 +63,12 @@
 	</variable>
 	<variable name="borrower_annotation" class="java.lang.String" resetType="Report" calculation="Nothing">
 		<variableExpression><![CDATA[$F{borrower.name} + (($F{amnesty.objid} != null && $F{amnesty.option} == "FIX")? "\n(Fix: " + new java.text.DecimalFormat("#,##0.00").format($F{amnesty.amount}) + $V{amnesty_dtstarted_annotation} + $V{amnesty_dtended_annotation} + ")" : "")]]></variableExpression>
+	</variable>
+	<variable name="noofaccounts" class="java.lang.Integer" resetType="Group" resetGroup="Category" calculation="Count">
+		<variableExpression><![CDATA[$F{borrower.objid}]]></variableExpression>
+	</variable>
+	<variable name="totalprincipalbalance" class="java.math.BigDecimal" resetType="Group" resetGroup="Category" calculation="Sum">
+		<variableExpression><![CDATA[$F{loanapp.balance}]]></variableExpression>
 	</variable>
 
 		<group  name="Route" >
@@ -146,7 +153,73 @@
 			</band>
 			</groupHeader>
 			<groupFooter>
-			<band height="0"  isSplitAllowed="true" >
+			<band height="50"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="10"
+						y="8"
+						width="100"
+						height="16"
+						key="staticText-20"
+						positionType="Float"/>
+					<box>					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.0"/>
+					<bottomPen lineWidth="0.0"/>
+					<rightPen lineWidth="0.0"/>
+</box>
+					<textElement verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[No. of Accounts:]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="110"
+						y="8"
+						width="70"
+						height="16"
+						key="textField-29"
+						positionType="Float"/>
+					<box>					<bottomPen lineWidth="0.5"/>
+</box>
+					<textElement verticalAlignment="Middle">
+						<font size="10" isUnderline="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$V{noofaccounts}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="10"
+						y="24"
+						width="120"
+						height="16"
+						key="staticText-21"
+						positionType="Float"/>
+					<box>					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.0"/>
+					<bottomPen lineWidth="0.0"/>
+					<rightPen lineWidth="0.0"/>
+</box>
+					<textElement verticalAlignment="Middle">
+						<font pdfFontName="Helvetica-Bold" size="10" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Total Principal Balance:]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="#,##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="130"
+						y="24"
+						width="140"
+						height="16"
+						key="textField-30"
+						positionType="Float"/>
+					<box>					<bottomPen lineWidth="0.5"/>
+</box>
+					<textElement verticalAlignment="Middle">
+						<font size="10" isUnderline="false"/>
+					</textElement>
+				<textFieldExpression   class="java.math.BigDecimal"><![CDATA[$V{totalprincipalbalance}]]></textFieldExpression>
+				</textField>
 			</band>
 			</groupFooter>
 		</group>
