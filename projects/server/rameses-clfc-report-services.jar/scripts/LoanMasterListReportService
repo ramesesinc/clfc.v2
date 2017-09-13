@@ -117,6 +117,8 @@ class LoanMasterListReportService
 						*/
 						o.route = r;
 						o.category = ps;
+						o.agingsincematuritydate = Integer.parseInt(o.agingsincematuritydate.toString());
+						o.agingsincelastpayment = Integer.parseInt(o.agingsincelastpayment.toString());
 
 						list << o;
 					}
