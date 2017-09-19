@@ -84,7 +84,10 @@ class TimeTicker
         System.out.println("[TimeTicker] is date synced " + Platform.getApplication().getIsDateSync());
         if (isConnected == true && isDateSync == false) {
             timemillis = getServerTime();
-            Platform.getApplication().setIsDateSync(true);
+            Log.i("TimeTicker", "timemillis-> " + timemillis);
+            if (timemillis > 0) {
+                Platform.getApplication().setIsDateSync(true);
+            }
         } else {
             timemillis = Platform.getApplication().getServerTime();
         }
