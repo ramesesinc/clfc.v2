@@ -42,30 +42,31 @@ class LoanMasterListReportService
 		return list;
 	}
 
+
 	@ProxyMethod 
 	public def getCategories() {
 		def list = ledger_segregationtype.getListByStateAndCategory([state: 'ACTIVATED', category: 'PAYMENTSTATE']);
 		if (list) list.sort{ it.name }
 		return list;
 	}
-
+	
 	/*@ProxyMethod
 	public def getReportData() {
 		def params = [routecode: "R-983794636"];
 		return getReportData(params);
 	}*/
+	
 	@Async
 	@ProxyMethod
 	public def getReportData( params ) {
 		def routes = [];
-		println params;
+		//println params;
 		if (!params.routecode){
 			routes = loan_route.getList([searchtext: '%']);
 		} else {
 			def r = loan_route.read([code: params.routecode]);
 			if (r) routes.add(r);
 		}
-
 		def currdate = dateSvc.getServerDateAsString().split(" ")[0];
 
 		def paymentsegregation = [];
@@ -76,7 +77,6 @@ class LoanMasterListReportService
 			if (p) paymentsegregation.add(p);
 		}
 
-		
 		def list = [];
 		routes?.each{ r ->
 			//println r;
@@ -189,6 +189,7 @@ class LoanMasterListReportService
 		return data;
 		
 	}
+	
 	
 
 
