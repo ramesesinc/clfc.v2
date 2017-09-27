@@ -32,7 +32,7 @@ class LoanFullyPaidReportService {
 		def params = [startdate: '2014-11-01', enddate: '2014-11-30'];
 		return getReportData(params);
 	}
-
+	@Async
 	@ProxyMethod
 	public def getReportData( params ) {
 		if (!params.startdate) throw new Exception("Please specify start date.");
@@ -47,7 +47,7 @@ class LoanFullyPaidReportService {
 		if (!list) {
 			throw new Exception("No fully paid from " + sd + " TO " + ed + ".");
 		}
-
+		
 		def branch = branchSvc.open([:]);
 		def data = [
 			date_period 		: sd + " TO " + ed,//new SimpleDateFormat("yyyy-MMM-dd").format(java.sql.Date.valueOf(params.txndate+"")),
@@ -58,7 +58,9 @@ class LoanFullyPaidReportService {
 		branch.each{ k, v->
 			data["branch_"+k] = v;
 		}
+
 		return data;
+
 	}
 
 	private def parseDate( date ) {

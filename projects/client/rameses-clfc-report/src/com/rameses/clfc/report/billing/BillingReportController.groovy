@@ -5,6 +5,7 @@ import com.rameses.rcp.annotations.*;
 import com.rameses.osiris2.client.*;
 import com.rameses.osiris2.common.*;
 import com.rameses.osiris2.reports.*;
+import com.rameses.common.*;
 
 class BillingReportController extends ReportModel {
 
@@ -14,8 +15,13 @@ class BillingReportController extends ReportModel {
     @Service("DateService")
     def dateSvc;
     
+    @Binding
+    def binding;
+    
     String title = "Billing Report";
     def date, mode = "init";
+    
+    def handler;
 
     void init() {
         date = dateSvc.getServerDateAsString();
@@ -32,32 +38,66 @@ class BillingReportController extends ReportModel {
     }
     
     def rptdata;
+    def loadingOpener = Inv.lookupOpener("popup:loading", [:]);
     def preview() {
-        rptdata = service.getReportData([date: date]);
-        mode = "preview";
-        viewReport();
-        return "preview";
+//        rptdata = service.getReportData([date: date]);
+//        mode = "preview";
+//        viewReport();
+//        return "preview";
+        if (!handler){
+            handler = [
+                onMessage : { o ->
+                    loadingOpener.handle.closeForm();
+                    if (o == AsyncHandler.EOF){
+                        return;
+                    }
+                    rptdata = o;
+                    viewReport();
+                    mode = 'preview';
+                    binding.fireNavigation('preview'); 
+                },
+                onTimeout : {
+                    handler?.retry();
+                },
+                onCancel : {
+                    loadingOpener.handle.closeForm();
+                },
+                onError : { p -> 
+                    loadingOpener.handle.closeForm();
+                    MsgBox.err(p.message);       
+                }
+            ] as AbstractAsyncHandler;
+        } 
+        service.getReportData([date:date], handler)
+        return loadingOpener;
     }
     
+    
     public Map getParameters() {
-        return [:];
+//        return [:];
+        def data = [:];
+        data.putAll(rptdata);
+        if (data.items) data.remove("items");
+        return data;
     }
 
     public Object getReportData() {
-        return rptdata;
+//        return rptdata;
 //        return service.getReportData([startdate: startdate, enddate: enddate]);
+        def data = rptdata.remove("items");
+        return data;
     }
     
     public String getReportName() {
-        return "com/rameses/clfc/report/billing/BillingReport.jasper";
+        return "com/rameses/clfc/report/billing/BillingReport_0.jasper";
     }
 
-    public SubReport[] getSubReports() {
-        return [
-            new SubReport("ROUTE_DETAIL", "com/rameses/clfc/report/billing/BillingReportPerRoute.jasper"),
-            new SubReport("ITEM_DETAIL", "com/rameses/clfc/report/billing/BillingReportPerItem.jasper")
-        ];
-    }
+//    public SubReport[] getSubReports() {
+//        return [
+//            new SubReport("ROUTE_DETAIL", "com/rameses/clfc/report/billing/BillingReportPerRoute.jasper"),
+//            new SubReport("ITEM_DETAIL", "com/rameses/clfc/report/billing/BillingReportPerItem.jasper")
+//        ];
+//    }
     
 }
 
