@@ -43,9 +43,12 @@ SELECT q.*,
 		CONCAT(q.bname, ' AND ', lb.borrowername)
 	ELSE
 		q.bname
-	END AS borrower_name
+	END AS borrower_name,
+	case when q.alp > 0 then q.alp else 0 end as agingsincelastpayment,
+	case when q.amd > 0 then q.amd else 0 end as agingsincematuritydate
 FROM (
-	SELECT q.*, p.objid AS lastpayment_objid, p.amount AS lastpayment_amount, p.txndate AS lastpayment_txndate, p.refno AS lastpayment_refno
+	SELECT q.*, p.objid AS lastpayment_objid, p.amount AS lastpayment_amount, p.txndate AS lastpayment_txndate, p.refno AS lastpayment_refno,
+		datediff(curdate(), p.txndate) as alp, datediff(curdate(), q.loanapp_dtmatured) as amd
 	FROM (
 		SELECT a.appno AS loanapp_appno, a.apptype AS loanapp_apptype, a.loanamount AS loanapp_loanamount, a.loantype AS loanapp_loantype,
 			a.borrower_objid AS borrower_objid, a.borrower_name AS bname, a.objid AS loanapp_objid, ac.dtreleased AS loanapp_dtreleased, 
