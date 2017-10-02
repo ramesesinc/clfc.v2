@@ -89,7 +89,7 @@ class BillingReportController extends ReportModel {
     }
     
     public String getReportName() {
-        return "com/rameses/clfc/report/billing/BillingReport_0.jasper";
+        return "com/rameses/clfc/report/billing/BillingReport.jasper";
     }
 
 //    public SubReport[] getSubReports() {
