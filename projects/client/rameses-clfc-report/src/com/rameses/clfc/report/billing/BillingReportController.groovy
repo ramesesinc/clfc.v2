@@ -47,12 +47,13 @@ class BillingReportController extends ReportModel {
         if (!handler){
             handler = [
                 onMessage : { o ->
-                    loadingOpener.handle.closeForm();
                     if (o == AsyncHandler.EOF){
+                        loadingOpener.handle.closeForm();
                         return;
                     }
                     rptdata = o;
                     viewReport();
+                    loadingOpener.handle.closeForm();
                     mode = 'preview';
                     binding.fireNavigation('preview'); 
                 },
