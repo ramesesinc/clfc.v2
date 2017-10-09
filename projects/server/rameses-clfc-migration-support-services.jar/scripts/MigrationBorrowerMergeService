@@ -42,6 +42,7 @@ class MigrationBorrowerMergeService extends ActiveCrudListService
 	public def getStates() {
 		return [
 			[caption: 'All'],
+			[caption: 'PENDING', state: 'PENDING'],
 			[caption: 'FOR APPROVAL', state: 'FOR_APPROVAL'],
 			[caption: 'APPROVED', state: 'APPROVED'],
 			[caption: 'DISAPPROVED', state: 'DISAPPROVED']
@@ -60,17 +61,29 @@ class MigrationBorrowerMergeService extends ActiveCrudListService
 	}
 
 	@ProxyMethod
-	public def approveDocument( params ) {
-		if (!params.items) throw new Exception("Please specify items.");
-		if (!params.borrower.objid) throw new RuntimeException("Please specify borrower to retain.");
+	public def save( params ) {
+		if (!params.borrower?.objid) throw new RuntimeException("Please specify borrower to retain.");
 
-		def b = params.borrower;
-
-		def data = approveImpl(params, 'APPROVED');
-		data.borrower = b;
-
+		def data = em.read(params);
+		data.borrower = params.borrower;
 		em.update(data, "retain-borrower");
 
+		return open(data);
+	}
+
+	//@ProxyMethod
+	public def submitForApproval( params ) {
+		if (!params.borrower.objid) throw new RuntimeException("Please specify borrower to retain.");
+
+		def data = changeState(params, "FOR_APPROVAL");
+		return open(data);
+	}
+
+	@ProxyMethod
+	public def approveDocument( params ) {
+		if (!params.items) throw new Exception("Please specify items.");
+
+		def data = approveImpl(params, 'APPROVED');
 		def list = params.items;
 		//def objid = list[0].borrower.objid;
 		def objid = data.borrower.objid;

@@ -1,4 +1,17 @@
 [getList]
+select b.*
+from (
+	select objid
+	from borrower_merge
+	where borrower_name like $P{searchtext}
+	union 
+	select objid
+	from borrower_merge
+	where author_name like $P{searchtext}
+) q inner join borrower_merge b on q.objid=b.objid
+order by b.dtcreated desc
+
+[xgetList]
 SELECT b.objid, b.state, b.dtcreated, b.author_objid, b.author_name, 
 	d.borrower_name
 FROM (
@@ -38,6 +51,21 @@ HAVING b.objid IS NOT NULL
 ORDER BY b.dtcreated DESC
 
 [getListByState]
+select b.*
+from (
+	select objid
+	from borrower_merge
+	where borrower_name like $P{searchtext}
+		and state = $P{state}
+	union 
+	select objid
+	from borrower_merge
+	where author_name like $P{searchtext}
+		and state = $P{state}
+) q inner join borrower_merge b on q.objid=b.objid
+order by b.dtcreated desc
+
+[xgetListByState]
 SELECT b.objid, b.state, b.dtcreated, b.author_objid, b.author_name, 
 	d.borrower_name
 FROM (

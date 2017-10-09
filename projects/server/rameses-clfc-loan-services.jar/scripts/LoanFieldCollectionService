@@ -90,15 +90,56 @@ class LoanFieldCollectionService
 		def cb;
 		def rem  = remittance.findCollectionRemittance(prm);
 		if (rem) {
+			entity.totalcollection = rem.totalcollection;
+			
 			def amt = rem.totalcollection + rem.others;
 			if (!amt) amt = 0;
+
+			entity.totalamount = amt;
 
 			if (rem.state == 'FOR_POSTING') {
 				entity.alloweditbreakdown = true;
 				entity.allowpost = true;
 			}
 
-			entity.totalamount = amt;
+			def shortagebreakdown = [];
+			def shortagelist = remittance.getShortages(rem);
+			shortagelist.each{ o->
+				def xprm = [
+					collectionid: o.objid,
+					groupid 	: o.objid,
+					grouptype 	: 'shortage'
+				];
+
+				def xcb = collection_cb.findCashbreakdown(xprm);
+				if (xcb) {
+					def items = collection_cb.getDetails(xcb);
+					items.each{ i->
+						def ii = shortagebreakdown.find{ it.denomination==i.denomination }
+						if (!ii) {
+							shortagebreakdown << i;
+							ii = i;
+						} else {
+							ii.qty += i.qty;
+						}
+
+						ii.amount = ii.qty * ii.denomination;
+					}
+					//cb.items = items;
+					//data.cashbreakdown = cb;
+				}
+			}
+
+			entity.shortagebreakdown = [items: shortagebreakdown];
+
+			def shortage = shortagelist?.amount?.sum();
+			if (!shortage) shortage = 0;
+			entity.shortage = shortage;
+
+			def overage = remittance.getOverages(rem)?.amount?.sum();
+			if (!overage) overage = 0;
+			entity.overage = overage;
+
 			def sb = sendback.findByRemittanceidAndState([remittanceid: rem.objid, state: 'DRAFT']);
 			if (sb) {
 				entity.allowpost = false;
@@ -229,6 +270,9 @@ class LoanFieldCollectionService
 
 		//def remitted = false;
 		def item = collection.read([objid: params.collectionid], "fc-item");
+		if (!item) throw new RuntimeException("No unposted collection for this billing.")
+
+
 		if (item) {
 			result.state = item.state;
 

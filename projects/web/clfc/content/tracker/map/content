@@ -318,7 +318,7 @@ function MessageHandler(item) {
 }
 function addPaymentLog(item) {
 	if (!isGoogleMapReady()) return; 
-	if (!item.lng || !item.lat || item.lng==0 || item.lat==0) return; 
+	//if (!item.lng || !item.lat || item.lng==0 || item.lat==0) return; 
 	if (!workspace.logs) workspace.logs = []; 
 	if (!workspace.paymentcount) workspace.paymentcount=0;
 
@@ -330,30 +330,37 @@ function addPaymentLog(item) {
 
 	updateCurrentLocation(item); 
 	logs.push(item); 
+
+	if (!workspace.paymentcount) workspace.paymentcount = 0;
 	workspace.paymentcount++;
 
 	var logcount = workspace.paymentcount; 
-	var remarks = (item.remarks? item.remarks: '');
-	var txntype = (item.txntype? item.txntype: 'NORMAL');
-	var fl = item.borrower.name.charAt(0);
 	/*
 	switch (fl.toLowerCase()) {
 		case "u": fl = "w"; break;
 		case "v": fl = "w"; break;
 	}
 	*/
-	var iconpath = '/images/mapicons/payment-' + txntype.toLowerCase() + '/' + fl.toLowerCase() + '.png';
-	var marker = new google.maps.Marker({ 
-		position 	: new google.maps.LatLng(item.lat, item.lng), 
-		title 		: txntype+' Payment (#'+ (logcount) +') '+remarks, 
-		icon 		: iconpath.toLowerCase(), 				
-		animation 	: google.maps.Animation.DROP, 
-		map 		: workspace.map, 
-		draggable 	: false, 
-		zIndex 		: 500
-	});	
-	item.marker = marker; 
-	new GmapInfoWindowHandler(workspace, marker, item, '/tracker/marker?objid='+item.objid);  
+	if (item.lng && item.lng != 0 && item.lat && item.lat != 0) {
+
+		var remarks = (item.remarks? item.remarks: '');
+		var txntype = (item.txntype? item.txntype: 'NORMAL');
+		var fl = item.borrower.name.charAt(0);
+
+		var iconpath = '/images/mapicons/payment-' + txntype.toLowerCase() + '/' + fl.toLowerCase() + '.png';
+		var marker = new google.maps.Marker({ 
+			position 	: new google.maps.LatLng(item.lat, item.lng), 
+			title 		: txntype+' Payment (#'+ (logcount) +') '+remarks, 
+			icon 		: iconpath.toLowerCase(), 				
+			animation 	: google.maps.Animation.DROP, 
+			map 		: workspace.map, 
+			draggable 	: false, 
+			zIndex 		: 500
+		});	
+		item.marker = marker; 
+		new GmapInfoWindowHandler(workspace, marker, item, '/tracker/marker?objid='+item.objid);  
+
+	}
 
 	if (tracker_controller.displaypayment == true) {
 		addPaymentMessage(item, logcount);
@@ -367,7 +374,7 @@ function addPaymentMessage( item, logcount ) {
 
 function addRemarksLog( item ) {
 	if (!isGoogleMapReady()) return; 
-	if (!item.lng || !item.lat || item.lng==0 || item.lat==0) return; 
+	//if (!item.lng || !item.lat || item.lng==0 || item.lat==0) return; 
 	if (!workspace.logs) workspace.logs = [];
 	if (!workspace.remarklogs) workspace.remarklogs = [];
 
@@ -378,25 +385,31 @@ function addRemarksLog( item ) {
 	updateCurrentLocation(item); 
 
 	logs.push(item); 
-	var logcount = logs.length;
-	var title    = item.txntype+' Remarks: '+item.remarks; 
-	var iconname = item.reftype + '_' + item.txntype;
-
-	var iconpath = '/images/mapicons/' + iconname + '.png';	
-	var marker = new google.maps.Marker({ 
-		position 	: new google.maps.LatLng(item.lat, item.lng), 
-		title 		: title, 
-		icon 		: iconpath.toLowerCase(), 				
-		map 		: workspace.map, 
-		draggable 	: false, 
-		zIndex 		: 250 
-	});	
-
 
 	if (!workspace.remarkscount) workspace.remarkscount = 0;
 	workspace.remarkscount++;
-	item.marker = marker; 
-	new GmapInfoWindowHandler(workspace, marker, item, '/tracker/remark_marker?objid='+item.objid); 
+
+	var logcount = workspace.remarkscount;
+
+	if (item.lng && item.lng != 0 && item.lat && item.lat != 0) {
+
+		var title    = item.txntype+' Remarks: '+item.remarks; 
+		var iconname = item.reftype + '_' + item.txntype;
+
+		var iconpath = '/images/mapicons/' + iconname + '.png';	
+		var marker = new google.maps.Marker({ 
+			position 	: new google.maps.LatLng(item.lat, item.lng), 
+			title 		: title, 
+			icon 		: iconpath.toLowerCase(), 				
+			map 		: workspace.map, 
+			draggable 	: false, 
+			zIndex 		: 250 
+		});	
+
+		item.marker = marker; 
+		new GmapInfoWindowHandler(workspace, marker, item, '/tracker/remark_marker?objid='+item.objid); 
+	}
+
 	if (tracker_controller.displayremarks == true) {
 		addRemarksMessage(item);
 	}
@@ -410,7 +423,7 @@ function addRemarksMessage( item ) {
 function addTrackerLog( item ) {
 
 	if (!isGoogleMapReady()) return; 
-	if (!item.lng || !item.lat || item.lng==0 || item.lat==0) return; 
+	//if (!item.lng || !item.lat || item.lng==0 || item.lat==0) return; 
 	if (!workspace.logs) workspace.logs = [];
 	if (!workspace.remarklogs) workspace.remarklogs = [];
 
@@ -421,38 +434,49 @@ function addTrackerLog( item ) {
 	updateCurrentLocation(item); 
 
 	logs.push(item); 
-	var logcount = logs.length;
-	var title    = 'Tracked #'+ logcount +' on '+item.txndate; 
-	//var iconname = 'blank';
-	var iconname = "pin";
-
-	//var iconpath = '/images/mapicons/map/' + iconname + '.png';	
-	var iconpath = '/images/mapicons/' + iconname + '.png';	
-	window.console.log(iconpath);
-	var marker = new google.maps.Marker({ 
-		position 	: new google.maps.LatLng(item.lat, item.lng), 
-		title 		: title, 
-		icon 		: iconpath.toLowerCase(), 				
-		map 		: workspace.map, 
-		draggable 	: false, 
-		zIndex 		: 250 
-	});	
 
 	if (!workspace.trackercount) workspace.trackercount = 0;
 	workspace.trackercount++;
-	var prevlnglat = workspace.previoustracklnglat; 
-	var newlnglat = item.lng + ':' + item.lat;
-	if (prevlnglat == newlnglat) return;
 
-	new GmapInfoWindowHandler(workspace, marker, item, '/tracker/track_marker?objid='+item.objid+'&&trackercount='+logcount); 
+	var logcount = workspace.trackercount;
+
+	if (item.lng && item.lng != 0 && item.lat && item.lat != 0) {
+
+		var title    = 'Tracked #'+ logcount +' on '+item.txndate; 
+		var iconname = "pin";
+
+		//var iconpath = '/images/mapicons/map/' + iconname + '.png';	
+		var iconpath = '/images/mapicons/' + iconname + '.png';	
+		window.console.log(iconpath);
+		var marker = new google.maps.Marker({ 
+			position 	: new google.maps.LatLng(item.lat, item.lng), 
+			title 		: title, 
+			icon 		: iconpath.toLowerCase(), 				
+			map 		: workspace.map, 
+			draggable 	: false, 
+			zIndex 		: 250 
+		});	
+
+		var prevlnglat = workspace.previoustracklnglat; 
+		var newlnglat = item.lng + ':' + item.lat;
+		if (prevlnglat == newlnglat) return;
+
+		item.marker = marker;
+		new GmapInfoWindowHandler(workspace, marker, item, '/tracker/track_marker?objid='+item.objid+'&&trackercount='+logcount); 
+		
+		workspace.previoustracklnglat = newlnglat;
+	}
+
+	
 	if (tracker_controller.displaytracker == true ) {
 		addTrackerMessage(item);
 	}
-	workspace.previoustracklnglat = newlnglat;
 }
 
 function addTrackerMessage( item ) {
-	var htmlstring = '<p class="postedtitle">Tracking...</p>lng: '+ item.lng +', lat:'+ item.lat +'<p class="postedon">tracked on <span class="txndate">'+ item.txndate +'</span></p>';
+	var htmlstring = '<p class="postedtitle">Tracking...</p>';
+	htmlstring += 'lng: '+ item.lng +', lat:'+ item.lat;
+	htmlstring += '<p class="postedon">tracked on <span class="txndate">'+ item.txndate +'</span></p>';
 	addMessage(htmlstring, new MessageHandler(item)); 
 }
 
@@ -466,18 +490,39 @@ function addStatusLog( item ) {
 	if (logitem) return; 
 
 	logs.push(item);
+	if (!workspace.statuscount) workspace.statuscount = 0;
+	workspace.statuscount++;
+
+	var logcount = workspace.statuscount;
+
+	if (item.lat && item.lat != 0 && item.lng && item.lng != 0) {
+		var marker = new google.maps.Marker({ 
+			position 	: new google.maps.LatLng(item.lat, item.lng), 
+			title 		: "Status", 
+			icon 		: '/images/mapicons/phone-icon.png', 				
+			map 		: workspace.map, 
+			draggable 	: false, 
+			zIndex 		: 250 
+		});	
+
+		item.marker = marker;
+		new GmapInfoWindowHandler(workspace, marker, item, '/tracker/mobile_status_marker?objid='+item.objid+'&&trackercount='+logcount); 	
+	}
+
 	if (tracker_controller.displaystatus == true) {
 		addStatusMessage(item);
 	}
 
-	if (!workspace.statuscount) workspace.statuscount = 0;
-	workspace.statuscount++;
 
 }
 
 function addStatusMessage( item ) {
-	var htmlstring = '<p class="postedtitle">Tracking...</p>WIFI: '+ (item.wifi==1? 'true' : 'false') + '<br/>Mobile Data: '+ (item.mobiledata==1? 'true' : 'false') + '<br/>GPS: ' + (item.gps==1? 'true' : 'false');
-	htmlstring += '<br/>Network: ' + (item.network==1? 'true' : 'false') + '<p class="postedon">tracked on <span class="txndate">'+ item.txndate +'</span></p>';
+	var htmlstring = '<p class="postedtitle">Tracking...</p>';
+	htmlstring += 'WIFI: <b>'+ (item.wifi==1? 'enabled' : 'disabled') + '</b><br/>';
+	htmlstring += 'Mobile Data: <b>'+ (item.mobiledata==1? 'enabled' : 'disabled') + '</b><br/>';
+	htmlstring += 'GPS: <b>' + (item.gps==1? 'enabled' : 'disabled') + '</b></br>';
+	htmlstring += 'Network: <b>' + (item.network==1? 'enabled' : 'disabled') + '</b>';
+	htmlstring += '<p class="postedon">tracked on <span class="txndate">'+ item.txndate +'</span></p>';
 	addMessage(htmlstring, new MessageHandler(item)); 
 }
 
@@ -537,7 +582,8 @@ function addNormalLog(item) {
 	}
 }
 function addLog(item) {
-	if (!isGoogleMapReady() || !item || (item.lat == 0 && item.lng == 0)) return; 
+	//if (!isGoogleMapReady() || !item || (item.lat == 0 && item.lng == 0)) return; 
+	if (!isGoogleMapReady() || !item) return; 
 	if (!workspace.logs) workspace.logs = []; 
 	if (!workspace.paymentcount) workspace.paymentcount = 0;
 	if (!workspace.remarkscount) workspace.remarkscount = 0;

@@ -13,6 +13,15 @@ WHERE l.parentid = $P{itemid}
 	AND l.acctname LIKE $P{searchtext}
 
 [getPastBillingsNotDownloaded]
+select i.*
+from ledger_billing b
+inner join ledger_billing_item i on b.objid=i.parentid
+left join ledger_billing_cancelrequest r on i.objid=r.billing_itemid
+where r.objid is null 
+	and b.billdate < $P{date}
+	and state = 'FOR_DOWNLOAD'
+
+[xgetPastBillingsNotDownloaded]
 SELECT li.*
 FROM ledger_billing l
 INNER JOIN ledger_billing_item li ON l.objid = li.parentid
@@ -101,7 +110,7 @@ INNER JOIN loan_ledger l ON d.ledgerid = l.objid
 WHERE d.parentid = $P{objid}
 
 [getBillingDetailsWithNextto]
-SELECT d.*, n.nexttoid AS nextto, d.route_code AS routecode, 
+SELECT d.*, n.nexttoid AS nextto, d.route_code AS routecode, lb.isstart,
 	CASE 
 		WHEN l.dtlastpaid IS NULL THEN (DATEDIFF(CURDATE(), DATE_SUB(l.dtstarted, INTERVAL -1 DAY)) + 1)
 		WHEN DATEDIFF(CURDATE(), l.dtlastpaid) < 0 THEN 0
@@ -109,8 +118,10 @@ SELECT d.*, n.nexttoid AS nextto, d.route_code AS routecode,
 	END AS totaldays, l.dtstarted, l.dtlastpaid
 FROM ledger_billing_detail d
 INNER JOIN loan_ledger l ON d.ledgerid = l.objid
+INNER JOIN loanapp_borrower lb on d.loanappid=lb.parentid
 LEFT JOIN loanapp_borrower_nextto n ON d.acctid = n.borrowerid
 WHERE d.parentid = $P{objid} 
+	AND lb.type='principal'
 
 [getRouteListByState]
 SELECT l.objid, li.state, li.objid AS itemid, lr.description AS route_description, lr.area AS route_area,
@@ -396,6 +407,7 @@ FROM (
 ) q INNER JOIN ledger_billing b ON q.objid = b.objid
 INNER JOIN ledger_billing_item i ON b.objid = i.parentid
 WHERE i.state IN ('FOR_DOWNLOAD', 'DOWNLOADED')
+
 
 [removeBillingItemByType]
 DELETE FROM ledger_billing_item

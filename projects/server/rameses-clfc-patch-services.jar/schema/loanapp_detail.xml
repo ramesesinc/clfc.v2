@@ -24,6 +24,7 @@
 
 	<element name="loanapp_capture" tablename="loanapp_capture">
 		<field name="objid" primary="true" />
+		<field name="loanno" required="true" />
 		<field name="dtreleased" required="true" />
 	</element>
 
@@ -38,6 +39,21 @@
 		<field name="totalprincipal" required="true" />
 		<field name="dtstarted" required="true" />
 		<field name="dtmatured" />
+	</element>
+
+	<element name="charge" tablename="loanapp_charge">
+		<field name="objid" primary="true" />
+		<field name="appid" required="true" />
+		<field name="acctid" required="true" />
+		<field name="title" required="true" />
+		<field name="amount" required="true" />
+	</element>
+	
+	<element name="extinfo" tablename="loanapp_extinfo">
+		<field name="objid" primary="true" />
+		<field name="netamount" required="true" />
+		<field name="totalcharges" required="true" />
+		<complex name="info" required="false" serializer="default" merge="true" />
 	</element>
 
 </schema>

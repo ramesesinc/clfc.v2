@@ -3,8 +3,11 @@ import com.rameses.annotations.*;
 import java.rmi.server.UID;
 import java.text.SimpleDateFormat;
 
-class LoanAppCaptureRenewService
-{
+class LoanAppCaptureRenewService { 
+
+	@Env 
+	def env;
+
 	@ActiveDB("loan_application")
 	def em;
 
@@ -13,6 +16,9 @@ class LoanAppCaptureRenewService
 
 	@ActiveDB('loan_product_type')
 	def productType;	
+
+	@ActiveDB("loan_producttype")
+	def loan_producttype;
 
 	@ActiveDB('borrower')
 	def borrower; 
@@ -65,8 +71,8 @@ class LoanAppCaptureRenewService
 	@Service('LoanAppAssessmentService')
 	def appAssessmentSvc;
 
-	@Env 
-	def env;
+	@Service("NewLoanProductTypeService")
+	def productTypeSvc;
 
 	private def DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
@@ -146,6 +152,11 @@ class LoanAppCaptureRenewService
 	}
 
 	@ProxyMethod
+	public def test() {
+		println 'svc-> ' + productTypeSvc;
+	}
+
+	@ProxyMethod
 	public def create( data ) {
 		validate(data);
 		data.dtcreated = dateSvc.serverDate;
@@ -154,7 +165,24 @@ class LoanAppCaptureRenewService
 		if (!data.txnmode) data.txnmode = 'CAPTURE';
 		if (!data.txntype) data.txntype = 'RENEW';
 
-		data.dtmatured = generateMaturityDate(data);
+		//data.dtmatured = generateMaturityDate(data);
+
+		data.producttype.name = data.producttype.code;
+		data.producttype.term = 0;
+
+		def xdata = [
+			loanapp 	: [
+				loanamount	: data.loanamount,
+				dtreleased 	: parseDate(data.dtreleased)
+			]
+		]
+
+		def res = productTypeSvc.executeProductTypeRulesForLoanApplication(data.producttype, [:], "user", xdata);
+		//println 'svc-> ' + productTypeSvc;
+		res.each{ k,v-> 
+			data[k] = v 
+			println k + '-> ' + v;
+		}
 
 		em.create(data); 
 		/*
@@ -180,7 +208,25 @@ class LoanAppCaptureRenewService
 	public def update( data ) {
 		validate(data);
 
-		data.dtmatured = generateMaturityDate(data);
+		data.producttype.name = data.producttype.code;
+		data.producttype.term = 0;
+		//data.dtmatured = generateMaturityDate(data);
+		def xdata = [
+			loanapp 	: [
+				loanamount	: data.loanamount,
+				dtreleased 	: parseDate(data.dtreleased)
+			]
+		]
+
+		//println 'app ' + xdata.loanapp.each{ println it }
+
+		def res = productTypeSvc.executeProductTypeRulesForLoanApplication(data.producttype, [:], "user", xdata);
+		//println 'svc-> ' + productTypeSvc;
+		res.each{ k,v-> 
+			data[k] = v 
+			println k + '-> ' + v;
+		}
+
 		em.update(data);
 
 		return open(data);
@@ -529,8 +575,13 @@ class LoanAppCaptureRenewService
 	}
 
 	@ProxyMethod
-	public def getProductTypes() {
+	public def xgetProductTypes() {
 		return productType.getList([searchtext: '%']);
+	}
+
+	@ProxyMethod
+	public def getProductTypes() {
+		return loan_producttype.getListByState([searchtext: "%", txnstate: "ACTIVATED"]).collect{ [title: it.title, code: it.code ]};
 	}
 
 	@ProxyMethod
@@ -615,6 +666,7 @@ class LoanAppCaptureRenewService
 			if (b) data.borrower.name = b.name;
 		}
 
+		/*
 		data.fullborrowername = data.borrower.name;//name.toString(); 
 		data.dtposted = data.dtfiled;  
 		data.postedby = data.createdby; 
@@ -622,6 +674,24 @@ class LoanAppCaptureRenewService
 		data.branchname = data.branch.name; 
 		data.routecode  = data.route?.code;
 		loanapp.create(data, 'loanapp_search'); 
+		*/
+		def ls = loanapp.read([objid: data.objid], 'loanapp_search');
+		if (!ls) {
+
+			data.fullborrowername = data.borrower.name; 
+			data.dtposted = data.dtcreated;  
+			data.postedby = data.createdby; 
+			data.branchcode = data.branch.code; 
+			data.branchname = data.branch.name; 
+			data.routecode  = data.route?.code;
+			loanapp.create(data, 'loanapp_search'); 
+		} else {
+			//prevls.putAll(ls);
+
+			ls.fullborrowername = data.borrower.name;
+			ls.routecode = data.route?.code;
+			loanapp.update(ls, 'loanapp_search');
+		}
 
 		def searchvalues = [data.appno, data.borrower.name]; 
 		for (sval in searchvalues) {

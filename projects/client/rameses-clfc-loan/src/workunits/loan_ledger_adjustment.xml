@@ -32,12 +32,19 @@
             visibleWhen="#{mode!='read' &amp;&amp; entity.requesttype=='MODIFY'}" immediate="true" />
             
         <invoker type="formActions" action="editModify" caption="Edit" mnemonic="e" shortcut="ctrl e"
-            visibleWhen="#{mode=='read' &amp;&amp; entity.requesttype=='MODIFY'}" />
+            visibleWhen="#{mode=='read' &amp;&amp; entity.txnstate=='DRAFT' &amp;&amp; entity.requesttype=='MODIFY'}" />
         <invoker type="formActions" action="saveModify" caption="Save" mnemonic="s" shortcut="ctrl s"
-            visibleWhen="#{mode!='read' &amp;&amp; entity.requesttype=='MODIFY'}" />
+            visibleWhen="#{mode!='read' &amp;&amp; entity.txnstate=='DRAFT' &amp;&amp; entity.requesttype=='MODIFY'}" />
                     
         <invoker type="formActions" action="submitForApprovalModify" caption="Submit for Approval" mnemonic="s" shortcut="ctrl s"
             visibleWhen="#{mode=='read' &amp;&amp; entity.txnstate=='DRAFT' &amp;&amp; entity.requesttype=='MODIFY'}" />
+        
+        <invoker type="formActions" action="approveModify" caption="Approve" mnemonic="a" shortcut="ctrl a"
+            visibleWhen="#{mode=='read' &amp;&amp; entity.txnstate=='FOR_APPROVAL' &amp;&amp; entity.requesttype=='MODIFY'}" 
+            role="APPROVER" />
+        <invoker type="formActions" action="disapproveModify" caption="Disapprove" mnemonic="d" shortcut="ctrl d" 
+            visibleWhen="#{mode=='read' &amp;&amp; entity.txnstate=='FOR_APPROVAL' &amp;&amp; entity.requesttype=='MODIFY'}" 
+            role="APPROVER" />
             
         <invoker type="formActions" action="requestForDelete" caption="Request for Deletion" mnemonic="r" shortcut="ctrl R"
             visibleWhen="#{mode=='read' &amp;&amp; entity.txnstate=='APPROVED' &amp;&amp; entity.allowrequest==true}" />

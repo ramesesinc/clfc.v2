@@ -24,7 +24,7 @@ class CollectionShortageController
     def mode = 'read', cbsmode = 'read';
     def action, totalbreakdown = 0;
     def afterApproveHandler;
-    def prevcashbreakdown;
+    def prevcashbreakdown, preventity;
     
     String title = "Shortage";
     String entityName = "shortage";
@@ -67,36 +67,32 @@ class CollectionShortageController
         }
         mode = 'read';
         EventQueue.invokeLater({ caller?.reload(); });
-        /*
-        if (MsgBox.confirm("You are about to save document. Continue?")) {
-            if (mode == 'create') {
-                entity = service.save(entity);
-            } else if (mode == 'edit') {
-                entity = service.update(entity);
-            }
-            mode = 'read';
-            binding.refresh('formActions');
-            EventQueue.invokeLater({ caller?.reload(); });
-        }
-        */
     }
     
     void edit() {
+         preventity = [:];
+         preventity.putAll(entity);
          mode = 'edit';
-        
-        /*
-        mode = 'edit'
-        binding.refresh('formActions');
-        */
     }
 
-    void cancel() {
-        if (!MsgBox.confirm('Cancelling will undo the changes made. Continue?')) return;
-        if (changeLog.hasChanges()) {
-            changeLog.undoAll();
-            changeLog.clear();
+    def cancel() {
+        if (mode=='edit') {
+            if (!MsgBox.confirm('Cancelling will undo the changes made. Continue?')) return;
+            
+            /*
+            if (changeLog.hasChanges()) {
+                changeLog.undoAll();
+                changeLog.clear();
+            }
+            */
+            if (preventity) {
+                entity = preventity;
+            }
+            
+            mode = 'read';
+            return null;
         }
-        mode = 'read';
+        return '_close';
     }
     
     void submitForNoting() {
@@ -166,6 +162,9 @@ class CollectionShortageController
     }
     
     void editCbs() {
+        preventity = [:];
+        preventity.putAll(entity);
+                
         prevcashbreakdown = [];
         def item;
         entity?.cashbreakdown?.items?.each{ o->
@@ -179,16 +178,15 @@ class CollectionShortageController
     void cancelCbs() {
         if (!MsgBox.confirm('Cancelling will undo the changes made. Continue?.')) return;
         
-        if (entity?.cashbreakdown) {
-            entity.cashbreakdown.items = [];
-            entity.cashbreakdown.items.addAll(prevcashbreakdown);
+        if (preventity) {
+            entity = preventity;
+        }
+        
+        if (prevcashbreakdown) {
+            entity.cashbreakdown.items = prevcashbreakdown;
         }
         totalbreakdown = (entity.cashbreakdown?.items? entity.cashbreakdown.items.amount.sum() : 0);
 
-        if (changeLog.hasChanges()) {
-            changeLog.undoAll();
-            changeLog.clear();
-        }
         cbsmode = 'read';
     }
     

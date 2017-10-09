@@ -84,6 +84,7 @@ class CollectionCashbreakdownService extends ActiveCrudListService
 			[caption: 'VERIFIED', state: 'VERIFIED'],
 			[caption: 'ENCASHED', state: 'ENCASHED'],
 			[caption: 'DEPOSITED', state: 'DEPOSITED'],
+			[caption: "VOIDED", state: "VOIDED"]
 		]
 	}
 

@@ -22,6 +22,9 @@
         <invoker type="formActions" action="deactivate" caption="Deactivate" mnemonic="d" shortcut="ctrl d"
             visibleWhen="${mode=='read' &amp;&amp; entity.txnstate=='ACTIVATED'}"
             role="DATAMGMT_AUTHOR" />
+            
+        <invoker type="formActions" action="testExpression" caption="Test Expression" 
+            visibleWhen="${mode=='read'}" />
     </invokers>
     
     <code class="com.rameses.clfc.producttype2.ProductTypeController" />

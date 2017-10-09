@@ -57,6 +57,9 @@ class MobilePostingService {
 	@ActiveDB('sms_for_sending')
 	def sms_for_sending;
 
+	@ActiveDB("ledger_billing_cancelrequest")
+	def ledger_billing_cancelrequest;
+
 	@Service("DateService")
 	def dateSvc;
 
@@ -448,9 +451,62 @@ class MobilePostingService {
 		def prm = decode(params);
 		def list = prm.list;
 		list.each{ o->
+			o.forcancellation = false;
+			def req = ledger_billing_cancelrequest.findBillingCancelRequestByState([itemid: o.objid, state: 'PENDING']);
+			if (req) {
+				o.forcancellation = true;
+				req.txnstate = "FOR_APPROVAL";
+				ledger_billing_cancelrequest.update(req);
+
+				def bi = ledger_billing.read([objid: o.objid], "billing-item");
+				bi.state = 'FOR_APPROVAL_CANCEL_REQUEST';
+				ledger_billing.update(bi, "billing-item");
+
+				def sc = specialcollection.read([objid: o.objid]);
+				if (sc) {
+					sc.state = 'FOR_APPROVAL_CANCEL_REQUEST';
+					specialcollection.update(sc);
+				}
+
+				def b = ledger_billing.read([objid: bi.parentid]);
+				def description = b.billdate.toString() + " ";
+				switch (bi?.item?.type) {
+					case 'route':
+						def r = loan_route.read([code: bi.item.objid]);
+						description += r.description;
+						break;
+					case 'special':
+						description += "Special";
+						break;
+					case 'followup':
+						description += "Follow-up";
+						break;
+				}
+
+				def msginfo = [
+					objid		: req.objid,
+					dtcreated 	: dateSvc.serverDate,
+					refid 		: req.objid,
+					filetype 	: 'billing:cancel:request',
+					message 	: 'For approval of cancel billing request (' + description + ')',
+					senderid 	: req.author.objid,
+					sendername 	: req.author.name,
+					recipientid : 'APPROVER'
+				];
+				inboxSvc.addMessage( msginfo );
+
+			}
+
+			req = ledger_billing_cancelrequest.findBillingCancelRequestByState([itemid: o.objid, state: 'FOR_APPROVAL']);
+			if (req) o.forcancellation = true;
+
 			o.iscancelled = false;
-			println 'o-> ' + o;
+			def i = ledger_billing.read([objid: o.objid], "billing-item");
+			if (i && i.state=='CANCELLED') {
+				o.iscancelled = true;
+			}
 		}
+
 
 		return [list: list];
 	}
@@ -708,10 +764,6 @@ class MobilePostingService {
 		def c = capture_payment.findPendingByFieldcollection([objid: params.sessionid]);
 		if (c) throw new Exception("Cannot remit collection. There are still pending captured payments to be mapped.");
 		
-		if (params.sessionid == 'LBccc596:15860efe2ef:-208f') {
-			params.sessionid = 'LB-5fb1f20e:15866d34854:-7075';
-		}
-
 		if (params.tracker) {
 			postTracker(params.tracker);
 		}
@@ -720,6 +772,21 @@ class MobilePostingService {
 		if (!params.cbsno) throw new Exception("Please specify cbsno.");
 		if (params.totalcollection == null) throw new Exception("Please specify total collection sheets for remittance.");
 		if (params.totalamount == null) throw new Exception("Please specify total amount collected.");
+
+		def req = ledger_billing_cancelrequest.findBillingCancelRequestByState([itemid: params.itemid, state: 'PENDING']);
+		if (req) {
+			throw new RuntimeException("Cannot remit collection. There is still a cancel billing request pending.");
+		}
+
+		req = ledger_billing_cancelrequest.findBillingCancelRequestByState([itemid: params.itemid, state: 'FOR_APPROVAL']); 
+		if (req) {
+			throw new RuntimeException("Cannot remit collection. There is still a cancel billing request for approval.");
+		}
+
+		req = ledger_billing_cancelrequest.findBillingCancelRequestByState([itemid: params.itemid, state: 'APPROVED']); 
+		if (req) {
+			throw new RuntimeException("Cannot remit collection. This billing has already been cancelled.");
+		}
 
 		if (params.haspayment) {
 			if (!params.payments) throw new Exception("Please specify payments.");

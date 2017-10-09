@@ -21,6 +21,11 @@ class LoanLedgerBillingController
     @Service("LoanLedgerBillingService")
     def service;
     
+    @Script("ILSReportUtil")
+    def reportUtil;
+    
+    private final String reportName = "com/rameses/clfc/report/export/billing/BillingReport.jasper";
+    
     def getTitle() {
         String text = "Collection Sheet";
 
@@ -96,14 +101,16 @@ class LoanLedgerBillingController
                         return;
                     }        
 
-                    loadingOpener.handle.binding.fireNavigation("_close");
                     entity.putAll(o);
+                    generatePDFFile();
 
                     if (entity._added) entity.remove('_added');
                     if (entity._removed) entity.remove('_removed');
                     //entity._added = [];
                     //entity._removed = [];
 
+                    loadingOpener.handle.binding.fireNavigation("_close");
+                    
                     def msg = "Billing created successfully!";
                     if (mode == 'edit') msg = "Billing updated successfully!";
 
@@ -302,6 +309,27 @@ class LoanLedgerBillingController
         })
     }
     
+    def cancelBilling() {
+        if (!MsgBox.confirm("You are about to cancel creation for this billing. Continue?")) return;
+        
+        def handler = { remarks->
+            entity.cancelremarks = remarks;
+            entity = service.cancelBilling(entity);
+            
+            MsgBox.alert("Cancel billing request successfully created!");
+            EventQueue.invokeLater({ 
+                caller?.reload();
+                binding?.refresh();
+                listHandler?.reload();
+            });
+        }
+        def op = Inv.lookupOpener('remarks:create', [title: 'Reason for cancellation', handler: handler]);
+        if (!op) return null;
+        
+        return op;
+    }
+    
+    /*
     void cancelBilling() {
         if (!MsgBox.confirm('You are about to cancel this billing. Continue?')) return;
         
@@ -313,6 +341,7 @@ class LoanLedgerBillingController
         });
         
     }
+    */
     
     def createSubBilling() {
         def op = Inv.lookupOpener('ledger:subbilling:create', [entity: entity]);
@@ -324,5 +353,12 @@ class LoanLedgerBillingController
         def op = Inv.lookupOpener('ledger:subbilling:open', [entity: entity]);
         if (!op) return null;
         return op;
+    }
+    
+    void generatePDFFile() {
+        entity.routes.each{ 
+            def data = service.getReportData(it);
+            reportUtil.generatePDFFile(data.path, data.filename, reportName, data.rptdata, data.rptparams, []);
+        }
     }
 }

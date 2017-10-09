@@ -192,6 +192,7 @@ class MigrationBorrowerResolverService extends ActiveCrudListService
 
 	}
 
+	/*
 	@ProxyMethod
 	public def submitForApproval( params ) {
 		if (!params.list) throw new Exception("Please specify list.");
@@ -201,6 +202,33 @@ class MigrationBorrowerResolverService extends ActiveCrudListService
 		def item = [
 			objid 		: 'BM' + new UID(),
 			state 		: 'FOR_APPROVAL',
+			dtcreated 	: dateSvc.serverDate,
+			author		: [objid: env.USERID, name: env.NAME]
+		];
+		borrower_merge.create(item);
+
+		def xdetail;
+		params.list.each{ o->
+			xdetail = [
+				objid	: 'BMD' + new UID(),
+				parentid: item.objid,
+				borrower: [objid: o.objid.trim(), name: o.borrowername.trim()]
+			];
+			borrower_merge.create(xdetail, 'detail');
+		}
+		return item;
+	}
+	*/
+
+	@ProxyMethod
+	public def saveMergeRequest( params ) {
+		if (!params.list) throw new Exception("Please specify list.");
+
+		validateForApprovalMergeList(params);
+
+		def item = [
+			objid 		: 'BM' + new UID(),
+			state 		: 'PENDING',
 			dtcreated 	: dateSvc.serverDate,
 			author		: [objid: env.USERID, name: env.NAME]
 		];

@@ -9,7 +9,7 @@ class SpecialCollectionTask
 	@Service("DateService")
 	def dateSvc;
 
-	@Schedule(interval=1, timeUnit="DAYS", immediate=true)
+	//@Schedule(interval=1, timeUnit="DAYS", immediate=true)
 	public void cancelPastSpecialCollectionNotDownloaded( task ) {
 		def date = dateSvc.getServerDateAsString();//dateSvc.serverDate.toString().split(" ")[0];
 		def list = em.getPastSpecialCollectionNotDownloaded([date: date.split(" ")[0]]);

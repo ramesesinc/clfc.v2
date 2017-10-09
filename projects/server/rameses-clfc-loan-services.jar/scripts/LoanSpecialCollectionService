@@ -8,6 +8,7 @@ import loan.facts.*;
 import loan.actions.*;
 import java.util.*;
 import com.rameses.util.*;
+import java.text.*;
 
 class LoanSpecialCollectionService extends ActiveListService
 {
@@ -22,6 +23,9 @@ class LoanSpecialCollectionService extends ActiveListService
 
 	@ActiveDB("ledger_billing")
 	def ledger_billing;
+
+	@ActiveDB("ledger_billing_cancelrequest")
+	def ledger_billing_cancelrequest;
 
 	@ActiveDB("loan_ledger")
 	def loan_ledger;
@@ -59,6 +63,21 @@ class LoanSpecialCollectionService extends ActiveListService
 	@ActiveDB('ledgeramnesty_smc')
 	def ledgeramnesty_smc;
 
+	@ActiveDB("loan_route")
+	def loan_route;
+
+	@ActiveDB("var")
+	def var;
+
+	@ActiveDB("loanapp_borrower")
+	def loanapp_borrower;
+
+	@ActiveDB("customer")
+	def customer;
+
+	@ActiveDB("customerindividual")
+	def customerindividual;
+
 	@Service("DateService")
 	def dateSvc;
 
@@ -86,6 +105,12 @@ class LoanSpecialCollectionService extends ActiveListService
 	@Service("InboxService")
 	def inboxSvc;
 
+		
+	private def DATE_FORMAT1 = new SimpleDateFormat("MMMMM dd, yyyy");
+	private def DATE_FORMAT2 = new SimpleDateFormat("MMM-dd-yyyy hh:mm:ss a");
+	private def DEC_FORMAT = new DecimalFormat("#,##0.00");
+
+
 	@ProxyMethod
 	public def getOptions() {
 		return [
@@ -100,6 +125,8 @@ class LoanSpecialCollectionService extends ActiveListService
 			[caption: 'DOWNLOADED', state: 'DOWNLOADED'],
 			[caption: 'REMITTED', state: 'REMITTED'],
 			[caption: 'POSTED', state: 'POSTED'],
+			[caption: 'PENDING CANCEL REQUEST', state: 'PENDING_CANCEL_REQUEST'],
+			[caption: 'FOR APPROVAL CANCEL REQUEST', state: 'FOR_APPROVAL_CANCEL_REQUEST'],
 			[caption: 'CANCELLED', state: 'CANCELLED']
 		]
 	}
@@ -198,7 +225,63 @@ class LoanSpecialCollectionService extends ActiveListService
 
 
 	@ProxyMethod
-	public def cancelBilling2( params ) {
+	public def cancelBillingRequest( params ) {
+		//def data = changeStateImpl(params, "PENDING_CANCEL_REQUEST");
+
+		def data = open(params);
+
+		def req = ledger_billing_cancelrequest.findBillingCancelRequestByState([itemid: data.objid, state: 'PENDING']);
+		if (!req) {
+			req = [
+				objid		: 'BCR' + new UID(),
+				dtfiled		: dateSvc.serverDate,
+				author		: [objid: env.USERID, name: env.NAME],
+				billing 	: [itemid: data.objid, state: data.state, date: data.txndate],
+				collector 	: data.collector,
+				txnstate	: 'PENDING',
+				remarks 	: params.cancelremarks
+			];
+
+			req.billing.description = "SPECIAL";
+			if (followupcollection.read(data)) {
+				req.billing.description = "FOLLOW-UP";
+			}
+
+			ledger_billing_cancelrequest.create(req);
+		}
+
+		//println 'state ' + data.state + ' ' + (!data.state.matches("FOR_DOWNLOAD|DOWNLOADED"));
+
+		if (!data.state.matches("FOR_DOWNLOAD|DOWNLOADED")) {
+			throw new RuntimeException("Cannot cancel billing. The billing has already been ${data.state}.");
+		}
+
+		if (data.state == "FOR_DOWNLOAD") {
+			req.txnstate = "FOR_APPROVAL";
+			ledger_billing_cancelrequest.update(req);
+
+			data = changeStateImpl(data, "FOR_APPROVAL_CANCEL_REQUEST");
+
+			//def filetype = (followupcollection.read(data)? 'followupcollection' : 'specialcollection');
+			def prm = [
+				objid		: req.objid,
+				recipient 	: 'APPROVER',
+				filetype 	: "billing:cancel:request",
+				message 	: 'Submitted for approval cancel billing request.'
+			];
+			addInbox(prm);
+		}
+
+		data = changeStateImpl(params, "PENDING_CANCEL_REQUEST");
+		def bi = ledger_billing.read([objid: data.objid], "billing-item");
+		if (bi) {
+			bi.state = data.state;
+			ledger_billing.changeState(bi);
+			bi = ledger_billing.read(bi, "billing-item");
+		}
+		
+		return data;
+		/*
 		params.cancelremarks = "Cancelled created billing.";
 		def data = cancelBilling(params);
 
@@ -207,8 +290,12 @@ class LoanSpecialCollectionService extends ActiveListService
 			item.state = data.state;
 			ledger_billing.update(item, "billing-item");
 		}
+		*/
 
-		return open(data);
+
+		//throw new RuntimeException("stopping");
+
+		//return open(data);
 	}
 
 	//@Async
@@ -1136,14 +1223,24 @@ class LoanSpecialCollectionService extends ActiveListService
 		data.allowReset = false;
 		def date = dateSvc.getServerDateAsString().split(" ")[0];
 		def txndate = data.txndate.toString();
-		if (date.compareTo(txndate) >= 0 && (data.state=='FOR_DOWNLOAD' || data.state=='DOWNLOADED')) {
-			data.allowReset = true;
-		}
+		//println 'date-> ' + date + ' txndate-> ' + txndate;
+		//if (date.compareTo(txndate) >= 0 && (data.state=='FOR_DOWNLOAD' || data.state=='DOWNLOADED')) {
+		//	data.allowReset = true;
+		//}
 
 		def regex = '(FOR_DOWNLOAD|DOWNLOADED)';
 		if (data.state?.matches(regex)) {
 			data.allowcancel = true;
+			if (txndate.compareTo(date) >= 0) {
+				data.allowReset = true;
+			}
 		}
+
+		def i = ledger_billing.read([objid: data.objid], "billing-item");
+		if (i) data.allowexport = true;
+
+		//println 'allowcancel ' + data.allowcancel;
+
 
 		return data;
 	}
@@ -1175,5 +1272,102 @@ class LoanSpecialCollectionService extends ActiveListService
 	@ProxyMethod
 	public def getFollowupCollectionList( params ) {
 		return em.getFollowupCollectionList(params);
+	}
+
+	@ProxyMethod
+	public def getReportData( params ) {
+		def sv = var.read([name: "report_export_path"]);
+		def path = sv?.value;
+		if (!path) path = "";
+
+		def data = open(params);
+		def serverdate = dateSvc.serverDate;
+
+		def filename = data.txndate.toString() + "_" + data.collector.name + "_" + data.objid.replaceAll(":", "_") + "_";
+
+		//println 'data';
+		//data.each{ println it }
+
+		def branch = branchSvc.open([:]);
+		def rptparams = [:];
+		branch.each{ k, v->
+			rptparams["branch_" + k] = v;
+		}
+
+		def desc = "Special";
+		def fnsuffix = "Special Collection";
+		if (followupcollection.read([objid: data.objid])) {
+			desc = "Follow-up";
+			fnsuffix = "Followup Collection";
+		}
+		filename += fnsuffix + ".pdf";
+
+		def r = [description: desc];
+
+		def list = [];
+		def items = ledger_billing.getBillingDetailsWithNextto([objid: data.objid]);
+		items.each{ o->
+			def map = [
+				refno 		: o.refno,
+				acctname	: o.acctname,
+				dtreleased	: o.dtreleased,
+				dtmatured 	: o.dtmatured,
+				route 		: r
+			];
+
+			def itm, itm2;
+			def l = loan_ledger.read([objid: o.ledgerid]);
+			def joints = loanapp_borrower.getJointBorrowers([parentid: l?.appid]); 
+			joints.each{ j->
+				itm = customer.read([objid: j.objid]);
+				if (itm) {
+					if (itm.type == 'INDIVIDUAL') {
+						itm2 = customerindividual.read([objid: itm.objid]);
+						map.acctname += " AND " + itm2.lastname + ', ' + itm2.firstname;
+					}
+				}
+			}
+			def ac = ledgeramnesty.findActiveByDateAndLedgerid([date: data.txndate, ledgerid: o.ledgerid]);
+			if (ac) {
+				def str = "\n(" + ac.type + ": ";
+				switch (ac.type) {
+					case 'FIX': 
+						def af = ledgeramnesty_fix.read([objid: ac.refid]);
+						//println 'amount ' + af.amount + ' dtstarted ' + af.dtstarted + ' dtended ' + af.dtended;
+						str += DEC_FORMAT.format(af.amount) + " SD: " + DATE_FORMAT1.format(parseDate(af.dtstarted));
+						if (af.dtended) {
+							str += " ED: " + DATE_FORMAT1.format(parseDate(af.dtended));
+						}
+						break;
+					default :
+						str += ac.description + " SD: " + DATE_FORMAT1.format(parseDate(ac.dtstarted));
+						break;
+				}
+				str += ")";
+				map.acctname += str;
+			}
+
+			list << map;
+		}
+
+		def rowsize = 20;
+		def s = list.size() / rowsize;
+		s =  list.size() - (s.toInteger() * rowsize);
+		s = rowsize - s.toInteger();
+
+		s += rowsize;
+		for (def i=0; i<s; i++) {
+			list << [route: r];
+		}
+
+		def idx = 0;
+		for (def i=0; i<list.size(); i++) {
+			if (i >= ((idx + 1) * rowsize)) {
+				idx++;
+			}
+			list[i].page = idx;
+		}
+		
+		return [path: path, filename: filename, rptdata: list, rptparams: rptparams];
 	}
 }

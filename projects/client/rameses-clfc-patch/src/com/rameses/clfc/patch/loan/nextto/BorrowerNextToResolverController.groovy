@@ -15,12 +15,15 @@ class BorrowerNextToResolverController
     
     String title = 'Borrower Next to Resolver';
     
-    def route, searchtext;
+    def entity = [:], searchtext;
+    def list, route;
     
     def routeLookup = Inv.lookupOpener('borrowernextto:route:lookup', [
          onselect: { o->
              o.name = o.description + ' - ' + o.area;
-             route = o;
+             entity = service.getInfo([route: o]);
+             //route = o;
+             binding?.refresh();
              listHandler?.reload();
          }
     ]);
@@ -33,13 +36,20 @@ class BorrowerNextToResolverController
     def selectedItem;
     def listHandler = [
         fetchList: { o->
-            o.routecode = route?.code;
-            o.searchtext = searchtext;
-            return service.getLedgers(o);
+            if (!entity.list) entity.list = [];
+            return entity.list;
+            //o.routecode = route?.code;
+            //o.searchtext = searchtext;
+            //return service.getLedgers(o);
         }
     ] as BasicListModel
     
+    def getParams() {
+        return [searchtext: searchtext, routecode: entity.route.code]
+    }
+    
     void search() {
+        entity.list = service.getLedgers(getParams());
         listHandler?.reload();
     }
     
@@ -47,14 +57,15 @@ class BorrowerNextToResolverController
         def handler = { o->
             def params = [
                 borrowerid  : selectedItem?.borrower?.objid,
-                nexttoid    : o?.objid
+                nexttoid    : o?.objid,
+                routecode   : entity.route?.code
             ];
             service.setNextTo(params);
-            listHandler?.reload();
+            search();
         }
         def params = [
             borrowerid  : selectedItem?.borrower?.objid, 
-            routecode   : route?.code,
+            routecode   : entity?.route?.code,
             onselect    : handler
         ];
         def op = Inv.lookupOpener('borrowernextto:available:lookup', params);
@@ -65,12 +76,13 @@ class BorrowerNextToResolverController
     def removeNextTo() {
         if (!MsgBox.confirm('You are about to remove next to for this borrower. Continue?')) return;
         
-        service.removeNextTo([borrowerid: selectedItem?.borrower?.objid]);
-        listHandler?.reload();
+        //service.removeNextTo([borrowerid: selectedItem?.borrower?.objid]);
+        service.removeNextTo(selectedItem);
+        search();
     }
     
     def refresh() {
-        listHandler?.reload();
+        search();
     }
     
     def close() {
@@ -78,7 +90,7 @@ class BorrowerNextToResolverController
     }
     
     def displayRouteLedgers() {
-        def op = Inv.lookupOpener('borrower:nextto:report', [routecode: route?.code]);
+        def op = Inv.lookupOpener('borrower:nextto:report', [routecode: entity.route?.code]);
         if (!op) return null;
         return op;
     }
@@ -87,5 +99,17 @@ class BorrowerNextToResolverController
         service.displayRouteLedgers([routecode: route?.code, searchtext: searchtext]);
     }
     */
+   
+    void setAsStartingBorrower() {
+        if (!selectedItem) return;
+        
+        def params = [
+            startborrower       : selectedItem,
+            prevstartborrower   : entity.startborrower
+        ];
+        entity.startborrower = service.setAsStartingBorrower( params );
+        binding?.refresh();
+        search();
+    }
 }
 

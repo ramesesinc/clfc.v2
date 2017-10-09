@@ -106,18 +106,15 @@ class LoanCollectionShortageService extends ActiveCrudListService
 			data.cashbreakdown = cb;
 		}
 
-		if (data.state == 'NOTED') {
+		if (data.state == 'FOR_NOTING') {
 			data.alloweditcbs = true;
 		}
 
 		def rem = remittance.read([objid: data.remittanceid]);
 		if (rem) {
 			def req = shortage_voidrequest.findRequestByShortageidAndState([shortageid: data.objid, txnstate: 'FOR_APPROVAL']);
-			if (!req && data.alloweditcbs==true) {
-				data.allowvoid = true
-			}
-
-			if (!req && data.alloweditcbs==true && !data.allowvoid && cb && (cb?.state=='DRAFT' || cb?.state=='SEND_BACK')) {
+			
+			if (!req && data.state=='NOTED' && cb?.state?.matches("DRAFT|SEND_BACK")) {
 				data.allowvoid = true;
 			}
 			
@@ -227,9 +224,26 @@ class LoanCollectionShortageService extends ActiveCrudListService
 	}
 	*/
 
+	void validateBeforeNoted( params ) {
+		def xprm = [
+			collectionid: params.objid,
+			groupid 	: params.objid,
+			grouptype 	: 'shortage'
+		];
+
+		def cb = collection_cb.findCashbreakdown(xprm);
+		if (!cb) throw new RuntimeException("No cash breakdown sheet has been created for this shortage.");
+
+
+		def list = collection_cb.getDetails(cb);
+		def amt = list?.amount?.sum();
+		if (!amt || amt == 0) throw new RuntimeException("No cash breakdown for this shortage.");
+	}
+
 	@ProxyMethod
 	public def noted( params ) {
 		def data = changeState(params, 'NOTED');
+		validateBeforeNoted(data);
 
 		data.dtnoted = dateSvc.serverDate;
 		data.notedby = [objid: env.USERID, name: env.NAME];

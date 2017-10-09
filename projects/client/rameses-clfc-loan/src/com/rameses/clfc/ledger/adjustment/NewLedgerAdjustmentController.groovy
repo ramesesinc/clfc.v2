@@ -296,6 +296,27 @@ class NewLedgerAdjustmentController {
         });
     }
     
+    void approveModify() {
+        if (!MsgBox.confirm("You are about to approve delete request for this document. Continue?")) return;
+        
+        entity = service.approveModify(entity);
+        EventQueue.invokeLater({
+            caller?.reload();
+            binding?.refresh('formActions');
+        });
+    }
+    
+    void disapproveModify() {
+        if (!MsgBox.confirm("You are about to disapprove delete request for this document. Continue?")) return;
+        
+        entity = service.disapproveModify(entity);
+        EventQueue.invokeLater({
+            caller?.reload();
+            binding?.refresh('formActions');
+        });
+        
+    }
+    
     void modify() {
         //ismodify = true;
         entity.requesttype = 'MODIFY';

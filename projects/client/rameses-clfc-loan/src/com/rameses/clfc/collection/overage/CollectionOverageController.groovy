@@ -53,25 +53,28 @@ class CollectionOverageController
                 entity = service.update(entity);
             }
             mode = 'read';
-            binding.refresh('formActions');
             EventQueue.invokeLater({ caller?.reload(); });
         }
     }
 
     void edit() {
+        preventity = [:];
+        preventity.putAll(entity);
         mode = 'edit';
-        binding.refresh('formActions');
     }
 
-    void cancel() {
-        if (MsgBox.confirm("Cancelling will undo the changes made. Continue?")) {
-            mode = 'read';
-            if (changeLog.hasChanges()) {
-                changeLog.undoAll();
-                changeLog.clear();
+    def cancel() {
+        if (mode=='edit') {
+            if (!MsgBox.confirm("Cancelling will undo the changes made. Continue?")) return;
+            
+            if (preventity) {
+                entity = preventity;
             }
-            binding.refresh('formActions');
+            
+            mode = 'read';
+            return null;
         }
+        return '_close';
     }
 
     void submitForNoting() {

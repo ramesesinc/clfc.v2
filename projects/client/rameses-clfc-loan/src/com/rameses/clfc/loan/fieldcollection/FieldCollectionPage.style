@@ -1,18 +1,15 @@
-"denominationHandler:item.*" [item.qty != 0] {
-    background-color: yellow;
-    color: black;
-}
-"selectedDenomination" [mode == 'read'] {
-    readonly: true;
-}
-"selectedDenomination" [mode != 'read'] {
-    readonly: false;
-}
-
 "entity.route.area" [ route.type == 'route' ] {
     visible: true;
 }
-
 "entity.route.area" [ route.type != 'route' ] {
     visible: false;
+}
+"entity.(shortage|overage)" [1==1] {
+    visible: false;
+}
+"entity.shortage" [entity.shortage > 0] {
+    visible: true;
+}
+"entity.overage" [entity.overage > 0] {
+    visible: true;
 }

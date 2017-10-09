@@ -27,3 +27,6 @@ UPDATE loan_ledger SET
 	dtstarted = $P{dtstarted},
 	dtmatured = $P{dtmatured}
 WHERE appid = $P{objid}
+
+[removeChargesByAppid]
+delete from loanapp_charge where appid=$P{appid}

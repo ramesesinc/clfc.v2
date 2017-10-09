@@ -343,6 +343,8 @@ class EncashmentService extends ActiveCrudListService
 				item.author = data.author;
 				em.create(item, 'encashment-check');
 			} else {
+				item.putAll(data.check);
+				item.amount = data.amount;
 				em.update(item, 'encashment-check');
 			}
 

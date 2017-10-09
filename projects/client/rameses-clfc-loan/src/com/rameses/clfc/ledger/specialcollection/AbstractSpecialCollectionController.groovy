@@ -4,6 +4,7 @@ import com.rameses.rcp.common.*;
 import com.rameses.rcp.annotations.*;
 import com.rameses.osiris2.client.*;
 import com.rameses.osiris2.common.*;
+import com.rameses.osiris2.reports.*;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
 import com.rameses.common.*;
 import java.rmi.server.UID;
 
@@ -20,6 +21,11 @@ abstract class AbstractSpecialCollectionController  {
     
     @Service("LoanBillingGroupService")
     def billingGroupSvc;
+    
+    @Script("ILSReportUtil")
+    def reportUtil;
+    
+    private final String reportName = "com/rameses/clfc/report/export/billing/BillingReport.jasper";
     
     abstract String getServiceName();
     abstract Map createEntity();
@@ -286,6 +292,7 @@ abstract class AbstractSpecialCollectionController  {
                 return;
             }
             entity = o;
+            generatePDFFile();
             //entity.putAll(o);
             //def msg = ;
             //if (mode == 'edit') msg = "Follow-up collection updated successfully!";
@@ -335,6 +342,7 @@ abstract class AbstractSpecialCollectionController  {
         return loadingOpener;
     }
     
+    /*
     void cancelBilling() {
         if (!MsgBox.confirm('You are about to cancel this billing. Continue?')) return;
         
@@ -346,6 +354,7 @@ abstract class AbstractSpecialCollectionController  {
         });
         
     }
+    */
     
     def cancelBilling() {
         if (!MsgBox.confirm("You are about to cancel creation for this billing. Continue?")) return;
@@ -363,10 +372,27 @@ abstract class AbstractSpecialCollectionController  {
         return op;
     }
     
-    void cancelBilling2() {
+    
+    def cancelBillingRequest() {
+        if (!MsgBox.confirm("You are about to cancel creation for this billing. Continue?")) return;
+        
+        def handler = { remarks->
+            entity.cancelremarks = remarks;
+            entity = service.cancelBillingRequest(entity);
+            
+            MsgBox.alert("Cancel billing request successfully created!");
+            binding?.refresh();
+        }
+        def op = Inv.lookupOpener('remarks:create', [title: 'Reason for cancellation', handler: handler]);
+        if (!op) return null;
+        
+        return op;
+    }
+    
+    void xcancelBillingRequest() {
         if (!MsgBox.confirm("You are about to cancel this billing. Continue?")) return;
         
-        entity = service.cancelBilling2(entity);
+        entity = service.cancelBillingRequest(entity);
         EventQueue.invokeLater({ 
             caller?.reload();
             binding?.refresh();
@@ -378,6 +404,11 @@ abstract class AbstractSpecialCollectionController  {
         if (!MsgBox.confirm("You are about to disapprove this document. Continue?")) return;
         
         entity = service.disapprove(entity);
+    }
+    
+    void generatePDFFile() {
+        def data = service.getReportData(entity);
+        reportUtil.generatePDFFile(data.path, data.filename, reportName, data.rptdata, data.rptparams, []);
     }
 }
 

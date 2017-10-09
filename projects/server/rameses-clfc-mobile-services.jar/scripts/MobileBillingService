@@ -167,10 +167,10 @@ class MobileBillingService
 		src?.sort{ it.acctname }
 		def idx = 0;
 		while (true) {
-			def xlist = src?.findAll{ it.nextto != null }
-			if (!xlist) break;
+			def item = src.find{ it.isstart==1 }
+			if (!item) item = src.find{ it.nextto != null };
+			if (!item) break;
 
-			def item = xlist[0];
 			def previtem;
 			while (item?.nextto != null) {
 				previtem = item;

@@ -21,6 +21,9 @@ class TrackerMigrationTask {
 	@ActiveDB("borrower")
 	def borrower;
 
+	@ActiveDB("var")
+	def var;
+
 	@ActiveDB(em="tracker", value="mobile_tracker")
 	def mobile_tracker;
 
@@ -32,7 +35,9 @@ class TrackerMigrationTask {
 
 	@Schedule(interval=1, timeUnit='SECONDS')
 	public void migrateTracker( task ) { 
-		println 'tracker migration scheduler';
+		def sysvar = var.read([name: "enable_tracker_migration_task"]);
+		if (!sysvar || sysvar.value.toLowerCase() != 'true') return;
+
 		def date = dateSvc.serverDate.toString().split(' ')[0];
 
 		def branch = branchSvc.open([:]);

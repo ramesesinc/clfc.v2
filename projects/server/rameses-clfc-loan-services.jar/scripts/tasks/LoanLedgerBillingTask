@@ -12,15 +12,18 @@ class LoanLedgerBillingTask
 	@ActiveDB("collection_remittance")
 	def remittance;
 
+	@ActiveDB("specialcollection")
+	def specialcollection;
+
 	@Service("DateService")
 	def dateSvc;
 
 
-	@Schedule(interval=1, timeUnit="DAYS", immediate=true)
+	@Schedule(interval=1, timeUnit="MINUTES", immediate=true)
 	public void cancelPastBillingsNotDownloaded( task ) {
 		def date = dateSvc.serverDate.toString().split(" ")[0];
 		def list = ledger_billing.getPastBillingsNotDownloaded([date: date]);
-		println 'cancelling past billing';
+		//println 'cancelling past billing';
 		list.each{ o->
 			o.state = "CANCELLED";
 			ledger_billing.changeState(o);
@@ -28,6 +31,17 @@ class LoanLedgerBillingTask
 			o.dtcancelled = dateSvc.serverDate;
 			o.cancelledby = [objid: 'SYSTEM', name: 'SYSTEM'];
 			ledger_billing.update(o, "cancel-item");
+
+			def sc = specialcollection.read([objid: o.objid]);
+			if (sc) {
+				sc.state = o.state;
+				specialcollection.changeState(sc);
+
+				sc.dtcancelled = o.dtcancelled;
+				sc.cancelledby = o.cancelledby;
+				sc.cancelledby.remarks = "System Cancelled";
+				specialcollection.update(sc, "sc-cancel");
+			}
 		}
 	}
 

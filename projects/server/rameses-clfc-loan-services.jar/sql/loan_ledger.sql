@@ -8,12 +8,16 @@ SELECT ll.objid, la.objid AS loanappid, la.appno, ll.acctname, ll.dailydue,
 		ll.producttypeid, ll.balance, ll.overpaymentamount, la.loanamount,
 		ll.absentpenalty, ll.dtmatured, ll.paymentmethod, ll.interestamount,
 		ll.dtcurrentschedule, la.dtcreated AS loandate, ll.term, ll.acctid,
-		c.address_text AS homeaddress, ll.compromiseid
+		c.address_text AS homeaddress, ll.compromiseid, n.nexttoid AS nextto,
+		lb.isstart as isstart
 FROM loan_ledger ll
 INNER JOIN loanapp la ON ll.appid = la.objid
 INNER JOIN customer c ON c.objid = ll.acctid
+INNER JOIN loanapp_borrower lb on lb.parentid=la.objid
+LEFT JOIN loanapp_borrower_nextto n ON c.objid=n.borrowerid
 WHERE la.route_code = $P{route_code}
 	AND ll.state = 'OPEN'
+	and lb.type='principal'
 
 [xgetCollectionsheets]
 SELECT ll.objid, la.objid AS loanappid, la.appno, ll.acctname, ll.dailydue,

@@ -24,6 +24,19 @@ class BorrowerNextToResolverService
 	def branchSvc;
 
 	@ProxyMethod
+	public def getInfo( params ) {
+		def data = [
+			route 	: params.route
+		];
+
+		data.list = em.getBorrowersByRoutecode([searchtext: "%", routecode: data.route.code]);
+		//data.list.each{ println it }
+		data.startborrower = data.list.find{ it.borrower?.isstart==1 }
+
+		return data;
+	}
+
+	@ProxyMethod
 	public def getLedgers( params ) {
 		params.searchtext = (params.searchtext? params.searchtext : '') + '%';
 		def list = em.getBorrowersByRoutecode(params);
@@ -44,6 +57,38 @@ class BorrowerNextToResolverService
 		params.searchtext = '%';
 		def list = em.getBorrowersByRoutecode(params);
 
+		def seqlist = [];
+		while (true) {			
+			def item = list.find{ it.borrower.isstart==1 }
+			if (!item) item = list.find{ it.nextto.objid != null };
+			if (!item) break;
+
+			def previtem;
+			while (item?.nextto?.objid != null) {
+				previtem = item;
+				item = list?.find{ it.borrower?.objid == item.nextto?.objid }
+				if (!item) {
+					item = previtem;
+					break;
+				}
+			}
+
+			def xitmlist;
+			while (item != null) {
+				xitmlist = list.findAll{ it.borrower.objid == item.borrower.objid }
+				xitmlist?.sort{ it.appno }
+				xitmlist?.each{ xitm->
+					seqlist << xitm;
+					list.remove(xitm);
+				}
+				item = list?.find{ it.nextto?.objid == item.borrower?.objid }
+			}
+		}
+
+		if (list) seqlist.addAll(list);
+
+
+		/*
 		def seqlist = [];
 		while (true) {
 			def xlist = list.findAll{ it.nextto.objid != null }
@@ -68,22 +113,13 @@ class BorrowerNextToResolverService
 					seqlist << xitm;
 					list.remove(xitm);
 				}
-				/*
-				xitm = list.find{ it.borrower.objid == item.borrower.objid }
-				//if (xitm) seqlist << list.remove(xitm);
-				if (xitm) {
-					seqlist << xitm;
-					list.remove(xitm);
-				}
-				*/
 				item = list?.find{ it.nextto?.objid == item.borrower?.objid }
 			}
 
 			//println '\nxlist size ' + xlist.size();
 			//println 'seqlist size ' + seqlist.size();
 		}
-
-		if (list) seqlist.addAll(list);
+		*/
 		/*
 		def xlist = list.findAll{ it.nextto.objid != null }
 		if (xlist) {
@@ -111,6 +147,9 @@ class BorrowerNextToResolverService
 
 	@ProxyMethod
 	public def setNextTo( params ) {
+		if (!params.borrowerid) throw new RuntimeException("Please specify borrowerid.");
+		if (!params.nexttoid) throw new RuntimeException("Please specify nexttoid.");
+		if (!params.routecode) throw new RuntimeException("Please specify routecode.");
 		/*
 		def b = borrower.read([objid: params.borrowerid]);
 		println 'borrower ' + b?.name;
@@ -118,16 +157,25 @@ class BorrowerNextToResolverService
 		def b2 = borrower.read([objid: params.nexttoid])
 		println 'next to ' + b2?.name;
 		*/
+
+		def list = em.getBorrowersByRoutecode([searchtext: "%", routecode: params.routecode]);
+		def b = borrower.read([objid: params.nexttoid]);
+		def nexttoid = params.nexttoid;
+		while (true) {
+			def item = list.find{ it.borrower.objid==nexttoid }
+			if (!item || !item.nextto.objid) {
+				break;
+			}
+			nexttoid = item.nextto.objid;
+			if (params.borrowerid == nexttoid) {
+				def msg = "Cannot set borrower next to " + b?.name + " because it will result in an infinite cycle for the collection sheet sequence. ";
+				msg += "To resolve this, make sure " + b?.name + " is not next to another borrower to avoid an infinite cycle for the collection sheet sequence.";
+				throw new RuntimeException(msg);
+			}
+		}
+
 		def item = em.findNextToByNexttoid(params);
 		if (item) {
-			/*
-			b = borrower.read([objid: item.borrowerid]);
-			println 'next to borrower ' + b?.name;
-
-			b2 = borrower.read([objid: item.nexttoid]);
-			println 'next to borrower next to ' + b2?.name;
-			throw new Exception('')
-			*/
 			item.nexttoid = params.borrowerid;
 			loanapp_borrower.update(item, 'nextto');
 		}
@@ -149,10 +197,30 @@ class BorrowerNextToResolverService
 
 	@ProxyMethod
 	public def removeNextTo( params ) {
-		def nextto = em.findNextToByBorrowerid(params);
-		if (nextto) {
-			loanapp_borrower.delete(nextto, 'nextto');
+		if (params.nextto.recordid) {
+			loanapp_borrower.delete([objid: params.nextto.recordid], 'nextto');
+		} else {
+			def nextto = em.findNextToByBorrowerid([borrowerid: params.borrower.objid]);
+			if (nextto) {
+				loanapp_borrower.delete(nextto, 'nextto');
+			}	
 		}
+	}
+
+	@ProxyMethod
+	public def setAsStartingBorrower( params ) {
+		def prevsb = params.prevstartborrower;
+		if (prevsb) {
+			loanapp_borrower.update([objid: prevsb.borrower.recordid, isstart: null]);
+		}
+
+		def sb = params.startborrower;
+		if (sb) {
+			sb.borrower.isstart = 1;
+			loanapp_borrower.update([objid: sb.borrower.recordid, isstart: sb.borrower.isstart]);
+		}
+
+		return sb;
 	}
 
 	@ProxyMethod

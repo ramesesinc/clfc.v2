@@ -78,7 +78,7 @@ public class BorrowerMergePage extends javax.swing.JPanel {
         xDataTable1.setName("selectedBorrower"); // NOI18N
 
         xButton1.setDepends(new String[] {"selectedBorrower"});
-        xButton1.setDisableWhen("${selectedBorrower==null}");
+        xButton1.setDisableWhen("${mode=='read'||selectedBorrower==null}");
         xButton1.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
         xButton1.setName("selectBorrowerToRetain"); // NOI18N
         xButton1.setPreferredSize(new java.awt.Dimension(80, 23));

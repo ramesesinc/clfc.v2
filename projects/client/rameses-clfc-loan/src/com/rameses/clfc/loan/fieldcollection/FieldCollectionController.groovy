@@ -5,6 +5,7 @@ import com.rameses.rcp.annotations.*;
 import com.rameses.osiris2.client.*;
 import com.rameses.osiris2.common.*;
 import com.rameses.rcp.framework.*;
+import com.rameses.clfc.util.LoanUtil;
 import java.rmi.server.UID;
 
 class FieldCollectionController 
@@ -26,66 +27,183 @@ class FieldCollectionController
     
     void init() {
         action = 'init';
+        mode = "read";
         billdate = dateSvc.getServerDateAsString().split(' ')[0];
         collectorList = service.getCollectors();
     }
     
     def close() {
-        return '_exit';
+        return '_close';
     }
     
     def next() {
         mode = 'read';
         action = 'view';
-        def opener = new Opener(outcome: 'main');
         getFieldCollection();
-        return opener;
+        return "main";
     }
     
-    private void getFieldCollection() {
+    def back() {
+        action = "init";
+        return "default";
+    }
+    
+    def getRouteList() {
+        if (!collector) return [];
+        def params = [
+            collectorid : collector.objid,
+            billdate    : billdate
+        ];
+        return service.getRoutes(params);
+    }
+ 
+    void save() {
+        entity.cashbreakdown = service.updateCashBreakdown(entity.cashbreakdown);
+        mode = 'read';
+    }
+    
+    void edit() {
+        prevcashbreakdown = [];
+        def item;
+        entity?.cashbreakdown?.items?.each{ o->
+            item = [:];
+            item.putAll(o);
+            prevcashbreakdown.add(item);
+        }
+        mode = 'edit';
+        //itemsModel?.reload();
+        //binding?.refresh()
+    }
+    
+    void cancel() {
+        if (!MsgBox.confirm('Cancelling will undo changes made to cash breakdown. Continue?')) return;
+        
+        if (prevcashbreakdown) {
+            entity.cashbreakdown.items = [];
+            entity.cashbreakdown.items.addAll(prevcashbreakdown);
+        }
+        
+        mode = 'read';
+        //itemsModel?.reload();
+    }
+    
+    void getFieldCollection() {
         entity = service.getFieldCollection([itemid: route.itemid]);
-        if (!entity) throw new Exception("No unposted collection for this collector.");
 
         entity.billdate = billdate;
         entity.collection = route.type;
         if (!entity.route) entity.route = route;
-
-        totalbreakdown = 0;
-        if (entity.cashbreakdown.items) totalbreakdown = entity.cashbreakdown.items.amount.sum();
+        
+        buildConsolidatedCashBreakdown(entity);
+        computeTotalBreakdown();
+    }
+    
+    void computeTotalBreakdown() {
+        totalbreakdown = entity.cashbreakdown?.items?.amount?.sum();
         if (!totalbreakdown) totalbreakdown = 0;
-        /*
-        if (!entity.cashbreakdown) {
-            entity.cashbreakdown = createCashBreakdown();
-        } else {
-            totalbreakdown = 0;
-            if (entity.cashbreakdown.items) totalbreakdown = entity.cashbreakdown.items.amount.sum();
-            if (!totalbreakdown) totalbreakdown = 0;
-        }
-        */
+        //def tb = entity.cashbreakdown.items?.amount?.sum();
+        //if (!tb) tb = 0;
+        
+        //def tb1 = entity.shortagebreakdown?.items?.amount?.sum();
+        //if (!tb1) tb1 = 0;
+        
+        //totalbreakdown = tb + tb1;
     }
-    
+     
     /*
-    private def createCashBreakdown() {
-        def m = [
-            objid   : 'CB' + new UID(),
-            items   : []
-        ]
-        mode = 'create';
-        totalbreakdown = 0;
-        return m;
-    }
+    def itemsModel = [
+        getOpeners: {
+            def list = Inv.lookupOpeners("fieldcollection:breakdown:plugin", [entity: entity, mode: mode]);
+            list = [];
+            
+            return list;
+        },
+        getOpenerParams: { o->
+            buildConsolidatedCashBreakdown(entity);
+            computeTotalBreakdown();
+            return [entity: entity, mode: mode];
+        }
+    ] as TabbedPaneModel;
     */
-    
-    def getCashbreakdown() {
+   
+    def getConsolidatedCashbreakdown() {
+        if (!entity.consolidatedbreakdown) entity.consolidatedbreakdown = [:];
+        if (!entity.consolidatedbreakdown.items) entity.consolidatedbreakdown.items = [];
+        
+        def tb = entity.consolidatedbreakdown?.items?.amount?.sum();
+        if (!tb) tb = 0;
         def params = [
-            entries         : entity.cashbreakdown.items,
-            totalbreakdown  : totalbreakdown,
+            entries         : entity.consolidatedbreakdown?.items,//entity?.cashbreakdown?.items,
+            totalbreakdown  : tb, //totalbreakdown,
+            editable        : false, //(mode != 'read'? true: false),
+        ];
+        
+        def op = Inv.lookupOpener("clfc:denomination:nopanel", params);
+        if (!op) return null;
+        return op;
+    }
+    
+    def getCollectionCashbreakdown() {
+        if (!entity.cashbreakdown) entity.cashbreakdown = [:];
+        if (!entity.cashbreakdown.items) entity.cashbreakdown.items = [];
+        
+        def tb = entity.cashbreakdown?.items?.amount?.sum();
+        if (!tb) tb = 0;
+        def params = [
+            entries         : entity.cashbreakdown?.items,//entity?.cashbreakdown?.items,
+            totalbreakdown  : tb, //totalbreakdown,
             editable        : (mode != 'read'? true: false),
-            onupdate        : {o->
-                totalbreakdown = o;
+            onupdate        : { o->
+                buildConsolidatedCashBreakdown(entity);
+                computeTotalBreakdown()
+                binding?.refresh("consolidatedCashbreakdown");
             }
-        ]
-        return InvokerUtil.lookupOpener('clfc:denomination', params);
+        ];
+        
+        def op = Inv.lookupOpener("clfc:denomination:nopanel", params);
+        if (!op) return null;
+        return op;
+    }
+    
+    def getShortageCashbreakdown() {
+        if (!entity.shortagebreakdown) entity.shortagebreakdown = [:];
+        if (!entity.shortagebreakdown.items) entity.shortagebreakdown.items = [];
+        
+        def tb = entity.shortagebreakdown?.items?.amount?.sum();
+        if (!tb) tb = 0;
+        def params = [
+            entries         : entity.shortagebreakdown?.items,//entity?.cashbreakdown?.items,
+            totalbreakdown  : tb, //totalbreakdown,
+            editable        : false, //(mode != 'read'? true: false),
+        ];
+        
+        def op = Inv.lookupOpener("clfc:denomination:nopanel", params);
+        if (!op) return null;
+        return op;
+    }
+    
+    void buildConsolidatedCashBreakdown( params ) {
+        entity.consolidatedbreakdown = [items: buildConsolidatedCashBreakdownImpl(params)];
+    }
+    
+    def buildConsolidatedCashBreakdownImpl( params ) {
+        def list = [];
+        LoanUtil.denominations.each{ o->
+            def map = [:];
+            map.putAll(o);
+            
+            def i = params.cashbreakdown.items?.find{ it.denomination==o.denomination && it.qty > 0 }
+            if (i) map.qty += i.qty;
+            
+            i = params.shortagebreakdown?.items?.find{ it.denomination==o.denomination && it.qty > 0 }
+            if (i) map.qty += i.qty;
+            
+            map.amount = map.qty * map.denomination;
+            
+            list << map;
+        }
+        
+        return list;
     }
     
     void submitCbsForVerification() {
@@ -98,13 +216,6 @@ class FieldCollectionController
     def viewCbsSendbackRemarks() {
         return Inv.lookupOpener('remarks:open', [title: 'Reason for Send Back', remarks: entity.cashbreakdown.sendbackremarks])
     }
-    
-    /*
-    boolean getAllowPost() {
-        if (mode != 'read' || entity?.remittance?.state != 'FOR_POSTING' || getTotalCollection() != totalbreakdown) return false;
-        return true;
-    }
-    */
     
     def getTotalCollection() {
         //if (page == 'special') return entity.routes.total.sum();
@@ -128,46 +239,6 @@ class FieldCollectionController
         def opener = InvokerUtil.lookupOpener('fcloan:open', [type: route.type, collectionid: route.itemid, title: title])
         opener.caption = title;
         return opener;
-    }
- 
-    void save() {
-        entity.cashbreakdown = service.updateCashBreakdown(entity.cashbreakdown);
-        mode = 'read';
-    }
-    
-    void edit() {
-        prevcashbreakdown = [];
-        def item;
-        entity?.cashbreakdown?.items?.each{ o->
-            item = [:];
-            item.putAll(o);
-            prevcashbreakdown.add(item);
-        }
-        mode = 'edit';
-    }
-    
-    void cancel() {
-        if (!MsgBox.confirm('Cancelling will undo changes made to cash breakdown. Continue?')) return;
-        
-        entity?.cashbreakdown?.items = [];
-        entity?.cashbreakdown?.items.addAll(prevcashbreakdown);
-        totalbreakdown = entity?.cashbreakdown?.items?.amount?.sum();
-        if (!totalbreakdown) totalbreakdown = 0;
-        mode = 'read';
-    }
-    
-    def getRouteList() {
-        if (!collector) return [];
-        def params = [
-            collectorid : collector.objid,
-            billdate    : billdate
-        ];
-        return service.getRoutes(params);
-    }
-    
-    def back() {
-        action = 'init';
-        return 'default';
     }
     
     def overage() {
@@ -245,5 +316,7 @@ class FieldCollectionController
 
         return Inv.lookupOpener('sendback:open', params);
     }
+    
+    
 }
 

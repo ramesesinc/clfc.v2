@@ -48,9 +48,6 @@ class LoanLedgerTask
 
 	@Schedule(interval=1, timeUnit="SECONDS")
 	public void executeSegregation( task ) {
-
-		println 'segregrate ledger';
-
 		def sysvar = var.read([name: "enable_segregation_task"]);
 		if (!sysvar || sysvar.value.toLowerCase() != 'true') return;
 
@@ -64,14 +61,14 @@ class LoanLedgerTask
 		def size, item;
 		while (true) {
 			_start = (_page*_limit)-_limit;
-			size = ((_page*_limit) < list.size()? (_page*_limit)+1 : list.size());
+			size = ((_page*_limit) < list.size()? (_page*_limit) : list.size());
 			for (int i=_start; i<size; i++) {
 				if (i < size) {
 					//println list[i]?.objid
 					processSegregation(list[i], currentdate);
 				}
 			}
-			if (size > (_page*_limit)) {
+			if ((size + 1) > (_page*_limit)) {
 				_page++;
 			} else {
 				break;

@@ -15,16 +15,16 @@
             
         <invoker type='formActions' action='submitForNoting' caption='Submit for Noting' mnemonic='s' shortcut='ctrl s'
             visibleWhen="#{mode=='read' &amp;&amp; entity?.state=='DRAFT'}" />
-            
-        <invoker type='formActions' action='noted' caption='Noted' mnemonic='n' shortcut='ctrl n'
-            visibleWhen="#{mode=='read' &amp;&amp; entity?.state=='FOR_NOTING'}" />
         
         <invoker type='formActions' action='cancelCbs' caption='Cancel' mnemonic='c' shortcut='ctrl c'
             visibleWhen="#{cbsmode!='read'}" immediate='true' />
         <invoker type='formActions' action='editCbs' caption='Edit' mnemonic='e' shortcut='ctrl e' 
             visibleWhen="#{cbsmode=='read' &amp;&amp; entity?.alloweditcbs==true}" />
         <invoker type='formActions' action='saveCbs' caption='Save' mnemonic='s' shortcut='ctrl s'
-            visibleWhen="#{cbsmode!='read'}" />
+            visibleWhen="#{cbsmode!='read'}" />            
+            
+        <invoker type='formActions' action='noted' caption='Noted' mnemonic='n' shortcut='ctrl n'
+            visibleWhen="#{cbsmode=='read' &amp;&amp; entity?.state=='FOR_NOTING'}" />
             
         <invoker type='formActions' action='voidShortage' caption='Void' mnemonic='v' shortcut='ctrl v'
             visibleWhen="#{mode=='read' &amp;&amp; cbsmode=='read' &amp;&amp; entity?.allowvoid==true}" 

@@ -1,11 +1,5 @@
-<workunit>
+<workunit extends="wtempaltes/posting_constraint_decimal.xml" >
     <invokers>
         <invoker type="branchloan:posting:constraint:decimal" action="init"/>
     </invokers>
-    
-    <code class='com.rameses.clfc.treasury.ledger.amnesty.smc.constraint.NumberHandler' />
-    
-    <pages>
-        <page template='com.rameses.clfc.treasury.ledger.amnesty.smc.constraint.DecimalHandler' />
-    </pages>
 </workunit>

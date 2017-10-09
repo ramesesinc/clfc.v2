@@ -7,6 +7,9 @@ import com.rameses.osiris2.common.*;
 
 class BorrowerMergeController {
     
+    @Caller
+    def caller;
+    
     @Binding
     def binding;
     
@@ -16,12 +19,48 @@ class BorrowerMergeController {
     String title = "Merge Request";
     
     def entity, selectedBorrower;
+    def mode = 'read';
+    def preventity, prevlist;
+    
     void open() {
         entity = service.open(entity);
+        mode = 'read';
         listHandler?.reload();
     }
     
-    def close() { return '_close'; }
+    void edit() {
+        preventity = [:];
+        if (entity) {
+            preventity.putAll(entity);
+        }
+        
+        prevlist = [];
+        if (entity.items) {
+            def item;
+            entity.items.each{ o->
+                item = [:];
+                item.putAll(o);
+                prevlist << item;
+            }
+        }
+        
+        mode = 'edit';
+    }
+    
+    def void cancel() {
+        if (preventity) {
+            entity = preventity;
+        }
+        
+        if (prevlist) {
+            entity.items = prevlist;
+        }
+        mode = 'read';
+    }
+    
+    def close() { 
+        return '_close'; 
+    }
     
     def listHandler = [
         fetchList: { o->
@@ -30,11 +69,28 @@ class BorrowerMergeController {
         }
     ] as BasicListModel;
     
+    void save() {
+        entity = service.save(entity);
+        mode = 'read';
+        EventQueue.invokeLater({
+             caller?.reload();
+        });
+    }
+    
     void selectBorrowerToRetain() {
         if (!selectedBorrower) return;
         
         entity.borrower = selectedBorrower.borrower;
         binding?.refresh();
+    }
+    
+    void submitForApproval() {
+        if (!MsgBox.confirm("You are about to submit this request for approval. Continue?")) return;
+        
+        entity = service.submitForApproval(entity);
+        EventQueue.invokeLater({
+             caller?.reload();
+        });
     }
     
     void approveDocument() {
@@ -47,6 +103,9 @@ class BorrowerMergeController {
         if (!MsgBox.confirm("You are about to disapprove this request. Continue?")) return;
         
         entity = service.disapprove(entity);
+        EventQueue.invokeLater({
+             caller?.reload();
+        });
     }
     
 }

@@ -34,9 +34,12 @@ class RemarksController
     }
     
     def doOk() {
+        /*
         if (handler) {
             EventQueue.invokeLater(handler, remarks);
-        }        
+        }
+        */
+        if (handler) handler(remarks);
         return '_close'; 
     }
 }

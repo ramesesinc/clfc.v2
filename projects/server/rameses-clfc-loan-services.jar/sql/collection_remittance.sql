@@ -48,6 +48,18 @@ WHERE crd.parentid = $P{objid}
 SELECT o.* FROM collection_remittance_other o
 WHERE o.parentid = $P{objid}
 
+[getShortages]
+select s.*
+from collection_remittance_other o
+inner join shortage s on o.refid=s.objid
+where o.parentid=$P{objid}
+
+[getOverages]
+select s.*
+from collection_remittance_other o
+inner join overage s on o.refid=s.objid
+where o.parentid=$P{objid}
+
 [getPostedRemittancesByDate]
 SELECT r.objid, 
 	(SELECT SUM(amount) FROM collection_remittance_detail WHERE parentid = r.objid) AS totalcollection

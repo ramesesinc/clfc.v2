@@ -20,6 +20,11 @@ abstract class AbstractFollowupCollectionController {
     
     @Service("LoanBillingGroupService")
     def billingGroupSvc;
+    
+    @Script("ILSReportUtil")
+    def reportUtil;
+    
+    private final String reportName = "com/rameses/clfc/report/export/billing/BillingReport.jasper";
 
     abstract String getServiceName();
     abstract Map createEntity();
@@ -283,6 +288,7 @@ abstract class AbstractFollowupCollectionController {
                 return;
             }
             entity = o;
+            generatePDFFile();
             //entity.putAll(o);
             //def msg = ;
             //if (mode == 'edit') msg = "Follow-up collection updated successfully!";
@@ -349,7 +355,26 @@ abstract class AbstractFollowupCollectionController {
         return op;
     }
     
-    void cancelBilling2() {
+    def cancelBillingRequest() {
+        if (!MsgBox.confirm("You are about to cancel this billing. Continue?")) return;
+        
+        def handler = { remarks->
+            entity.cancelremarks = remarks;
+            entity = service.cancelBillingRequest(entity);
+            
+            MsgBox.alert("Billing request successfully created!");
+            EventQueue.invokeLater({
+                caller?.reload();
+                binding?.refresh();
+            });
+        }
+        def op = Inv.lookupOpener('remarks:create', [title: 'Reason for cancellation', handler: handler]);
+        if (!op) return null;
+        
+        return op;
+    }
+    
+    void xcancelBilling2() {
         if (!MsgBox.confirm("You are about to cancel this billing. Continue?")) return;
         
         entity = service.cancelBilling2(entity);
@@ -364,6 +389,11 @@ abstract class AbstractFollowupCollectionController {
         if (!MsgBox.confirm("You are about to disapprove this document. Continue?")) return;
         
         entity = service.disapprove(entity);
+    }
+    
+    void generatePDFFile() {
+        def data = service.getReportData(entity);
+        reportUtil.generatePDFFile(data.path, data.filename, reportName, data.rptdata, data.rptparams, []);
     }
 }
 

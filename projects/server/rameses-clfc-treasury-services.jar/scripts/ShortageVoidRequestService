@@ -16,6 +16,9 @@ class ShortageVoidRequestService extends ActiveCrudListService
 	@ActiveDB("collection_remittance")
 	def remittance;
 
+	@ActiveDB("collection_cb")
+	def collection_cb;
+
 	@Service("DateService")
 	def dateSvc;
 
@@ -137,7 +140,20 @@ class ShortageVoidRequestService extends ActiveCrudListService
 		def other = remittance.findRemittanceOtherByRefid([refid: data.shortage.objid]);
 		if (other) {
 			remittance.delete(other, "rem-other");
-			shortage.changeState([objid: other.refid, state: 'VOIDED']);
+		}
+
+		shortage.changeState([objid: data.shortage.objid, state: 'VOIDED']);
+
+		def xprm = [
+			collectionid: data.shortage.objid,
+			groupid 	: data.shortage.objid,
+			grouptype 	: 'shortage'
+		];
+
+		def cb = collection_cb.findCashbreakdown(xprm);
+		if (cb) {
+			cb.state = "VOIDED";
+			collection_cb.update(cb);
 		}
 
 		return data;

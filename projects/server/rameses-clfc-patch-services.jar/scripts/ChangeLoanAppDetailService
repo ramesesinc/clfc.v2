@@ -23,6 +23,9 @@ class ChangeLoanAppDetailService
 	@ActiveDB("loan_route")
 	def loan_route;
 
+	@ActiveDB("loan_application")
+	def loan_application;
+
 	@Service("DateService")
 	def dateSvc;
 
@@ -46,8 +49,7 @@ class ChangeLoanAppDetailService
 		def pt = producttype.read(params.producttype);
 
 		loanapp_detail.update(params, "loanapp");
-
-		loanapp_detail.update(params, "loanapp_capture");
+		loanapp_detail.update([objid: params.objid, loanno: params.appno, dtreleased: params.dtreleased], "loanapp_capture");
 
 
 		def search = loanapp.read([objid: params.objid], "loanapp_search");
@@ -73,11 +75,14 @@ class ChangeLoanAppDetailService
 
 		//throw new RuntimeException("stopping");
 
-		def app = loanapp.read([objid: params.objid]);
+		//def app = loanapp.read([objid: params.objid]);
+		def app = loanapp_detail.read([objid: params.objid], "loanapp");
 		def ledger = loan_ledger.findByAppId([appid: params.objid]);
 
+
 		if (ledger) {
-			def dtreleased = java.sql.Date.valueOf(params.dtreleased);
+			//def dtreleased = java.sql.Date.valueOf(params.dtreleased);
+			def dtreleased = parseDate(params.dtreleased);
 
 			ledger.acctname = params.borrower.name;
 			//ledger.dailydue = ledgerSvc.computeDailyDue([loanamount: params.loanamount+"", term: pt?.term, interestrate: pt?.interestrate]);
@@ -106,6 +111,64 @@ class ChangeLoanAppDetailService
 			//dateSvc.add(dtreleased, params.producttype.term+"");//dateSvc.parseDate(params.dtreleased, null).date;
 				
 			loanapp_detail.update(ledger, "ledger");
+
+
+		}
+
+		if (app) {
+			loanapp_detail.removeChargesByAppid([appid: app.objid]);
+
+			def chrg;
+			params?.charges?.each{ o->
+				chrg = loanapp_detail.read([objid: o.objid], "charge");
+				if (!chrg) {
+					chrg = [
+						objid 	: o.objid,
+						appid 	: app.objid,
+						acctid 	: o.acctid,
+						title 	: o.title,
+						amount 	: o.amount
+					];
+					loanapp_detail.create(chrg, "charge");
+				} else {
+					chrg.putAll(o);
+					loanapp_detail.update(chrg, "charge");
+				}
+			}
+
+			def ttlcharges = params.charges?.amount.sum();
+			if (!ttlcharges) ttlcharges = 0;
+
+			def netamount = app.loanamount - ttlcharges;
+
+			def extinfo = loanapp_detail.read([objid: app.objid], "extinfo");
+			if (!extinfo) {
+				extinfo = [
+					objid	 	: app.objid,
+					netamount	: netamount,
+					totalcharges: ttlcharges
+				];
+				loanapp_detail.create(extinfo, "extinfo");
+			} else {
+				extinfo.netamount = netamount;
+				extinfo.totalcharges = ttlcharges;
+				if (extinfo.assessmentinfo) {
+					extinfo.assessmentinfo.charges = params.charges;
+					extinfo.assessmentinfo.totalcharges = ttlcharges;
+					extinfo.assessmentinfo.netamount = netamount;
+				}
+				loanapp_detail.update(extinfo, "extinfo");
+			}
+
+			def lapp = loan_application.read([objid: app?.objid]);
+			if (lapp) {
+				if (lapp.assessmentinfo) {
+					lapp.assessmentinfo.charges = params.charges;
+					lapp.assessmentinfo.totalcharges = ttlcharges;
+					lapp.assessmentinfo.netamount = netamount;
+				}
+				loan_application.update(lapp);
+			}
 		}
 
 		def item = [
@@ -119,11 +182,17 @@ class ChangeLoanAppDetailService
 
 		return params;
 	}
+
 	@ProxyMethod
 	public def getLoanTypes() {
 		def list = loanTypeSvc.getList([:]);
 		if (!list) return [];
 		return list.collect{ it.name }
+	}
+
+	@ProxyMethod
+	public def getAppTypes() {
+
 	}
 
 	private def parseDate( date ) {
@@ -147,6 +216,15 @@ class ChangeLoanAppDetailService
 
 		def r = loan_route.read(data.route);
 		if (r) data.route = r;
+
+		def charges = [];
+		def app = loan_application.read([objid: data.objid]);
+		if (app) {
+			if (!app.assessmentinfo) app.assessmentinfo = [:];
+			if (!app.assessmentinfo.charges) app.assessmentinfo.charges = [];
+			charges = app.assessmentinfo.charges;
+		}
+		data.charges = charges;
 
 		return data;
 	}

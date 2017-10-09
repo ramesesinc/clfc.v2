@@ -78,8 +78,8 @@ class LoanFollowupCollectionService extends ActiveListService
 	}
 
 	@ProxyMethod
-	public def cancelBilling2( params ) {
-		return specialColSvc.cancelBilling2(params);
+	public def cancelBillingRequest( params ) {
+		return specialColSvc.cancelBillingRequest(params);
 	}
 
 
@@ -162,5 +162,10 @@ class LoanFollowupCollectionService extends ActiveListService
 
 		if (!params.billdate) params.billdate = dateSvc.serverDate.toString().split(' ')[0];
 		return ledger_billing.findBillingByCollectoridAndBilldate(params);
+	}
+
+	@ProxyMethod
+	public def getReportData( params ) {
+		return specialColSvc.getReportData( params );
 	}
 }

@@ -317,7 +317,7 @@ class NewLedgerAdjustmentService extends ActiveCrudListService {
 		def data = changeState(params, state);
 
 		data.dtposted = dateSvc.serverDate;
-		data.postedby = getUser();
+		data.poster = getUser();
 		em.update(data, 'adjustment-post');
 
 		inboxSvc.removeMessageByRefid([refid: data.objid]);

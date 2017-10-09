@@ -9,6 +9,7 @@
 		<field name="relaterid"/>
 		<field name="type" required="true"/>
 		<field name="relation"/>
+		<field name="isstart" />
 	</element>
 
 	<element name="joint" tablename="loanapp_borrower">

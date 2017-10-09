@@ -12,6 +12,7 @@ class LoanAppCaptureLedgerController
     @Binding
     def binding;
     
+    @Service("LoanLedgerService")
     def service;
 
     def paymentTypes = LoanUtil.paymentTypes;    
@@ -20,6 +21,7 @@ class LoanAppCaptureLedgerController
     def mode = 'read';
     def title = 'Capture Ledger';
     
+    /*
     LoanAppCaptureLedgerController() {
         try {
             service = InvokerProxy.instance.create("LoanLedgerService");
@@ -28,6 +30,7 @@ class LoanAppCaptureLedgerController
             throw ce;
         }
     }
+    */
     
     @PropertyChangeListener
     def listener = [
