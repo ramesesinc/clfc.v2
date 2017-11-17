@@ -813,7 +813,7 @@ Last Payment]]></text>
 				</textField>
 				<staticText>
 					<reportElement
-						x="675"
+						x="643"
 						y="7"
 						width="40"
 						height="14"
@@ -826,7 +826,7 @@ Last Payment]]></text>
 				</staticText>
 				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Page" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="715"
+						x="683"
 						y="7"
 						width="25"
 						height="14"
@@ -839,9 +839,9 @@ Last Payment]]></text>
 				</textField>
 				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Report" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="740"
+						x="708"
 						y="7"
-						width="30"
+						width="49"
 						height="14"
 						key="textField-14"/>
 					<box></box>

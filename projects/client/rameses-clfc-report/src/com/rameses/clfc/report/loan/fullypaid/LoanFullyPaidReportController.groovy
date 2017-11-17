@@ -96,7 +96,7 @@ class LoanFullyPaidReportController extends ReportModel {
     }
     
     public String getReportName() {
-        return "com/rameses/clfc/report/loan/fullypaid/LoanFullyPaidSummaryReport_0.jasper";
+        return "com/rameses/clfc/report/loan/fullypaid/LoanFullyPaidSummaryReport.jasper";
     }
 
 //    public SubReport[] getSubReports() {

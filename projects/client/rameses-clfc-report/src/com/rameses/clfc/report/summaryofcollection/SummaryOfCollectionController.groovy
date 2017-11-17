@@ -96,7 +96,7 @@ class SummaryOfCollectionController extends ReportModel {
     }
     
     public String getReportName() {
-        return "com/rameses/clfc/report/summaryofcollection/SummaryOfCollectionReport_0.jasper";
+        return "com/rameses/clfc/report/summaryofcollection/SummaryOfCollectionReport.jasper";
     }
 
 //    public SubReport[] getSubReports() {

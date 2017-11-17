@@ -96,7 +96,7 @@ class BranchLoanReleaseReportController extends ReportModel
     }
     
     public String getReportName() {
-        return "com/rameses/clfc/report/treasury/branch/loanrelease/BranchLoanReleaseReport_0.jasper";
+        return "com/rameses/clfc/report/treasury/branch/loanrelease/BranchLoanReleaseReport.jasper";
     }
 
 //    public SubReport[] getSubReports() {
