@@ -1,4 +1,4 @@
-package com.rameses.clfc.producttype2.attribute.handler
+package com.rameses.clfc.producttype2.handler
 
 import com.rameses.rcp.common.*;
 import com.rameses.rcp.annotations.*;

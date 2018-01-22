@@ -17,14 +17,18 @@
             def binding;
             
             def handler;
+            def activateHandler;
+            def closeHandler;
         
             void closeForm() { 
+                if (closeHandler) closeHandler();
                 binding?.fireNavigation('_close');
             }
         
             void onbinding_activate() {
                 EventQueue.invokeLater({ 
                     if (handler) handler(); 
+                    if (activateHandler) activateHandler();
                 }); 
             } 
         }

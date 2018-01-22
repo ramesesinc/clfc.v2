@@ -25,6 +25,7 @@ class AppInfoController {
     def productTypeLookup = Inv.lookupOpener("product_type:lookup", [
         onselect: { o->
             entity.producttype = o;
+            //entity.producttype = caller?.service.getProductTypeInfo(o);
             binding?.refresh();
         }
     ]);

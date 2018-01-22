@@ -1,6 +1,8 @@
-<workunit >
+<workunit>
     <invokers>
+        <!--
         <invoker type="capturedpayment:open" action="open" caption="Capture Payment Mapping" target="popup" />
+        -->
         
         <invoker type='formActions' action='close' caption='Close' mnemonic='c' shortcut='ctrl w'
             visibleWhen="#{mode=='read'}" immediate='true' />

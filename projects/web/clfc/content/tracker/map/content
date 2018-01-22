@@ -34,16 +34,40 @@ var TrackerLogFetcher = new function() {
 		//	hasMoreResults = false;
 		//}
 
-		//hasMoreResults = false;
+		hasMoreResults = true;
 		if (hasMoreResults == true) {
 			_page++; 
 			fetch_0(); 
 		} else {
 			_processing = false;
 			markLine(prevlocation, endlocation);
+
+			\$("#loader-box").hide();
+			\$("#error-box").hide();
+			\$("#info-box").hide(); 
+			/*
 			var loaderbox = RUI.find('#loader-box'); 
-			loaderbox.toggle('slide');
-			loaderbox.remove(); 
+			window.console.log(loaderbox);;
+			if (loaderbox) {
+				loaderbox.toggle('slide');
+				loaderbox.hide();
+				loaderbox.remove(); 
+			}
+
+			var errorbox = RUI.find("#error-box");
+			window.console.log(errorbox);
+			if (errorbox) {
+				errorbox.hide();
+				errorbox.remove();
+			}
+
+			var infobox = RUI.find("#info-box");
+			window.console.log(infobox);
+			if (infobox) {
+				infobox.hide();
+				infobox.remove();
+			}
+			*/
 		}
 	} 
 
@@ -97,9 +121,10 @@ function createMapObject(params) {
 
 	var mapOptions = { 
 		zoom      : params.zoom, 
-		center    : new google.maps.LatLng(params.lat, params.lng), 
-		mapTypeId : google.maps.MapTypeId.ROADMAP 
+		center    : new google.maps.LatLng(params.lat, params.lng)
+		//mapTypeId : google.maps.MapTypeId.HYBRID  
 	} 
+	window.console.log("passing");
 
 	workspace.map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
 	workspace.markers = []; 
@@ -200,7 +225,8 @@ function initialize() {
 function loadScript() {
 	var script = document.createElement("script");
 	script.type = "text/javascript";
-	script.src = "http://maps.googleapis.com/maps/api/js?v=3.expr&key=${PROJECT.apikey}&sensor=true&callback=initialize"; 
+	//script.src = "http://maps.googleapis.com/maps/api/js?v=3.expr&key=${PROJECT.apikey}&sensor=true&callback=initialize"; 
+	script.src = "http://maps.googleapis.com/maps/api/js?key=${PROJECT.apikey}&callback=initialize"; 
 	document.body.appendChild(script); 
 } 
 
@@ -857,12 +883,12 @@ function resizeMapCanvas() {
 	}
 </style>
 
+<div id="map-canvas"></div> 
 <div id="loader-box">
 	<img src="/images/loading.gif" border="0" height="16"/>
 	Loading tracker logs please wait...
 </div>
 <div id="error-box" style="display:none;"></div>
-<div id="map-canvas"></div> 
 
 <div r:dockto="header-action">
 	<table class="mainmenu">

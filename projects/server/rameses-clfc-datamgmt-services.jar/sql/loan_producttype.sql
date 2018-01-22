@@ -41,3 +41,22 @@ order by p.dtcreated desc
 select * from loan_producttype_attribute
 where parentid=$P{code}
 	and category=$P{category}
+
+[getFactListByCategory]
+select f.*
+from ils_sys_fact f
+where f.objid in (select factid from ils_sys_fact_category where category=$P{category})
+
+[getFieldListByFactid]
+select f.*
+from ils_sys_factfield f
+where f.parentid=$P{factid}
+order by f.seqno
+
+[getFieldsByCategory]
+select * from loan_producttype_factfield
+where parentid=$P{objid}
+	and category=$P{category}
+
+[removeFieldsByCategory]
+delete from loan_producttype_factfield where parentid=$P{objid} and category=$P{category}

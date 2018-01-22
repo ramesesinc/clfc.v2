@@ -21,6 +21,10 @@ class CaptureAppInfoController {
             binding.refresh('entity.marketedby');
         }
         /*,
+        "producttype": { o->
+            entity.producttype = o;
+        }
+        /*,
         "entity.apptype": {o->
             if (o == 'NEW') { 
                 entity.previousloans?.clear(); 
@@ -32,11 +36,38 @@ class CaptureAppInfoController {
     
     def entity, mode = 'read';
     def loanTypes, productTypes;
+    def producttype;
     def clientTypes = LoanUtil.clientTypes;
     def appTypes = LoanUtil.appTypes;
     
-    def routeLookupHandler = InvokerUtil.lookupOpener('route:lookup', [:]);
+    def routeLookupHandler = Inv.lookupOpener('route:lookup', [:]);
+    def customerLookupHandler = Inv.lookupOpener("customer:search", [
+         onselect: { o-> 
+            service.checkBorrowerForExistingLoan([borrowerid: o.objid, objid: entity.objid]); 
+            entity.borrower = o; 
+            entity.borrower.address = o.address?.text; 
+         },
+         onempty: {
+            entity.borrower = [:];
+         }
+    ]);
     
+    void init() {
+        if (!entity) entity = [:];
+        loanTypes = service.getLoanTypes();
+        productTypes = service.getProductTypes();
+        //producttype = productTypes.find{ it.code==entity.producttype.name }
+    }
+    
+    /*
+    void init() {
+        if (!entity) entity = [:];
+        loanTypes = service.getLoanTypes();
+        productTypes = service.getProductTypes();
+    }
+    */
+    
+    /*
     def getCustomerLookupHandler() {
         def onselect = { o-> 
             service.checkBorrowerForExistingLoan([borrowerid: o.objid, objid: entity.objid]); 
@@ -50,11 +81,6 @@ class CaptureAppInfoController {
         if (!op) return;
         return op;
     }
-    
-    void init() {
-        if (!entity) entity = [:];
-        loanTypes = service.getLoanTypes();
-        productTypes = service.getProductTypes();
-    }
+    */
     
 }

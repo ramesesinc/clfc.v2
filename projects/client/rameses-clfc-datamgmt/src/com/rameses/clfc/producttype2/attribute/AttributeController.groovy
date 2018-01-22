@@ -16,7 +16,7 @@ class AttributeController extends CRUDController {
     @PropertyChangeListener
     def listener = [
         "type": { o->
-            entity.type = o?.type;
+            entity.handler = o?.type;
             entity.defaultvalue = null;
             binding?.refresh("opener");
         }
@@ -64,38 +64,35 @@ class AttributeController extends CRUDController {
         def list = [];
         def x = Inv.lookupOpeners("producttype:attribute:category:plugin");
         x?.each{ o->
-            println 'o-> ' + o;
             list << o.caption;
         }
-        
         list.sort{ it }
+        return list;
+    }
+    
+    def getDatatypeList() {
+        def list = service.getDatatypeList();
+        if (!list) list = [];
         
         return list;
     }
     
     void afterOpen( data ) {
         resetTypeList();
-        type = typeList.find{ it.type==data.type }
+        type = typeList.find{ it.type==data.handler }
         
         checkEditable(data);
         binding?.refresh();
     }
-    /*
-    def getTypeList() {
-        def list = [];
-        
-        return list;
-    }
-    */
     
     def getOpener() {
-        if (!entity.type) entity.type = "blank";
+        if (!entity.handler) entity.handler = "blank";
         def params = [
             entity  : entity,
             mode    : mode
         ]
         
-        def op = Inv.lookupOpener("producttype:attribute:" + entity.type, params);
+        def op = Inv.lookupOpener("producttype:attribute:" + entity.handler, params);
         if (!op) return null;
         return op;
     }

@@ -1,4 +1,4 @@
-"entity.*" [mode!='read'] {
+"entity.*|producttype" [mode!='read'] {
     enabled: true;
 }
 "entity.marketedby" [entity.clienttype != 'MARKETED'] {
@@ -13,6 +13,6 @@
 "selectedPreviousLoan" [entity.apptype == 'NEW'] {
     enabled: false;
 }
-"entity.*" [mode=='read'] {
+"entity.*|producttype" [mode=='read'] {
     enabled: false;
 }

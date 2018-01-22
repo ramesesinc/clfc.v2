@@ -7,6 +7,6 @@
     <code class="com.rameses.clfc.loan.capture.CaptureAppInfoController" />
     
     <pages>
-        <page template="com.rameses.clfc.loan.capture.CaptureAppInfoPage" />
+        <page template="com.rameses.clfc.loan.capture.XCaptureAppInfoPage" />
     </pages>
 </workunit>

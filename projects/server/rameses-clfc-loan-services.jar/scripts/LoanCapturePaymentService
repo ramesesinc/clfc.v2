@@ -1,92 +1,81 @@
-import com.rameses.common.*;
 import com.rameses.annotations.*;
-import com.rameses.services.extended.*;
 import com.rameses.rules.common.*;
+import com.rameses.util.*;
 import java.rmi.server.UID;
 import loan.facts.*;
 import loan.actions.*;
 import java.util.*;
-import com.rameses.util.*;
 
-class LoanCapturePaymentService extends ActiveListService
-{
+class LoanCapturePaymentService {
+
 	@Env
 	def env;
 
 	@ActiveDB("capture_payment")
 	def em;
 
-	@ActiveDB('customer')
-	def customer;
+	@ActiveDB("loan_ledger")
+	def loan_ledger;
 
-	@ActiveDB('collection_cb')
-	def collection_cb;
-
-	@ActiveDB("loan_exemption")
-	def exemption;
-
-	@ActiveDB("specialcollection")
-	def specialcollection;
+	@ActiveDB("loanapp")
+	def loanapp;
 
 	@ActiveDB("fieldcollection")
 	def fieldcollection;
 
+	@ActiveDB("specialcollection")
+	def specialcollection;
+
 	@ActiveDB("ledger_billing")
 	def ledger_billing;
 
-	@ActiveDB("loan_ledger")
-	def loan_ledger;
+	@ActiveDB("customer")
+	def customer;
 
-	@ActiveDB('loan_ledger_payment')
+	@ActiveDB("loan_ledger_payment")
 	def loan_ledger_payment;
 
-	@ActiveDB("loan_route")
-	def loan_route;
-
-	@ActiveDB('loan_product_type')
+	@ActiveDB("loan_product_type")
 	def product_type;
 
-	@ActiveDB('loanapp')
-	def loanapp;
+	@ActiveDB("ledgeramnesty")
+	def ledgeramnesty;
 
-	@ActiveDB('datatxnlog')
-	def txnlog; 
+	@ActiveDB("ledgeramnesty_fix")
+	def ledgeramnesty_fix;
+
+	@ActiveDB("ledgeramnesty_waiver")
+	def ledgeramnesty_waiver;
+
+	@ActiveDB("ledgeramnesty_baddebt")
+	def ledgeramnesty_baddebt;
+
+	@ActiveDB("ledgeramnesty_smc")
+	def ledgeramnesty_smc;
+
+	@ActiveDB("loan_exemption")
+	def exemption;
+
+	@ActiveDB("collection_cb")
+	def collection_cb;
 
 	@ActiveDB("collection_remittance")
 	def remittance;
 
-	@ActiveDB('amnesty')
-	def amnesty;
-
-	@ActiveDB('ledgeramnesty')
-	def ledgeramnesty;
-
-	@ActiveDB('ledgeramnesty_waiver')
-	def ledgeramnesty_waiver;
-
-	@ActiveDB('ledgeramnesty_fix')
-	def ledgeramnesty_fix;
-
-	@ActiveDB('ledgeramnesty_baddebt')
-	def ledgeramnesty_baddebt;
-
-	@ActiveDB('ledgeramnesty_smc')
-	def ledgeramnesty_smc;
+	@ActiveDB("datatxnlog")
+	def txnlog; 
 
 	@Service("DateService")
 	def dateSvc;
 
-	@Service("LoanSpecialCollectionService")
-	def specialColSvc;
+	@Service("InboxService")
+	def inboxSvc;
 
 	@Service("BranchService")
 	def branchSvc;
 
-	@Service("InboxService")
-	def inboxSvc;
-
-	@Service("RuleExecutorService")
-	def ruleSvc;
+	@Service("NumberService")
+	def numSvc;
 
 	@Service("LoanLedgerBillingService")
 	def billingSvc;
@@ -97,180 +86,189 @@ class LoanCapturePaymentService extends ActiveListService
 	@Service("LoanLedgerService")
 	def ledgerSvc;
 
-	@Service('NumberService')
-	def numSvc;
+	@Service("RuleExecutorService")
+	def ruleSvc;
 
 	@ProxyMethod
-	public def getOptions() {
-		return [
-			[caption: 'PENDING', state: 'PENDING'],
-			[caption: 'FOR VERIFICATION', state: 'FOR_VERIFICATION'],
-			[caption: 'VERIFIED', state: 'VERIFIED'],
-			[caption: 'REMITTED', state: 'REMITTED'],
-			[caption: 'POSTED', state: 'POSTED']
-		]
+	public def getPendingCollectors( params ) {
+		if (!params.date) throw new RuntimeException("Please specify date.");
+
+		def list = em.getPendingCapturedPaymentCollectorsByDate(params);
+		return list;
 	}
 
 	@ProxyMethod
-	public def getColumns( params ) {
+	public def getPendingColumns( params ) {
 		def cols = [];
-		if (!params.state) {
-			cols << [name: 'state', caption: 'Status'];
-		}
-		cols << [name: 'txndate', caption: 'Date'];
-		cols << [name: 'collector.name', caption: 'Collector'];
 
-		if (params.state == 'VERIFIED') {
-			cols << [name: 'dtverified', caption: 'Date Verified'];
-			cols << [name: 'verifier.name', caption: 'Verified By'];
-		} else if (params.state == 'REMITTED') {
-			cols << [name: 'dtremitted', caption: 'Date Remitted'];
-			cols << [name: 'remittedby.name', caption: 'Remitted By'];
-		}
+		cols << [name: "borrowername", caption: "Borrower"];
+		cols << [name: "amount", caption: "Amount", type: "decimal", format: "#,##0.00"];
+		cols << [name: "check.no", caption: "Check No."];
+		cols << [name: "check.date", caption: "Check Date", type: "date", outputFormat: "MMM-dd-yyyy"];
+		cols << [name: "bank.name", caption: "Bank"];
+		cols << [name: "paidby", caption: "Paid By"];
+		cols << [name: "dtpaid", caption: "Date Paid"];
 
 		return cols;
 	}
 
-	void beforeList( params ) {
-		params.searchtext = (params.searchtext? params.searchtext : '') + '%';
-		def lm;
-		if (params.state) {
-			lm = 'getListByState';
+	@ProxyMethod
+	public def getPendingPayments( params ) {
+		if (!params.date) throw new RuntimeException("Please specify date.");
+		if (!params.collectorid) throw new RuntimeException("Please specify collectorid.");
+
+		params.searchtext = (params.searchtext? params.searchtext : "") + "%";
+		def list = em.getPendingCapturedPaymentsByCollectorAndDate(params);
+		if (!list) throw new RuntimeException("No pending captured payments for this collector.");
+
+		return list;
+	}
+
+	@ProxyMethod
+	public def getForMappingCollectors( params ) {
+		if (!params.date) throw new RuntimeException("Please specify date.");
+
+		def list = em.getCapturedPaymentCollectorsByDate( params );
+		return list;
+	}
+
+	@ProxyMethod
+	public def getForMappingCollection( params ) {
+		if (!params.date) throw new RuntimeException("Please specify date.");
+		if (!params.collectorid) throw new RuntimeException("Please specify collectorid.");
+
+		def list = em.getCapturedPaymentCollectionsByDateAndCollector( params );
+		list.eachWithIndex{ itm, idx-> 
+			def info = itm.remove("info");
+			info = em.serializer.read(info);
+			itm.putAll(info);
+			if (!itm.scdetailid) itm.scdetailid = "SCD" + new UID();
+			if (!itm.name) {
+				itm.name = "Capture " + (idx + 1);
+			}
+			em.update(itm);
 		}
-		if (params.state == 'PENDING') {
-			lm = 'getPendingList';
+		return list;
+	}
+
+
+	def getUser() {
+		return [objid: env.USERID, name: env.NAME];
+	}
+
+	@ProxyMethod
+	public def submitForMapping( params ) {
+		def list = getPendingPayments(params);
+		if (!list) throw new RuntimeException("No pending captured payments to map.");
+
+		def item = list[0];
+
+		def cp = em.read([objid: item?.captureid]);
+		if (!cp) {
+			cp  = [
+				objid 				: item?.captureid,
+				state 				: "FOR_MAPPING",
+				trackerid 			: item?.trackerid,
+				txndate 			: item?.txndate,
+				fieldcollectionid 	: item?.fieldcollectionid,
+				specialcollectionid : "SC" + new UID(),
+				dtfiled 			: dateSvc.serverDate,
+				author				: getUser(),
+				collector 			: item?.collector
+			];
+
+			def captured_payments = em.getCapturedPaymentByCollectorAndDate([collectorid: item?.collector.objid, date: item?.txndate]);
+			if (!captured_payments) captured_payments = [];
+			cp.name = "Capture " + (captured_payments.size() + 1);
+
+			em.create(cp);
 		}
-		if (lm) params._listMethod = lm;
+
+		list.each{ o->
+			def dtl = em.read([objid: o.objid], "cp-detail");
+			if (!dtl) {
+				dtl = [
+					objid 			: o.objid,
+					parentid		: item?.captureid,
+					scdetailid		: "SCD" + new UID(),
+					txnmode 		: o.txnmode,
+					dtpaid	 		: o.dtpaid,
+					paidby 			: o.paidby,
+					borrowername 	: o.borrowername,
+					amount			: o.amount,
+					payoption 		: o.payoption
+				];
+				em.create(dtl, "cp-detail");
+
+				if (dtl.payoption == 'check') {
+					dtl.bank = o.bank;
+					dtl.check = o.check;
+					em.update(dtl, "detail-check");
+				}
+			}
+
+			em.delete([objid: o.objid], "cp-pending");
+		}
 	}
 
 	@ProxyMethod
 	public def open( params ) {
-		def data = em.read(params)
-		//if (!data) throw new Exception("Record does not exist or has already been deleted.");
-		if (!data) throw new Exception('Captured payment record does not exist or has already been deleted.');
+		def data = em.read( params );
+		if (!data) throw new RuntimeException("Capture payment record does not exist or has already been deleted.");
 
-		if (data.state == 'PENDING') {
-			def i = em.findSendBack([objid: data.objid]);
-			if (i) data.sendbackremarks = i.remarks;
-		}
-
-		data.list = em.getDetails(data);
-		data.list?.each{ o->
-			if (o.ledgerid) {
-				o.ledger = loan_ledger.findLedgerWithInfo([objid: o.ledgerid]);
-				def appc = loanapp.read([objid: o.ledger?.loanapp?.objid], 'loanapp_capture');
+		data.list = em.getDetails( data );
+		data.list.each{			
+			if (it.ledgerid) {
+				it.ledger = loan_ledger.findLedgerWithInfo([objid: it.ledgerid]);
+				def appc = loanapp.read([objid: it.ledger?.loanapp?.objid], 'loanapp_capture');
 				if (appc?.dtreleased) {
-					o.ledger.dtreleased = appc.dtreleased;
+					it.ledger.dtreleased = appc.dtreleased;
 				}
 				//o.ledger.dtreleased = dateSvc.add(o.ledger.dtstarted, "-1");
 			}
-			//println 'ledger ' + o.ledger;
 		}
-
-		def prm = [
-			collectionid: data.fieldcollectionid,
-			groupid 	: data.specialcollectionid,
-			grouptype 	: 'special' 
-		];
-		def rem = remittance.findCollectionRemittance(prm);
-		if (rem) data.remitted = true;
 
 		return data;
 	}
 
 	@ProxyMethod
 	public def save( params ) {
-		def data = em.read(params);
-		//if (!data) throw new Exception("Record does not exist or has already been deleted.");
-		if (!data) throw new Exception('Captured payment record does not exist or has already been deleted.');
+		//def data = em.read(params);
+		//if (!data) throw new RuntimeException("Capture payment record does not exist or has already been deleted.");
 
-		data.specialcollectionid = params.specialcollectionid;
+		def data = open( params );
 
+		data.putAll(params);
+		if (!data.specialcollectionid) data.specialcollectionid = "SC" + new UID();
 		em.update(data);
-		params.list?.each{ o->
-			em.update(o, 'cp-detail');
-		}
-		/*
-		if (!data.fieldcollectionid) {
-			createBilling(params);
+
+		data.list.each{
+			if (!it.scdetailid) it.scdetailid = "SCD" + new UID();
+			em.update(it, "cp-detail");
 		}
 
-		def sc;
-		if (!data.specialcollectionid) {
-			def prm = [
-				objid 		: params.specialcollectionid,
-				state 		: 'DOWNLOADED',
-				billingid 	: params.fieldcollectionid,
-				txndate 	: params.txndate,
-				txntype 	: 'CAPTURE',
-				collector 	: params.collector,
-				itemtype 	: 'special',
-				ledgers 	: []
-			];
-			params.list.each{ o->
-				o.ledger.homeaddress = o.ledger.borrower.address;
-				o.ledger.appno = o.ledger.loanapp.appno;
-				o.ledger.loanamount = o.ledger.loanapp.loanamount;
-				o.ledger.capturedetailid = o.objid;
-				prm.ledgers.add(o.ledger)
-				//prm.ledgers.add(loan_ledger.findLedgerById([ledgerid: o.ledger.objid]));
-			}
-			sc = specialColSvc.create(prm);
-		} else {
-			sc = specialcollection.read([objid: params.specialcollectionid]);
-			sc.ledgers = [];
-			params.list.each{ o->
-				o.ledger.homeaddress = o.ledger.borrower.address;
-				o.ledger.appno = o.ledger.loanapp.appno;
-				o.ledger.loanamount = o.ledger.loanapp.loanamount;
-				o.ledger.capturedetailid = o.objid;
-				sc.ledgers.add(o.ledger);
-			}
-			sc = specialColSvc.update(sc);
-		}
-
-		//params.state = 'CLOSED';
-		em.update(params);
-		//em.delete(params, "cp-pending");
-
-		def m;
-		params.list.each{ o->
-			//o.ledgerid = o.ledger.objid;
-			m = [
-				objid 	: o.objid,
-				ledgerid: o.ledger.objid
-			];
-			em.update(m, "cp-detail");
-		}
-		//createFieldCollection(params);
-		*/
-
-		return open(data);
+		//return getCollectionInfo( [collectionid: data.objid] );
+		return data;
 	}
-
 
 	@ProxyMethod
 	public def submitForVerification( params ) {
-		if (!params.list) throw new Exception('Please specify list.');
+		if (!params.list) throw new RuntimeException("Please specify list.");
 
 		def i = params.list?.find{ it.ledgerid == null }
 		if (i) throw new Exception("Cannot submit for verification. There are still unmapped payment(s).");
 
-		def data = changeState(params, 'FOR_VERIFICATION');
-
-		i = em.read(data, 'cp-pending');
-		if (i) em.delete(i, 'cp-pending');
+		def data = changeState(params, "FOR_VERIFICATION");
 
 		data.dtsubmitforverification = dateSvc.serverDate;
-		data.submittedforverificationby = [objid: env.USERID, name: env.NAME];
+		data.submittedforverificationby = getUser();
 		em.update(data);
-
 
  		def msginfo = [ 
 			objid 		: data.objid, 
 			dtcreated	: data.dtsubmitforverification, 
 			refid 		: data.objid, 
-			filetype 	: 'capturedpayment', 
+			filetype 	: 'capture:payment', 
 			message 	: 'Captured payment collection for approval (Collector: ' + data.collector.name + ' Date: ' + data.txndate + ')', 
 			senderid	: env.USERID, 
 			sendername 	: env.NAME, 
@@ -278,7 +276,61 @@ class LoanCapturePaymentService extends ActiveListService
 		]; 
 		inboxSvc.addMessage( msginfo );
 
-		return open(data);
+		return open( data );
+	}
+
+	def changeState( params, state ) {
+		def data = em.read(params);
+		if (!data) throw new RuntimeException("Capture payment record does not exist or has already been deleted.");
+
+		if (data.state == state) {
+			throw new RuntimeException("Capture payment record is already " + state + ".");
+		}
+
+		data.state = state;
+		em.update(data);
+
+		def action, remarks;
+		switch (state) {
+			case 'FOR_MAPPING'		: action = 'FOR MAPPING';
+									  remarks = 'For Mapping';
+									  break;
+			case 'SEND_BACK'		: action = 'SEND BACK';
+									  remarks = 'Send Back';
+									  break;
+			case 'FOR_VERIFICATION' : action = 'FOR VERIFICATION';
+									  remarks = 'Submit for verification';
+									  break;
+			case 'VERIFIED' 		: action = 'VERIFIED';
+									  remarks = 'Verified';
+									  break;
+			case 'REMITTED' 		: action = 'REMITTED';
+									  remarks = 'Remitted';
+									  break;
+		}
+
+		if (action && remarks) {
+			def loginfo = [
+				objid 	: 'TLOG' + new UID(), 
+				txndate : dateSvc.serverDate, 
+				txnid   : data.objid, 
+				user    : [objid: env.USERID, username: env.NAME], 
+				action	: action, 
+				remarks : remarks
+			]; 
+			txnlog.create( loginfo ); 
+		}
+
+		return open( data );
+	}
+
+	@ProxyMethod
+	public def returnForMapping( params ) {
+		def data = changeState(params, "FOR_MAPPING");
+
+		inboxSvc.removeMessageByRefid([refid: data.objid]);
+
+		return data;
 	}
 
 	@Async
@@ -287,45 +339,85 @@ class LoanCapturePaymentService extends ActiveListService
 		return verify(params);
 	}
 
-	@ProxyMethod
+	@ProxyMethod 
 	public def verify( params ) {
-		def data = changeState(params, 'VERIFIED');
+		def data = changeState(params, "VERIFIED");
 
 		data.dtverified = dateSvc.serverDate;
-		data.verifier = [objid: env.USERID, name: env.NAME];
+		data.verifier = getUser();
 		em.update(data, 'verify');
 
-		createSpecialCollection(data);
-		createBilling(data);
-		createFieldCollection(data);
+		createSpecialCollection( data );
+		createBilling( data );
+		createFieldCollection( data );
 
 		inboxSvc.removeMessageByRefid([refid: data.objid]);
 
-		return open(data);
+		return open( data );
 	}
 
-	@ProxyMethod
-	public def sendBack( params ) {
-		if (!params.sendbackremarks) throw new Exception('Please specify send back remarks.');
+	def parseDate( date ) {
+		if (!date) return null;
 
-		def data = changeState(params, 'PENDING');
-
-		def i = em.read(data, 'cp-pending');
-		if (!i) em.create(data, 'cp-pending');
-
-		def item = [
-			objid 		: 'CPS' + new UID(),
-			parentid	: data.objid,
-			dtcreated 	: dateSvc.serverDate,
-			author 		: [objid: env.USERID, name: env.NAME],
-			remarks 	: params.sendbackremarks
-		];
-		em.create(item, 'sendback');
-
-		inboxSvc.removeMessageByRefid([refid: data.objid]);
-
-		return open(data);
+		if (date instanceof Date) {
+			return date;
+		} else {
+			return java.sql.Date.valueOf(date);
+		}
 	}
+
+	def parse( pattern, date ) {
+		if (!pattern) pattern = 'yyyy-MM-dd';
+		def dt = parseDate(date);
+		return new java.text.SimpleDateFormat(pattern).format(dt);
+	}
+
+	private void createSpecialCollection( data ) {
+		def sc = specialcollection.read([objid: data.specialcollectionid]);
+		if (!sc) {
+			sc = [
+				objid 		: data.specialcollectionid,
+				state 		: 'DOWNLOADED',
+				billingid 	: data.fieldcollectionid,
+				txndate 	: data.txndate,
+				txntype 	: 'CAPTURE',
+				dtfiled 	: dateSvc.serverDate,
+				author 		: [objid: env.USERID, name: env.NAME],
+				collector 	: data.collector
+			];
+			specialcollection.create(sc);
+		}
+		data.specialcollectionid = sc.objid;
+
+		def list = em.getDetails(data);
+
+		def ledger, item, app;
+		list?.each{ o->
+			ledger = loan_ledger.read([objid: o.ledgerid]);
+			if (!ledger) throw new Exception('Ledger record does not exist or has already been deleted.');
+
+			app = loanapp.read([objid: ledger.appid]);
+			if (!app) throw new Exception('Loanapp record does not exist or has already been deleted.');
+
+			item = [
+				objid 			: o.scdetailid,
+				parentid		: sc.objid,
+				billingdetailid	: 'LSCD' + new UID(),
+				routecode 		: app?.route?.code,
+				borrower 		: app?.borrower,
+				loanapp 		: [objid: app?.objid, appno: app?.appno],
+			];
+
+			def i = specialcollection.read([objid: o.scdetailid], 'sc-detail');
+			if (!i) {
+				specialcollection.create(item, 'sc-detail');
+			} else {
+				item.billingdetailid = i.billingdetailid;
+				specialcollection.update(item, 'sc-detail');
+			}
+		}
+	}
+
 
 	private void createBilling( data ) {
 		def billing = ledger_billing.findByCollectorAndBilldate([collectorid: data.collector.objid, date: data.txndate]);
@@ -448,6 +540,104 @@ class LoanCapturePaymentService extends ActiveListService
 		}
 
 	}
+	private void createFieldCollection( data ) {
+		data = em.read(data);
+		if (!data) throw new Exception('Capture payment record does not exist or has already been deleted.');
+
+		def fc = fieldcollection.read([objid: data.fieldcollectionid]);
+		if (!fc) {
+			def branch = branchSvc.open([:]);
+
+			fc = [
+				objid 		: data.fieldcollectionid,
+				dtfiled 	: dateSvc.serverDate,
+				author 		: [objid: env.USERID, name: env.NAME],
+				branchid 	: branch.code,
+				billdate 	: data.txndate,
+				collector 	: data.collector
+			];
+			fieldcollection.create(fc);
+		}
+
+		def item = fieldcollection.read([objid: data.specialcollectionid], "fc-item");
+		if (!item) {
+			item = [
+				objid 		: data.specialcollectionid,
+				parentid	: fc.objid,
+				state 		: 'DRAFT',
+				dtfiled 	: dateSvc.serverDate,
+				author 		: [objid: env.USERID, name: env.NAME],
+				item 		: [objid: data.specialcollectionid, type: 'special'],
+				trackerid 	: data.trackerid,
+				totalcount 	: data.list.size(),
+				totalamount : data.list.amount.sum()
+			];
+			fieldcollection.create(item, "fc-item");
+		}
+
+		def list = em.getDetails(data);
+
+		def xitem, loan, payment, billing, sc, refno;
+
+		list?.each{ o->
+			xitem = em.read(o, 'cp-detail');
+			if (xitem) {
+				sc = specialcollection.read([objid: xitem.scdetailid], 'sc-detail');
+
+				billing = ledger_billing.read([objid: sc?.billingdetailid], "billing-detail");
+				if (!billing) throw new Exception("Billing detail record does not exist or has already been deleted.");
+
+				loan = fieldcollection.read([objid: sc?.billingdetailid], 'fc-loan');
+				if (!loan) {
+					loan = [
+						objid	 			: sc?.billingdetailid,
+						parentid 			: item?.objid,
+						fieldcollectionid 	: fc.objid,
+						loanapp 			: sc?.loanapp,
+						borrower 			: sc?.borrower,
+						routecode 			: sc?.routecode,
+						noofpayments 		: 0,
+						version 			: 1
+					]
+					fieldcollection.create(loan, "fc-loan");
+				} else {
+					if (!loan.version) loan.version = 1;
+					fieldcollection.update(loan, 'fc-loan');
+				}
+
+				payment = fieldcollection.read([objid: xitem.objid], 'fc-payment');
+				if (!payment) {
+					refno = billing.refno + (loan.noofpayments > 1? loan.noofpayments : '');
+					payment = [
+						objid 				: xitem.objid,
+						parentid			: loan.objid,
+						itemid 				: loan.parentid,
+						fieldcollectionid 	: fc?.objid,
+						dtfiled 			: dateSvc.serverDate,
+						author 				: [objid: env.USERID, name: env.NAME],
+						txnmode 			: 'ONLINE',
+						dtpaid				: xitem.dtpaid,
+						refno 				: refno,
+						paytype 			: billing.paymentmethod,
+						amount 				: xitem.amount,
+						paidby 				: xitem.paidby,
+						payoption 			: xitem.payoption,
+						version				: 1
+					];
+					fieldcollection.create(payment, "fc-payment");
+
+					if (xitem.payoption == 'check') {
+						payment.bank = xitem.bank;
+						payment.check = xitem.check;
+						fieldcollection.update(payment, "payment-check");
+					}
+
+					loan.noofpayments++;
+					fieldcollection.update(loan, "loan-noofpayments");
+				}
+			}
+		}
+	}
 
 	private def createItem( params ) {
 		def ledger = loan_ledger.read([objid: params.ledgerid]);
@@ -457,11 +647,13 @@ class LoanCapturePaymentService extends ActiveListService
 		if (ledger?.dtmatured) {
 			maturitydate = parseDate(ledger?.dtmatured);
 		}
+		if (!ledger.overduepenalty) ledger.overduepenalty = 0;
+		//if (1==1) {
 		if (maturitydate && (currentdate.compareTo(maturitydate) > 0) && ledger?.overduepenalty == 0) {
 			def p = product_type.read([name: ledger?.producttypeid])
 			ledger.overduepenalty = ledgerSvc.computeOverduePenalty([balance: ledger.balance, pastduerate: (p.pastduerate? p.pastduerate : 0.00)]);
-			loan_ledger.update(ledger, 'overduepenalty');
 		}
+		loan_ledger.update(ledger, 'overduepenalty');
 
 		def app = loanapp.read([objid: ledger?.appid]);
 		def appc = loanapp.read([objid: ledger?.appid], 'loanapp_capture');
@@ -672,160 +864,6 @@ class LoanCapturePaymentService extends ActiveListService
 		return data;
 	}
 
-	private def parseDate( date ) {
-		if (!date) return null;
-		if (date instanceof Date) {
-			return date;
-		} else {
-			return java.sql.Date.valueOf(date);
-		}
-	}
-
-	private def parse( pattern, date ) {
-		if (!pattern) pattern = 'yyyy-MM-dd';
-		def dt = parseDate(date);
-		return new java.text.SimpleDateFormat(pattern).format(dt);
-	}
-
-	private void createSpecialCollection( data ) {
-		def sc = specialcollection.read([objid: data.specialcollectionid]);
-		if (!sc) {
-			sc = [
-				objid 		: data.specialcollectionid,
-				state 		: 'DOWNLOADED',
-				billingid 	: data.fieldcollectionid,
-				txndate 	: data.txndate,
-				txntype 	: 'CAPTURE',
-				dtfiled 	: dateSvc.serverDate,
-				author 		: [objid: env.USERID, name: env.NAME],
-				collector 	: data.collector
-			];
-			specialcollection.create(sc);
-		}
-		data.specialcollectionid = sc.objid;
-
-		def list = em.getDetails(data);
-
-		def ledger, item, app;
-		list?.each{ o->
-			ledger = loan_ledger.read([objid: o.ledgerid]);
-			if (!ledger) throw new Exception('Ledger record does not exist or has already been deleted.');
-
-			app = loanapp.read([objid: ledger.appid]);
-			if (!app) throw new Exception('Loanapp record does not exist or has already been deleted.');
-
-			item = [
-				objid 			: o.scdetailid,
-				parentid		: sc.objid,
-				billingdetailid	: 'LSCD' + new UID(),
-				routecode 		: app?.route?.code,
-				borrower 		: app?.borrower,
-				loanapp 		: [objid: app?.objid, appno: app?.appno],
-			];
-
-			def i = specialcollection.read([objid: o.scdetailid], 'sc-detail');
-			if (!i) {
-				specialcollection.create(item, 'sc-detail');
-			} else {
-				item.billingdetailid = i.billingdetailid;
-				specialcollection.update(item, 'sc-detail');
-			}
-		}
-
-		/*
-		if (action == 'create') {
-			sc = specialColSvc.create(sc);
-		} else if (action == 'update') {
-			sc = specialColSvc.update(sc);
-		}
-		*/
-
-
-		/*
-		if (!data.specialcollectionid) {
-			def prm = [
-				objid 		: params.specialcollectionid,
-				state 		: 'DOWNLOADED',
-				billingid 	: params.fieldcollectionid,
-				txndate 	: params.txndate,
-				txntype 	: 'CAPTURE',
-				collector 	: params.collector,
-				itemtype 	: 'special',
-				ledgers 	: []
-			];
-			params.list.each{ o->
-				o.ledger.homeaddress = o.ledger.borrower.address;
-				o.ledger.appno = o.ledger.loanapp.appno;
-				o.ledger.loanamount = o.ledger.loanapp.loanamount;
-				o.ledger.capturedetailid = o.objid;
-				prm.ledgers.add(o.ledger)
-				//prm.ledgers.add(loan_ledger.findLedgerById([ledgerid: o.ledger.objid]));
-			}
-			sc = specialColSvc.create(prm);
-		} else {
-			sc = specialcollection.read([objid: params.specialcollectionid]);
-			sc.ledgers = [];
-			params.list.each{ o->
-				o.ledger.homeaddress = o.ledger.borrower.address;
-				o.ledger.appno = o.ledger.loanapp.appno;
-				o.ledger.loanamount = o.ledger.loanapp.loanamount;
-				o.ledger.capturedetailid = o.objid;
-				sc.ledgers.add(o.ledger);
-			}
-			sc = specialColSvc.update(sc);
-		}
-		*/
-
-	}
-
-	private def changeState( params, state ) {
-		def data = em.read(params);
-		if (!data) throw new Exception("Capture payment record does not exist or has already been deleted.");
-
-		if (data.state == state) {
-			throw new Exception("Capture payment record already " + state + ".");
-		}
-
-		data.state = state;
-		em.changeState(data);
-
-		def action, remarks;
-		switch (state) {
-			case 'FOR_VERIFICATION' : action = 'FOR VERIFICATION';
-									  remarks = 'Submit for verification';
-									  break;
-			case 'VERIFIED' 		: action = 'VERIFIED';
-									  remarks = 'Verified';
-									  break;
-			case 'REMITTED' 		: action = 'REMITTED';
-									  remarks = 'Remitted';
-									  break;
-			case 'PENDING' 			: action = 'PENDING';
-									  remarks = 'Pending';
-									  break;
-		}
-
-		if (action && remarks) {
-			def loginfo = [
-				objid 	: 'TLOG' + new UID(), 
-				txndate : dateSvc.serverDate, 
-				txnid   : data.objid, 
-				user    : [objid: env.USERID, username: env.NAME], 
-				action	: action, 
-				remarks : remarks
-			]; 
-			txnlog.create( loginfo ); 
-		}
-
-		return open(data);
-	}
-
-	@Async
-	@ProxyMethod
-	public def asyncRemit( params ) {
-		return remit(params);
-	}
-
 	@ProxyMethod
 	public def remit( params ) {
 		if (!params.cbsno) throw new Exception("Please specify cbsno.")
@@ -841,8 +879,9 @@ class LoanCapturePaymentService extends ActiveListService
 		if (!cb) throw new Exception("No cash breakdown sheet has been created for this collection.");
 
 		def cbsno = params.cbsno.toUpperCase();
-		if (cb.cbsno != cbsno) 
+		if (cb.cbsno != cbsno) {
 			throw new Exception("CBS No. inputted does not match cbs no. generated for this collection.");
+		}
 		
 
 		createRemittance(params);
@@ -869,176 +908,6 @@ class LoanCapturePaymentService extends ActiveListService
 		}
 
 		return open(data);
-	}
-
-	private void createFieldCollection( data ) {
-		data = em.read(data);
-		if (!data) throw new Exception('Capture payment record does not exist or has already been deleted.');
-
-		def fc = fieldcollection.read([objid: data.fieldcollectionid]);
-		if (!fc) {
-			def branch = branchSvc.open([:]);
-
-			fc = [
-				objid 		: data.fieldcollectionid,
-				dtfiled 	: dateSvc.serverDate,
-				author 		: [objid: env.USERID, name: env.NAME],
-				branchid 	: branch.code,
-				billdate 	: data.txndate,
-				collector 	: data.collector
-			];
-			fieldcollection.create(fc);
-		}
-
-		def item = fieldcollection.read([objid: data.specialcollectionid], "fc-item");
-		if (!item) {
-			item = [
-				objid 		: data.specialcollectionid,
-				parentid	: fc.objid,
-				state 		: 'DRAFT',
-				dtfiled 	: dateSvc.serverDate,
-				author 		: [objid: env.USERID, name: env.NAME],
-				item 		: [objid: data.specialcollectionid, type: 'special'],
-				trackerid 	: data.trackerid,
-				totalcount 	: data.list.size(),
-				totalamount : data.list.amount.sum()
-			];
-			fieldcollection.create(item, "fc-item");
-		}
-
-		def list = em.getDetails(data);
-
-		def xitem, loan, payment, billing, sc, refno;
-
-		list?.each{ o->
-			xitem = em.read(o, 'cp-detail');
-			if (xitem) {
-				sc = specialcollection.read([objid: xitem.scdetailid], 'sc-detail');
-
-				billing = ledger_billing.read([objid: sc?.billingdetailid], "billing-detail");
-				if (!billing) throw new Exception("Billing detail record does not exist or has already been deleted.");
-
-				loan = fieldcollection.read([objid: sc?.billingdetailid], 'fc-loan');
-				if (!loan) {
-					loan = [
-						objid	 			: sc?.billingdetailid,
-						parentid 			: item?.objid,
-						fieldcollectionid 	: fc.objid,
-						loanapp 			: sc?.loanapp,
-						borrower 			: sc?.borrower,
-						routecode 			: sc?.routecode,
-						noofpayments 		: 0,
-						version 			: 1
-					]
-					fieldcollection.create(loan, "fc-loan");
-				} else {
-					if (!loan.version) loan.version = 1;
-					fieldcollection.update(loan, 'fc-loan');
-				}
-
-				payment = fieldcollection.read([objid: xitem.objid], 'fc-payment');
-				if (!payment) {
-					refno = billing.refno + (loan.noofpayments > 1? loan.noofpayments : '');
-					payment = [
-						objid 				: xitem.objid,
-						parentid			: loan.objid,
-						itemid 				: loan.parentid,
-						fieldcollectionid 	: fc?.objid,
-						dtfiled 			: dateSvc.serverDate,
-						author 				: [objid: env.USERID, name: env.NAME],
-						txnmode 			: 'ONLINE',
-						dtpaid				: xitem.dtpaid,
-						refno 				: refno,
-						paytype 			: billing.paymentmethod,
-						amount 				: xitem.amount,
-						paidby 				: xitem.paidby,
-						payoption 			: xitem.payoption,
-						version				: 1
-					];
-					fieldcollection.create(payment, "fc-payment");
-
-					if (xitem.payoption == 'check') {
-						payment.bank = xitem.bank;
-						payment.check = xitem.check;
-						fieldcollection.update(payment, "payment-check");
-					}
-
-					loan.noofpayments++;
-					fieldcollection.update(loan, "loan-noofpayments");
-				}
-			}
-		}
-
-		/*
-		def item;
-		def sc;
-		def fc_loan;
-		def fc_payment;
-		def billing;
-		data.list.each{ o->
-			item = em.read(o, "cp-detail");
-			if (item) {
-				sc = specialcollection.read([objid: item.scdetailid], "sc-detail");
-
-				billing = ledger_billing.read([objid: sc.billingdetailid], "billing-detail");
-				if (!billing) throw new Exception("Record does not exist or has already been deleted.");
-
-				fc_loan = fieldcollection.read([objid: sc?.billingdetailid], "fc-loan");
-				if (!fc_loan) {
-					fc_loan = [
-						objid 				: billing.objid,
-						parentid 			: fc_item.objid,
-						fieldcollectionid 	: fc.objid,
-						loanapp 			: [
-							objid 	: billing.loanappid,
-							appno	: billing.appno
-						],
-						borrower 			: [
-							objid 	: billing.acctid,
-							name 	: billing.acctname
-						],
-						routecode 	: billing.route.code,
-						noofpayments 		: 0
-					];
-					fieldcollection.create(fc_loan, "fc-loan");
-				}
-
-				fc_payment = fieldcollection.read([objid: item.objid], "fc-payment");
-				if (!fc_payment) {
-					fc_payment = [
-						objid 	 			: item.objid,
-						parentid 			: fc_loan.objid,
-						itemid 			 	: fc_loan.parentid,
-						fieldcollectionid 	: fc_loan.fieldcollectionid,
-						dtfiled 			: dateSvc.serverDate,
-						author 				: [
-							objid 	: (env.USERID? env.USERID : 'NOT IDENTIFIED'),
-							name 	: (env.NAME? env.NAME : 'NOT IDENTIFIED')
-						],
-						txnmode 			: 'ONLINE',
-						dtpaid				: item.dtpaid,
-						refno 				: billing.refno + (fc_loan.noofpayments > 1? fc_loan.noofpayments : ''),
-						paytype 			: billing.paymentmethod,
-						amount 				: item.amount,
-						paidby 				: item.paidby,
-						payoption 			: item.payoption
-					];
-					fieldcollection.create(fc_payment, "fc-payment");
-
-					if (item.payoption == 'check') {
-						fc_payment.bank = item.bank;
-						fc_payment.check = item.check;
-						fieldcollection.update(fc_payment, "payment-check");
-					}
-
-					fc_loan.noofpayments++;
-					fieldcollection.update(fc_loan, "loan-noofpayments");
-				}
-				//billing = ledger_billing.read([objid: sc?.billingdetailid], "billing-detail");
-
-			}
-		}
-		*/
 	}
 
 	private void createRemittance( params ) {
@@ -1124,44 +993,5 @@ class LoanCapturePaymentService extends ActiveListService
 
 			}
 		}
-
-		/*
-		def detail;
-		def scdetail;
-		def fcpayment;
-		data.list.each{ o->
-			detail = remittance.findRemittanceDetailByRefid([refid: o.objid]);
-			if (!detail) {
-				scdetail = specialcollection.read([objid: o.scdetailid], "sc-detail");
-				if (!scdetail) throw new Exception("Record does not exist or has already been deleted.");
-
-				fcpayment = fieldcollection.read(o, "fc-payment");
-				if (!fcpayment) throw new Exception("Record does not exist or has already been deleted.");
-
-				detail = [
-					objid 		: 'REMDTL' + new UID(),
-					parentid 	: rem.objid,
-					refid 	 	: o.objid,
-					borrower 	: scdetail.borrower,
-					loanapp 	: scdetail.loanapp,
-					routecode 	: scdetail.routecode,
-					refno 		: fcpayment.refno,
-					amount 		: fcpayment.amount,
-					paytype 	: fcpayment.paytype,
-					payoption 	: fcpayment.payoption,
-					paidby 		: fcpayment.paidby,
-					tag 		: 'ONLINE'
-				]
-
-				remittance.create(detail, "rem-detail");
-
-				if (fcpayment.payoption == 'check') {
-					detail.bank = fcpayment.bank;
-					detail.check = fcpayment.check;
-					remittance.update(detail, "rem-detail-check");
-				}
-			}
-		}
-		*/
 	}
-}
+} 

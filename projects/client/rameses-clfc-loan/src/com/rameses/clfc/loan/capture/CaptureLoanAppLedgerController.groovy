@@ -20,16 +20,35 @@ class LoanAppCaptureLedgerController
     def entity;
     def mode = 'read';
     def title = 'Capture Ledger';
-    
-    /*
-    LoanAppCaptureLedgerController() {
-        try {
-            service = InvokerProxy.instance.create("LoanLedgerService");
-        } catch (ConnectException ce) {
-            ce.printStackTrace();
-            throw ce;
+        
+    def getAppLookupHandler() {
+        def handler = {o->
+            entity.appno = o.appno;
+            entity.loanamount = o.loanamount;
+            entity.appid = o.objid;
+            entity.borrower = o.borrower;
+            entity.producttypeid = o.producttype?.name;
+            entity.interestrate = o.producttype?.interestrate;
+            entity.overduerate = o.producttype?.overduerate;
+            entity.underpaymentrate = o.producttype?.underpaymentpenalty;
+            entity.absentrate = o.producttype?.absentpenalty;
+            entity.term = o.producttype?.term;
+            entity.route = o.route;
+            //entity.dtstarted = o.dtstarted;
+            entity.dtreleased = o.dtreleased;
+            //entity.dtmatured = o.dtmatured;
         }
+        return InvokerUtil.lookupOpener("capture_loanapp:lookup", [onselect:handler]);
     }
+    
+   /*
+    def appLookupHandler = Inv.lookupOpener("capture_loanapp:lookup", [
+        onselect: { o->
+            entity.putAll(o);
+            entity.acctid = entity.borrower.objid;
+            binding?.refresh();
+        }
+    ]);
     */
     
     @PropertyChangeListener
@@ -57,12 +76,11 @@ class LoanAppCaptureLedgerController
     }
     
     def next() {
-        mode = 'create';
         entity = service.resolveEntity(entity);
-        if (!entity.payments) entity.payments = [];
-        entity.payments.clear();
+        entity.payments = [];
         entity.paymentmethod = null;
         paymentsHandler.reload();
+        mode = 'create';
         return 'main';
     }
     
@@ -90,6 +108,7 @@ class LoanAppCaptureLedgerController
         }
     }
     
+    /*
     def getAppLookupHandler() {
         def handler = {o->
             entity.appno = o.appno;
@@ -109,6 +128,7 @@ class LoanAppCaptureLedgerController
         }
         return InvokerUtil.lookupOpener("capture_loanapp:lookup", [onselect:handler]);
     }
+    */
     
     def paymentsHandler = [
         fetchList: {o->

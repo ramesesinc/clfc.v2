@@ -22,4 +22,17 @@
 		<complex name="info" required="false" serializer="default" merge="true" />
 	</element>
 
+	<element name="factfield" tablename="loan_producttype_factfield">
+		<field name="objid" primary="true" />
+		<field name="parentid" required="true" />
+		<field name="title" required="true" />
+		<field name="fact_objid" required="true" />
+		<field name="fact_varname" required="true" />
+		<field name="field_objid" required="true" />
+		<field name="field_name" required="true" />
+		<field name="field_title" required="true" />
+		<field name="field_handler" required="true" />
+		<field name="category" required="true" />
+	</element>
+
 </schema>

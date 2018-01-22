@@ -62,7 +62,7 @@ class ChangeLoanAppDetailController {
         if (!op) return null;
         return op;
     }
-
+ 
     def close() {
         return "_close";
     }
@@ -117,7 +117,7 @@ class ChangeLoanAppDetailController {
         
         String msg = "<html>Changes made will affect the corresponding ledger for Application <b>" + data.appno + "</b>. Do you want to continue?</html>";
         if (MsgBox.confirm(msg)) {
-            entity = service.save(data);
+            service.save(data);
             msg = "<html>Application <b>" + data.appno + "</b> updated successfully.";
             MsgBox.alert(msg);
             return init();

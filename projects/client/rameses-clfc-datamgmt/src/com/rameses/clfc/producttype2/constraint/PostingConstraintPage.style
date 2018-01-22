@@ -1,7 +1,10 @@
-"entity.(isdeductabletoamount|allowoffset)" [mode != 'read' && entity.datatype == 'decimal'] {
+"entity.*" [mode!='read'] {
     enabled: true;
 }
-"entity.(isdeductabletoamount|allowoffset)" [mode == 'read' || entity.datatype != 'decimal'] {
+"entity.(isdeductabletoamount|allowoffset|isexempted|recalculateifnotenough)" [mode != 'read' && entity.datatype == 'decimal'] {
+    enabled: true;
+}
+"entity.(isdeductabletoamount|allowoffset|isexempted|recalculateifnotenough)" [mode == 'read' || entity.datatype != 'decimal'] {
     enabled: false;
 }
 "entity.isincrementafterposting" [mode != 'read' && entity.datatype == 'date'] {
@@ -10,6 +13,10 @@
 "entity.isincrementafterposting" [mode == 'read' || entity.datatype != 'date'] {
     enabled: false;
 }
-"entity.value" [1==1] {
+"entity.*" [mode=='read'] {
+    enabled: false;
+}
+"entity.postingexpr" [1==1] {
+    enabled: true;
     readonly: true;
 }

@@ -23,6 +23,6 @@
     
     <pages>
         <page template="com.rameses.clfc.loan.capture.CaptureLoanAppInitLedgerPage"/>
-        <page template="com.rameses.clfc.loan.capture.CaptureLoanAppLedgerPage" name="main"/>
+        <page template="com.rameses.clfc.loan.capture.XCaptureLoanAppLedgerPage" name="main"/>
     </pages>
 </workunit>

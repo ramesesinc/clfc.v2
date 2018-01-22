@@ -1,4 +1,4 @@
-package com.rameses.clfc.treasury.ledger.amnesty.smc.handler
+package com.rameses.clfc.producttype2.handler
 
 import com.rameses.rcp.common.*;
 import com.rameses.rcp.annotations.*;

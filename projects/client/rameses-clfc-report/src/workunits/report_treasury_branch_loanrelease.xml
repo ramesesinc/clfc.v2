@@ -1,7 +1,11 @@
 <workunit>
     <invokers>
+        <!--
         <invoker folderid="/home/online/report/cao" caption="Loan Release" action="init" 
             role="ACCT_ASSISTANT,CASHIER,BRANCH_MANAGER" />
+        -->
+        <invoker folderid="/home/online/report/cao" caption="Loan Release" action="init"
+            role="CAO_OFFICER,ACCT_ASSISTANT,CASHIER,BRANCH_MANAGER" />
         
         <invoker type="formActions" action="close" caption="Close" mnemonic="c" shortcut="ctrl c"
             visibleWhen="#{mode=='init'}" immediate="true" />

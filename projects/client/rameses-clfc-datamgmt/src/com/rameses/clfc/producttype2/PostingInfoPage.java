@@ -41,6 +41,7 @@ public class PostingInfoPage extends javax.swing.JPanel {
         xLabel3 = new com.rameses.rcp.control.XLabel();
         jScrollPane2 = new javax.swing.JScrollPane();
         xHtmlView1 = new com.rameses.rcp.control.XHtmlView();
+        xButton9 = new com.rameses.rcp.control.XButton();
 
         xLabel4.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
         xLabel4.setText("Header Display Sequence");
@@ -85,7 +86,7 @@ public class PostingInfoPage extends javax.swing.JPanel {
             }
         });
 
-        xList1.setExpression("${item.sequence} ${item.title}");
+        xList1.setExpression("${item.seqno} ${item.title}");
         xList1.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
         xList1.setHandler("headersHandler");
         xList1.setName("selectedHeader"); // NOI18N
@@ -96,6 +97,14 @@ public class PostingInfoPage extends javax.swing.JPanel {
 
         xHtmlView1.setName("postingHtml"); // NOI18N
         jScrollPane2.setViewportView(xHtmlView1);
+
+        xButton9.setContentAreaFilled(false);
+        xButton9.setDisableWhen("#{mode=='read'}");
+        xButton9.setImmediate(true);
+        xButton9.setMargin(new java.awt.Insets(2, 2, 2, 2));
+        xButton9.setName("addCondition"); // NOI18N
+        xButton9.setPreferredSize(new java.awt.Dimension(109, 25));
+        xButton9.setText("<html><a href=\"x\">[ Add ]</a></html>");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -108,7 +117,10 @@ public class PostingInfoPage extends javax.swing.JPanel {
                         .addComponent(xLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(xButton6, javax.swing.GroupLayout.PREFERRED_SIZE, 164, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(xLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(xLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(xButton9, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addGap(0, 77, Short.MAX_VALUE))
             .addComponent(jScrollPane1)
             .addGroup(layout.createSequentialGroup()
@@ -135,9 +147,11 @@ public class PostingInfoPage extends javax.swing.JPanel {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
-                .addComponent(xLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 17, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(7, 7, 7)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 140, Short.MAX_VALUE))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(xLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 17, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(xButton9, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(2, 2, 2)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 137, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -153,6 +167,7 @@ public class PostingInfoPage extends javax.swing.JPanel {
     private com.rameses.rcp.control.XButton xButton6;
     private com.rameses.rcp.control.XButton xButton7;
     private com.rameses.rcp.control.XButton xButton8;
+    private com.rameses.rcp.control.XButton xButton9;
     private com.rameses.rcp.control.XHtmlView xHtmlView1;
     private com.rameses.rcp.control.XLabel xLabel3;
     private com.rameses.rcp.control.XLabel xLabel4;

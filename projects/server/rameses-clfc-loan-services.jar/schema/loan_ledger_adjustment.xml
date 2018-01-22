@@ -12,10 +12,10 @@
 		<field name="borrower_name" required="true" />
 		<field name="txndate" required="true" />
 		<field name="amount" required="true" />
-		<field name="debit_type" required="true" />
-		<field name="debit_amount" required="true" />
-		<field name="credit_type" required="true" />
-		<field name="credit_amount" required="true" />
+		<field name="debit_type" />
+		<field name="debit_amount" />
+		<field name="credit_type" />
+		<field name="credit_amount" />
 		<field name="remarks" required="true" />
 		<complex name="info" required="false" serializer="default" merge="true" />
 		<field name="dtmodified" />

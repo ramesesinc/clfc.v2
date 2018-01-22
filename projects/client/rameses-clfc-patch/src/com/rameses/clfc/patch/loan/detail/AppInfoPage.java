@@ -42,7 +42,6 @@ public class AppInfoPage extends javax.swing.JPanel {
         xPanel1.setBorder(xTitledBorder1);
 
         xFormPanel1.setCaptionWidth(110);
-        xFormPanel1.setPadding(new java.awt.Insets(10, 10, 5, 5));
 
         xTextField2.setCaption("App. No.");
         xTextField2.setCaptionWidth(110);
@@ -93,7 +92,7 @@ public class AppInfoPage extends javax.swing.JPanel {
 
         xLookupField2.setCaption("Route");
         xLookupField2.setCaptionWidth(110);
-        xLookupField2.setExpression("#{entity.route? entity.route.description - entity.route.area : ''}");
+        xLookupField2.setExpression("${entity.route.description}");
         xLookupField2.setHandler("routeLookupHandler");
         xLookupField2.setPreferredSize(new java.awt.Dimension(250, 20));
         xLookupField2.setRequired(true);
@@ -102,9 +101,9 @@ public class AppInfoPage extends javax.swing.JPanel {
         xLookupField1.setCaption("Product Type");
         xLookupField1.setCaptionWidth(110);
         xLookupField1.setDisabledTextColor(new java.awt.Color(0, 0, 0));
-        xLookupField1.setExpression("#{entity.producttype.name}");
+        xLookupField1.setExpression("${entity.producttype.name}");
         xLookupField1.setHandler("productTypeLookup");
-        xLookupField1.setPreferredSize(new java.awt.Dimension(150, 20));
+        xLookupField1.setPreferredSize(new java.awt.Dimension(200, 20));
         xLookupField1.setRequired(true);
         xFormPanel1.add(xLookupField1);
 

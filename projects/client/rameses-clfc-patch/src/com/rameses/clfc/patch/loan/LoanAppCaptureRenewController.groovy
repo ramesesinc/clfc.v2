@@ -32,8 +32,6 @@ class LoanAppCaptureRenewController
         entity.appno = null; 
     }
     
-    def getLoanTyp
-    
     def doCancel() {
         return '_close'; 
     } 

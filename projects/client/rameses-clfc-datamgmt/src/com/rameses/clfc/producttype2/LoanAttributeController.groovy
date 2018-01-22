@@ -36,7 +36,7 @@ class LoanAttributeController {
              o.value = o.defaultvalue;
              entity.attributeid = o.code;
              entity.attribute = o;
-             entity.handler = o.type;
+             entity.handler = o.handler;
              entity.computeduringapplication = 1;
              entity.computeduringposting = 0;
              binding?.refresh();
@@ -59,7 +59,7 @@ class LoanAttributeController {
     def getOpener() {
         if (!entity.handler) return;
         
-        def params = [entity: entity, mode: mode];
+        def params = [entity: entity, mode: mode, vars: []];
         def invtype = "producttype:loan:attribute:" + entity.handler;
         if (entity.handler == 'expression') {
             if (!varlist) varlist = [];

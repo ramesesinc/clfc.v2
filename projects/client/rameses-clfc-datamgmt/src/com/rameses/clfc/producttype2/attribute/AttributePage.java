@@ -43,6 +43,7 @@ public class AttributePage extends javax.swing.JPanel {
         xTextField5 = new com.rameses.rcp.control.XTextField();
         xComboBox2 = new com.rameses.rcp.control.XComboBox();
         xComboBox1 = new com.rameses.rcp.control.XComboBox();
+        xComboBox3 = new com.rameses.rcp.control.XComboBox();
         xSubFormPanel2 = new com.rameses.rcp.control.XSubFormPanel();
 
         xTextField2.setText("xTextField2");
@@ -74,6 +75,7 @@ public class AttributePage extends javax.swing.JPanel {
         xTextField4.setCaption("Var. Name");
         xTextField4.setName("entity.varname"); // NOI18N
         xTextField4.setPreferredSize(new java.awt.Dimension(0, 20));
+        xTextField4.setRequired(true);
         xTextField4.setSpaceChar('_');
         xFormPanel1.add(xTextField4);
 
@@ -100,6 +102,13 @@ public class AttributePage extends javax.swing.JPanel {
         xComboBox1.setPreferredSize(new java.awt.Dimension(120, 20));
         xFormPanel1.add(xComboBox1);
 
+        xComboBox3.setCaption("Data Type");
+        xComboBox3.setItems("datatypeList");
+        xComboBox3.setName("entity.datatype"); // NOI18N
+        xComboBox3.setPreferredSize(new java.awt.Dimension(120, 20));
+        xComboBox3.setRequired(true);
+        xFormPanel1.add(xComboBox3);
+
         xSubFormPanel2.setDynamic(true);
         xSubFormPanel2.setHandler("opener");
 
@@ -111,7 +120,7 @@ public class AttributePage extends javax.swing.JPanel {
         );
         xSubFormPanel2Layout.setVerticalGroup(
             xSubFormPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 158, Short.MAX_VALUE)
+            .addGap(0, 165, Short.MAX_VALUE)
         );
 
         javax.swing.GroupLayout xPanel1Layout = new javax.swing.GroupLayout(xPanel1);
@@ -129,9 +138,9 @@ public class AttributePage extends javax.swing.JPanel {
             xPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(xPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(xFormPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 137, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(xFormPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(xSubFormPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, 158, Short.MAX_VALUE)
+                .addComponent(xSubFormPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, 165, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -140,6 +149,7 @@ public class AttributePage extends javax.swing.JPanel {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private com.rameses.rcp.control.XComboBox xComboBox1;
     private com.rameses.rcp.control.XComboBox xComboBox2;
+    private com.rameses.rcp.control.XComboBox xComboBox3;
     private com.rameses.rcp.control.XFormPanel xFormPanel1;
     private com.rameses.rcp.control.XLabel xLabel1;
     private com.rameses.rcp.control.XPanel xPanel1;

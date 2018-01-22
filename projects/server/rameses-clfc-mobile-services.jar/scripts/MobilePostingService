@@ -609,11 +609,6 @@ class MobilePostingService {
 	}
 
 	@ProxyMethod
-	public def postCapturePaymentEncrypt( params ) {
-		return postCapturePayment(decode(params));
-	}
-
-	@ProxyMethod
 	public def checkIfCaptureIsRemitted( params ) {
 		if (!params.captureid) throw new RuntimeException("Please specify captureid.");
 
@@ -627,7 +622,49 @@ class MobilePostingService {
 	}
 
 	@ProxyMethod
+	public def postCapturePaymentEncrypt( params ) {
+		return postCapturePayment(decode(params));
+	}
+
+	@ProxyMethod
 	public def postCapturePayment( params ) {
+		if (!params.captureid) throw new Exception("Please specify captureid.");
+		if (!params.payment) throw new Exception("Please specify payment.");
+		if (!params.collector) throw new Exception("Please specify collector.");
+		
+		def data = capture_payment.read([objid: params.payment?.objid], "cp-pending");
+		if (!data) {
+			data = [
+				objid 				: params.payment.objid,
+				captureid 			: params.captureid,
+				fieldcollectionid 	: params.sessionid,
+				trackerid 			: params.trackerid,
+				dtfiled 			: dateSvc.serverDate,
+				author 				: params.collector,
+				txnmode 			: params.mode,
+				txndate 			: params.txndate,
+				txntype 			: params.type,
+				borrowername 		: params.payment.borrowername,
+				amount 				: params.payment.amount,
+				payoption 			: params.payment.option,
+				bank 				: params.payment.bank,
+				check 				: params.payment.check,
+				dtpaid 				: params.payment.dtpaid,
+				paidby 				: params.payment.paidby,
+				collector 			: params.collector
+			];
+			capture_payment.create(data, "cp-pending");
+
+			if (data.payoption == 'check') {
+				capture_payment.update(data, "cp-pending-check");
+			}
+		}
+
+		return [response: "success"];
+	}
+
+	@ProxyMethod
+	public def xpostCapturePayment( params ) {
 		if (!params.captureid) throw new Exception("Please specify captureid.");
 		if (!params.payment) throw new Exception("Please specify payment.");
 		if (!params.collector) throw new Exception("Please specify collector.");
@@ -759,10 +796,14 @@ class MobilePostingService {
 
 	@ProxyMethod
 	public def remitCollection( params ) {
+		println 'params ' + params;
 		if (!params.sessionid) throw new Exception("Please specify sessionid.");
 
 		def c = capture_payment.findPendingByFieldcollection([objid: params.sessionid]);
-		if (c) throw new Exception("Cannot remit collection. There are still pending captured payments to be mapped.");
+		if (c) throw new Exception("Cannot remit collection. There are still pending captured payments.");
+
+		c = capture_payment.findByFieldcollectionidAndState( [objid: params.sessionid, state: "FOR_MAPPING"] );
+		if (c) throw new RuntimeException("Cannot remit collection. There are still captured payments for mapping.");
 		
 		if (params.tracker) {
 			postTracker(params.tracker);

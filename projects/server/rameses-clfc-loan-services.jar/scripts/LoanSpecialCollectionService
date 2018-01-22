@@ -993,6 +993,16 @@ class LoanSpecialCollectionService extends ActiveListService
 		return detail;
 	}
 
+	def parseDate( date ) {
+		if (!date) return null;
+
+		if (date instanceof Date) {
+			return date;
+		} else {
+			return java.sql.Date.valueOf(date);
+		}
+	}
+
 	private def parse( pattern, date ) {
 		if (!pattern) pattern = "yyyy-MM-dd";
 		def dt;

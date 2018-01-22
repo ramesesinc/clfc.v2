@@ -42,8 +42,49 @@ class BranchLoanReleaseReportController extends ReportModel
             criteria    : criteria
         ];
     }
-    def rptdata;
+    def rptdata, loadingActivated = false;
+    def activateHandler = {
+        loadingActivated = true;
+    }
+    def closeHandler = {
+        loadingActivated = false;
+    }
+    //def loadingOpener = Inv.lookupOpener("popup:loading", [activateHandler: activateHandler, closesHandler: closeHandler]);
     def loadingOpener = Inv.lookupOpener("popup:loading", [:]);
+    
+    def xpreview() {
+        
+        if (!handler) {
+            handler = [
+                onMessage : { o ->
+                    loadingOpener.handle.closeForm();
+                    if (o == AsyncHandler.EOF){
+                        return;
+                    }
+                    rptdata = o;
+                    viewReport();
+                    mode = 'preview';
+                    binding.fireNavigation('preview'); 
+                    
+                },
+                onTimeout : {
+                    handler?.retry();
+                },
+                onCancel : {
+                    loadingOpener.handle.closeForm();
+                },
+                onError : { p -> 
+                    loadingOpener.handle.closeForm();
+                    MsgBox.err(p.message);       
+                }
+            ] as AbstractAsyncHandler;
+        }
+        
+        service.getReportData(getParams(), handler);
+        return loadingOpener;
+    }
+    
+    
     def preview() {
 //        service.generate(getParams());
 //        viewReport();
@@ -96,7 +137,7 @@ class BranchLoanReleaseReportController extends ReportModel
     }
     
     public String getReportName() {
-        return "com/rameses/clfc/report/treasury/branch/loanrelease/BranchLoanReleaseReport.jasper";
+        return "com/rameses/clfc/report/treasury/branch/loanrelease/BranchLoanReleaseReport_0.jasper";
     }
 
 //    public SubReport[] getSubReports() {

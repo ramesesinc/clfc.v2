@@ -17,7 +17,7 @@
             String serviceName = 'LoanLedgerPhoneFollowupResultService';
             String entityName = 'phonefollowupresult';
         
-            Map createPermission = [role: 'CASHIER,BRANCH_MANAGER,ASST_BRANCH_MANAGER', domain: 'LOAN'];
+            Map createPermission = [role: 'CASHIER,BRANCH_MANAGER', domain: 'LOAN'];
 
             def selectedOption;
             def optionsModel = [

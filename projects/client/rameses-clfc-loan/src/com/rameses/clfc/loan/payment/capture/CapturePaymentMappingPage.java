@@ -17,10 +17,10 @@ import com.rameses.rcp.ui.annotations.Template;
 
 @StyleSheet
 @Template(FormPage.class)
-public class CapturePaymentPage extends javax.swing.JPanel {
+public class CapturePaymentMappingPage extends javax.swing.JPanel {
     
     /** Creates new form CapturedPaymentMappingPage */
-    public CapturePaymentPage() {
+    public CapturePaymentMappingPage() {
         initComponents();
     }
     
@@ -35,9 +35,9 @@ public class CapturePaymentPage extends javax.swing.JPanel {
         jPanel1 = new javax.swing.JPanel();
         xFormPanel1 = new com.rameses.rcp.control.XFormPanel();
         xDateField1 = new com.rameses.rcp.control.XDateField();
+        xLabel1 = new com.rameses.rcp.control.XLabel();
         xLabel2 = new com.rameses.rcp.control.XLabel();
         xTextField1 = new com.rameses.rcp.control.XTextField();
-        xLabel5 = new com.rameses.rcp.control.XLabel();
         xPanel1 = new com.rameses.rcp.control.XPanel();
         xDataTable1 = new com.rameses.rcp.control.XDataTable();
         xPanel2 = new com.rameses.rcp.control.XPanel();
@@ -48,6 +48,7 @@ public class CapturePaymentPage extends javax.swing.JPanel {
         xDateField2 = new com.rameses.rcp.control.XDateField();
         xDateField3 = new com.rameses.rcp.control.XDateField();
         xLabel4 = new com.rameses.rcp.control.XLabel();
+        xLabel5 = new com.rameses.rcp.control.XLabel();
 
         com.rameses.rcp.control.border.XTitledBorder xTitledBorder1 = new com.rameses.rcp.control.border.XTitledBorder();
         xTitledBorder1.setTitle("Capture information");
@@ -63,6 +64,12 @@ public class CapturePaymentPage extends javax.swing.JPanel {
         xDateField1.setOutputFormat("MMM-dd-yyyy");
         xDateField1.setReadonly(true);
         xFormPanel1.add(xDateField1);
+
+        xLabel1.setCaption("Collection");
+        xLabel1.setExpression("${entity.name}");
+        xLabel1.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+        xLabel1.setPreferredSize(new java.awt.Dimension(0, 20));
+        xFormPanel1.add(xLabel1);
 
         com.rameses.rcp.control.border.XLineBorder xLineBorder1 = new com.rameses.rcp.control.border.XLineBorder();
         xLineBorder1.setLineColor(new java.awt.Color(180, 180, 180));
@@ -80,27 +87,20 @@ public class CapturePaymentPage extends javax.swing.JPanel {
         xTextField1.setRequired(true);
         xFormPanel1.add(xTextField1);
 
-        xLabel5.setCaption("Status");
-        xLabel5.setExpression("#{entity.state}");
-        xLabel5.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
-        xLabel5.setForeground(new java.awt.Color(0, 0, 203));
-        xLabel5.setPreferredSize(new java.awt.Dimension(0, 20));
-        xFormPanel1.add(xLabel5);
-
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(xFormPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 333, Short.MAX_VALUE)
+                .addComponent(xFormPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 300, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addComponent(xFormPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(xFormPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 147, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         com.rameses.rcp.control.border.XTitledBorder xTitledBorder2 = new com.rameses.rcp.control.border.XTitledBorder();
@@ -162,7 +162,7 @@ public class CapturePaymentPage extends javax.swing.JPanel {
             }),
             new com.rameses.rcp.common.Column(new Object[]{
                 new Object[]{"name", "check.no"}
-                , new Object[]{"caption", "CheckNo"}
+                , new Object[]{"caption", "Check No"}
                 , new Object[]{"width", 100}
                 , new Object[]{"minWidth", 0}
                 , new Object[]{"maxWidth", 0}
@@ -175,7 +175,7 @@ public class CapturePaymentPage extends javax.swing.JPanel {
             }),
             new com.rameses.rcp.common.Column(new Object[]{
                 new Object[]{"name", "check.date"}
-                , new Object[]{"caption", "CheckDate"}
+                , new Object[]{"caption", "Check Date"}
                 , new Object[]{"width", 100}
                 , new Object[]{"minWidth", 0}
                 , new Object[]{"maxWidth", 0}
@@ -184,7 +184,7 @@ public class CapturePaymentPage extends javax.swing.JPanel {
                 , new Object[]{"nullWhenEmpty", true}
                 , new Object[]{"editable", false}
                 , new Object[]{"textCase", com.rameses.rcp.constant.TextCase.NONE}
-                , new Object[]{"typeHandler", new com.rameses.rcp.common.TextColumnHandler()}
+                , new Object[]{"typeHandler", new com.rameses.rcp.common.DateColumnHandler(null, "MMM-dd-yyyy", null)}
             })
         });
         xDataTable1.setHandler("listHandler");
@@ -196,14 +196,14 @@ public class CapturePaymentPage extends javax.swing.JPanel {
             xPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(xPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(xDataTable1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(xDataTable1, javax.swing.GroupLayout.DEFAULT_SIZE, 756, Short.MAX_VALUE)
                 .addContainerGap())
         );
         xPanel1Layout.setVerticalGroup(
             xPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(xPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(xDataTable1, javax.swing.GroupLayout.DEFAULT_SIZE, 162, Short.MAX_VALUE)
+                .addComponent(xDataTable1, javax.swing.GroupLayout.DEFAULT_SIZE, 168, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -285,8 +285,16 @@ public class CapturePaymentPage extends javax.swing.JPanel {
         );
         xPanel2Layout.setVerticalGroup(
             xPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(xFormPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, 158, Short.MAX_VALUE)
+            .addGroup(xPanel2Layout.createSequentialGroup()
+                .addComponent(xFormPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, 147, Short.MAX_VALUE)
+                .addContainerGap())
         );
+
+        xLabel5.setCaption("Status");
+        xLabel5.setExpression("#{entity.state}");
+        xLabel5.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        xLabel5.setForeground(new java.awt.Color(255, 0, 0));
+        xLabel5.setPreferredSize(new java.awt.Dimension(0, 20));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -297,20 +305,29 @@ public class CapturePaymentPage extends javax.swing.JPanel {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(xPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(xPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(xLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 243, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(xPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(xPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(xPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGap(7, 7, 7)
+                .addComponent(xLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(xPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(xPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -325,6 +342,7 @@ public class CapturePaymentPage extends javax.swing.JPanel {
     private com.rameses.rcp.control.XDecimalField xDecimalField1;
     private com.rameses.rcp.control.XFormPanel xFormPanel1;
     private com.rameses.rcp.control.XFormPanel xFormPanel2;
+    private com.rameses.rcp.control.XLabel xLabel1;
     private com.rameses.rcp.control.XLabel xLabel2;
     private com.rameses.rcp.control.XLabel xLabel3;
     private com.rameses.rcp.control.XLabel xLabel4;

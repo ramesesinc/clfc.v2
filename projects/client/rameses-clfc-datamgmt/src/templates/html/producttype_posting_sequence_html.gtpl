@@ -11,7 +11,7 @@ import com.rameses.util.*;
     </head>
     <body>
         <%
-            list.sort{ it.sequence }
+            list.sort{ it.index }
             list.each{ o->
                 o.isfirst = false;
                 o.islast = false;
@@ -24,17 +24,20 @@ import com.rameses.util.*;
             <div class="block">
                 <%
                     try {
+                        if (o.varname) {
+                            out.print('<b>' + o.varname + '&nbsp;:&nbsp;</b>');
+                        }
                         out.print('<u>' + o.title + '</u>&nbsp;&nbsp;');
                         if (mode!='read') { %>
-                            <a href="editCondition" code="${o.code}">[Edit]</a>&nbsp;&nbsp;
+                            <a href="editCondition" objid="${o.objid}">[Edit]</a>&nbsp;&nbsp;
                             <%  if (o?.isfirst == false) { %>
-                                    <a href="moveUpCondition" code="${o.code}">[Move Up]</a>&nbsp;&nbsp;
+                                    <a href="moveUpCondition" objid="${o.objid}">[Move Up]</a>&nbsp;&nbsp;
                             <%  } 
                                 if (o?.islast == false) { %>
-                                    <a href="moveDownCondition" code="${o.code}">[Move Down]</a>&nbsp;&nbsp;
+                                    <a href="moveDownCondition" objid="${o.objid}">[Move Down]</a>&nbsp;&nbsp;
                             <%  } 
                                 if (!o?.isdefault) { %>
-                                    <a href="removeCondition" code="${o.code}">[Remove]</a>&nbsp;&nbsp;
+                                    <a href="removeCondition" objid="${o.objid}">[Remove]</a>&nbsp;&nbsp;
                             <%  }
                         }
                         out.print('<br/>&nbsp;&nbsp;');
@@ -61,7 +64,7 @@ import com.rameses.util.*;
                         }
 
                         if (o?.recalculateifnotenough == true) {
-                            out.print('<br/>&nbsp;&nbsp;Recalculate if not enough is <b>true</b>');
+                            out.print('<br/>&nbsp;&nbsp;Recalculate and decrease total days if not enough is <b>true</b>');
                         }
 
                         o?.constraints?.each{ con->

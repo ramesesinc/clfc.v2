@@ -89,6 +89,10 @@ class DepositSlipController extends CRUDController
             items   : []
         ];
     }
+    
+    void afterCreate( data ) {
+        checkEditable(data);
+    }
 
     void afterOpen( data ) {
         /*if (!data.cashbreakdown) {

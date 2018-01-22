@@ -15,7 +15,7 @@ class LoanAppCaptureRenewService {
 	def loanapp;
 
 	@ActiveDB('loan_product_type')
-	def productType;	
+	def productType;
 
 	@ActiveDB("loan_producttype")
 	def loan_producttype;
@@ -166,7 +166,7 @@ class LoanAppCaptureRenewService {
 		if (!data.txntype) data.txntype = 'RENEW';
 
 		//data.dtmatured = generateMaturityDate(data);
-
+		/*
 		data.producttype.name = data.producttype.code;
 		data.producttype.term = 0;
 
@@ -183,7 +183,9 @@ class LoanAppCaptureRenewService {
 			data[k] = v 
 			println k + '-> ' + v;
 		}
+		*/
 
+		data = applyProductType(data);
 		em.create(data); 
 		/*
 		em.create(data, 'loanapp_capture'); 
@@ -208,28 +210,36 @@ class LoanAppCaptureRenewService {
 	public def update( data ) {
 		validate(data);
 
+		data = applyProductType(data);
+		em.update(data);
+
+		return open(data);
+	}
+
+	def applyProductType( data ) {
+
 		data.producttype.name = data.producttype.code;
 		data.producttype.term = 0;
 		//data.dtmatured = generateMaturityDate(data);
 		def xdata = [
 			loanapp 	: [
-				loanamount	: data.loanamount,
+				loanamount	: data.amount,
 				dtreleased 	: parseDate(data.dtreleased)
 			]
 		]
 
 		//println 'app ' + xdata.loanapp.each{ println it }
 
+		println 'producttype';
+		data.producttype.each{ println it }
+
 		def res = productTypeSvc.executeProductTypeRulesForLoanApplication(data.producttype, [:], "user", xdata);
 		//println 'svc-> ' + productTypeSvc;
 		res.each{ k,v-> 
 			data[k] = v 
-			println k + '-> ' + v;
 		}
 
-		em.update(data);
-
-		return open(data);
+		return data;
 	}
 
 	@ProxyMethod
@@ -445,7 +455,8 @@ class LoanAppCaptureRenewService {
 			netamount 		: assessment?.netamount? assessment.netamount : 0,
 			totalcharges 	: assessment?.totalcharges? assessment.totalcharges : 0,
 			dtmatured 		: data.dtmatured,
-			assessmentinfo 	: assessment
+			assessmentinfo 	: assessment,
+			producttype 	: data.producttype
 		];
 		loanapp.create(extinfo, "extinfo");
 
@@ -521,6 +532,7 @@ class LoanAppCaptureRenewService {
 
 	}
 
+	/*
 	private def generateMaturityDate( data ) {
 		def cal = Calendar.getInstance();
 		cal.setTime(parseDate(data.dtreleased));
@@ -563,6 +575,7 @@ class LoanAppCaptureRenewService {
 
 		return parseDate(DATE_FORMAT.format(cal.getTime()));
 	}
+	*/
 
 	private def parseDate( date ) {
 		if (!date) return null;
@@ -574,14 +587,16 @@ class LoanAppCaptureRenewService {
 		}
 	}
 
+	/*
 	@ProxyMethod
 	public def xgetProductTypes() {
 		return productType.getList([searchtext: '%']);
 	}
+	*/
 
 	@ProxyMethod
 	public def getProductTypes() {
-		return loan_producttype.getListByState([searchtext: "%", txnstate: "ACTIVATED"]).collect{ [title: it.title, code: it.code ]};
+		return loan_producttype.getListByState([searchtext: "%", txnstate: "ACTIVATED"]).collect{ [title: it.title, code: it.code, version: 2 ]};
 	}
 
 	@ProxyMethod
@@ -652,11 +667,17 @@ class LoanAppCaptureRenewService {
 		];
 		loanapp.create(newlog, 'loanapp_log'); 
 
+		println 'data';
+		data.each{ println it }
+
 		buildSearchIndex(data);
 		buildBorrower(data);
 		buildBusiness(data);
 		buildOtherLending(data);
 		buildCollateral(data);
+
+		throw new RuntimeException("stopping")
+
 		return data;
 	}
 
@@ -705,11 +726,34 @@ class LoanAppCaptureRenewService {
 	} 	
 
 	private void buildBorrower(data) { 
-		loanapp.getBorrowerList([parentid: data.prevloanid]).each{o-> 
-			o.objid = 'LB' + new UID(); 
-			o.parentid = data.objid; 
-			loanapp_borrower.create(o); 
-		} 
+		def list = loanapp.getBorrowerList([parentid: data.prevloanid]);
+		if (list) {
+			list.each{o-> 
+				o.objid = 'LB' + new UID(); 
+				o.parentid = data.objid; 
+				loanapp_borrower.create(o); 
+			}
+		} else {
+			def lb = loanapp_borrower.findPrincipalBorrower([parentid: data.objid]);
+			if (!lb) {
+				lb = [
+					objid: 		  'LB' + new UID(), 
+					parentid: 	  data.objid, 
+					borrowerid:   data.borrower.objid, 
+					borrowername: data.borrower.name, 
+					principalid:  data.borrower.objid,
+					type:         'PRINCIPAL' 
+				];
+				loanapp_borrower.create(lb); 
+			} else {
+				lb = loanapp_borrower.read([objid: lb.lbid]);
+				
+				lb.borrowerid = data.borrower.objid;
+				lb.borrowername = data.borrower.name;
+				lb.principalid = lb.borrowerid;
+				loanapp_borrower.update(lb);
+			}
+		}
 	} 
 
 	private void buildBusiness(data) { 

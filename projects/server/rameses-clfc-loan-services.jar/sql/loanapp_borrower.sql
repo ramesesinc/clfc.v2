@@ -1,5 +1,5 @@
 [findPrincipalBorrower]
-SELECT lb.type, lb.relation, b.* 
+SELECT lb.objid as lbid, lb.type, lb.relation, b.* 
 FROM loanapp_borrower lb 
 	INNER JOIN borrower b ON lb.borrowerid=b.objid 
 WHERE lb.parentid=$P{parentid} AND lb.type='PRINCIPAL'  

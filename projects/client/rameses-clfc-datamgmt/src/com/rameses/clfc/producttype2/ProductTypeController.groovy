@@ -18,6 +18,7 @@ class ProductTypeController {
     
     def entity, mode = "read";
     def preventity, prevgenattr, prevloanattr;
+    def prevloanfields, prevpostingheader, prevpostingseq;
     
     void create() {
         entity = createEntity();
@@ -110,9 +111,9 @@ class ProductTypeController {
         if (res.haserror == true) throw new Exception(res.msg);
         
         if (mode == "create") {
-            entity = service.create(entity);
+            entity = service.createData(entity);
         } else if (mode == "edit") {
-            entity = service.update(entity);
+            entity = service.updateData(entity);
         }
         
         mode = "read";
@@ -152,6 +153,15 @@ class ProductTypeController {
                 entity.loaninfo._removedattr = [];
             }
             
+            if (entity.postinginfo) {
+                if (prevpostingheader) {
+                    entity.postinginfo.postingheader = prevpostingheader;
+                }
+                if (prevpostingseq) {
+                    entity.postinginfo.postingsequence = prevpostingseq;
+                }
+            }
+            
             mode = "read";
             
             return null;
@@ -166,13 +176,28 @@ class ProductTypeController {
         }
         
         prevgenattr = [];
-        if (entity.generalinfo.attributes) {
+        if (entity.generalinfo?.attributes) {
             prevgenattr = copyList(entity.generalinfo.attributes);
         }
         
         prevloanattr = [];
         if (entity.loaninfo.attributes) {
             prevloanattr = copyList(entity.loaninfo.attributes);
+        }
+        
+        prevloanfields = [];
+        if (entity.loaninfo?.fields) {
+            prevloanfields = copyList(entity.loaninfo.fields);
+        }
+        
+        prevpostingheader = [];
+        if (entity.postinginfo?.postingheader) {
+            prevpostingheader = copyList(entity.postinginfo.postingheader)
+        }
+        
+        prevpostingseq = [];
+        if (entity.postinginfo.postingsequence) {
+            prevpostingseq = copyList(entity.postinginfo.postingsequence);
         }
         
         mode = "edit";
@@ -194,6 +219,10 @@ class ProductTypeController {
             binding?.refresh();
             caller?.reload();
         });
+    }
+    
+    void testExpression() {
+        service.testExpression(entity);
     }
     
 }

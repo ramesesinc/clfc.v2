@@ -14,7 +14,7 @@ class PostingHeaderController extends CRUDController
     String entityName = 'postingheader';
     
     Map createPermission = [role: 'ADMIN_SUPPORT', domain: 'ADMIN'];
-    Map editPermission = [role: 'ADMIN_SUPPORT', domain: 'ADMIN'];
+    Map editPermission = [role: 'ADMIN_SUPPORT', domain: 'ADMIN']; 
     
     def typeList = ["DEFAULT"];
     def dataTypeList = ["decimal", "date"];

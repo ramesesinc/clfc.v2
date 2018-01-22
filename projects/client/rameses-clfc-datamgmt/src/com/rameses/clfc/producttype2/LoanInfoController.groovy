@@ -4,6 +4,7 @@ import com.rameses.rcp.common.*;
 import com.rameses.rcp.annotations.*;
 import com.rameses.osiris2.client.*;
 import com.rameses.osiris2.common.*;
+import java.rmi.server.UID;
 
 class LoanInfoController {
 
@@ -17,12 +18,12 @@ class LoanInfoController {
     def service;
     
     def entity, mode = "read";
-    def defaultvarlist = [];
+    //def defaultvarlist = [];
     
     void init() {
         if (!entity) entity = [:];
         if (!entity.loaninfo) entity.loaninfo = [title: "LOANINFO"];
-        defaultvarlist = service.getLoanInfoVarlist();
+        //defaultvarlist = service.getLoanInfoVarlist();
     }
     
     def getHtml() {
@@ -62,7 +63,6 @@ class LoanInfoController {
         }
         
         binding?.refresh('html');
-        
     }
     
     void moveDownAttr( params ) {
@@ -89,7 +89,10 @@ class LoanInfoController {
     }
     
     def buildVarList( index ) {
-        def list = defaultvarlist;
+        def list = [];
+        entity.loaninfo?.fields?.each{ o->
+            list << [caption: o.title, title: o.title, signature: o.title, handler: o.field.handler];
+        }
         def item;
         
         entity?.generalinfo?.attributes?.each{ o->
@@ -137,11 +140,11 @@ class LoanInfoController {
             
             if (!o.index) o.index = entity.loaninfo.attributes.size();
             
-            if (!entity.loaninfo.addedattr) entity.loaninfo._addedattr = [];
-            entity.generalinfo._addedattr << o;
+            if (!entity.loaninfo._addedattr) entity.loaninfo._addedattr = [];
+            entity.loaninfo._addedattr << o;
             
             if (!entity.loaninfo.attributes) entity.loaninfo.attributes = [];
-            entity.generalinfo.attributes << o;
+            entity.loaninfo.attributes << o;
             
             binding?.refresh("html");
         }
@@ -176,9 +179,7 @@ class LoanInfoController {
             binding?.refresh("html");
         }
         
-        
         def item = entity?.loaninfo?.attributes?.find{ it.objid == params.objid }
-        
         def op;
         if (item) {
             def xparam = [
@@ -187,6 +188,7 @@ class LoanInfoController {
                 handler : handler,
                 varlist : buildVarList(item.index)
             ];
+            
             op = Inv.lookupOpener("loan:producttype:loan:attribute:popup:open", xparam);
             
         }
@@ -204,6 +206,48 @@ class LoanInfoController {
         entity.loaninfo.attributes.remove(item);
         
         binding?.refresh("html");
+    }
+    
+    def selectedField;
+    def fieldListHandler = [
+        fetchList: { o->
+            if (!entity.loaninfo.fields) entity.loaninfo.fields = [];
+            return entity.loaninfo.fields;
+        }
+    ] as BasicListModel;
+    
+    def addField() {
+        
+        def handler = { o->
+            def i = entity.loaninfo.fields?.find{ it.fact.objid==o.fact.objid && it.field.objid==o.field.objid }
+            if (i) throw new RuntimeException("Field has already been selected.");
+            
+            if (!o.objid) o.objid  = "LPFF" + new UID();
+            if (!o.parentid) o.parentid = entity.code;
+            o.title = o.fact.varname + "_" + o.field.name;
+                        
+            if (!entity.loaninfo.fields) entity.loaninfo.fields = [];
+            entity.loaninfo.fields << o;
+            
+            fieldListHandler?.reload();
+            binding?.refresh("exprOpener");
+        }
+        
+        def params = [
+            onselect: handler,
+            category: "producttype"
+        ];
+        
+        def op = Inv.lookupOpener("loan:producttype:field:select", params);
+        if (!op) return null;
+        return op;
+    }
+    
+    void removeField() {
+        if (!selectedField) return;
+        
+        entity.loaninfo.fields.remove(selectedField);
+        fieldListHandler?.reload();
     }
 }
 
